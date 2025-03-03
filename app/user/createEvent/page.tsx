@@ -18,8 +18,8 @@ export default function CreateEvent(){
     const [model, setModel] = useState<string>("text-embedding-3-small")//embeddingモデル
 
     //<EventOption />で設定する項目：UIの画像、利用期間
-    const [startTime, setStartTime] = useState<string>("no limit")//利用開始時間
-    const [endTime, setEndTime] = useState<string>("no limit")//利用終了時間
+    const [startTime, setStartTime] = useState<string>("制限なし")//利用開始時間
+    const [endTime, setEndTime] = useState<string>("制限なし")//利用終了時間
     //
     const options = ["英語", "中国語（簡体）", "中国語（繁体）", "韓国語"];
     const otherOptions = ["その他","フランス語","ポルトガル語","スペイン語"]

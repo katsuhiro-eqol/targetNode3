@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { db } from "@/firebase"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import {Sidebar} from "../../components/sideBar"
+import EventList from "../../components/eventsList"
 
 export default function QAList(){
     const [events, setEvents] = useState<string[]>([""]) //firestoreから読み込む
@@ -40,6 +41,7 @@ export default function QAList(){
         const qa = []
         querySnapshot.forEach((doc) => {
             const data = doc.data()
+            console.log(data.foreign)
             const qadata = {
                 id: doc.id,
                 question:data.question,
@@ -47,7 +49,7 @@ export default function QAList(){
                 modalFile:data.modalFile,
                 modalUrl:data.modalUrl,
                 voiceId:data.voiceId,
-                foreign:data.foreign.toString() || null,
+                foreign:data.foreign,
                 vector:data.vector
             }
             qa.push(qadata)
@@ -108,7 +110,7 @@ export default function QAList(){
                 })}
                 </select>
             </div>
-
+                <EventList eventData={eventData} />
             </div>
         </div>
         </div>
