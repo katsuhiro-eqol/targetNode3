@@ -8,7 +8,7 @@ const runpod_key = process.env.RUNPOD_API_KEY
 
 const runpod_url = "https://api.runpod.ai/v2/ipv7b7lbrstx3n/runsync"
 //ここ重要。必ずサーバーで直接model_idを確認すること
-const modelId = {bauncer:"0", silva:"1"}
+//const modelId = {bauncer:"0", silva:"1"}
 const vits_param = {
     bauncer: {
         model_id: 0,
@@ -34,7 +34,8 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const data = docSnap.data()
-      return NextResponse.json({ voiceId: voiceId, status:"0"});
+      console.log()
+      return NextResponse.json({ voiceId: voiceId, url: data.url, frame:data.frame, status:"0"});
     } else {
       try {
           const headers = {
@@ -50,24 +51,10 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
                   text: answer
               }
           }
-    const response = await axios.post(runpod_url, data, {headers:headers});
-      return NextResponse.json({ voiceId: voiceId, audioContent: response.data.output.voice, status:"1"});
-    } catch (error) {
-        return NextResponse.json({ error: error });
+        const response = await axios.post(runpod_url, data, {headers:headers});
+        return NextResponse.json({ voiceId: voiceId, audioContent: response.data.output.voice, status:"1"});
+        } catch (error) {
+            return NextResponse.json({ error: error });
+        }
     }
 }
-
-/*
-const processedString = (input) => {
-  let newText = input
-  newText = newText.trim()
-  newText = newText.replace(/。/g, "、")
-  let processed = ""
-  if (newText.slice(-1) == "、"){
-      processed = newText.replace(/.$/, '')
-  } else {
-      processed = newText
-  }
-  return processed
-}
-*/

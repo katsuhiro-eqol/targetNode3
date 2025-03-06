@@ -3,6 +3,7 @@ import React from "react";
 import {useState, useEffect} from "react"
 import ForeignModal from "./foreignModal"
 import ModalModal from "./modalModal"
+import ListenVoice from "./listenVoice"
 
 export default function QADataList({qaData}){
     const [isForeign, setIsForeign] = useState<boolean>(false)
@@ -11,6 +12,8 @@ export default function QADataList({qaData}){
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string>("")
     const [modalFile, setModalFile] = useState<string>("")
+    const [isAudio, setIsAudio] = useState<boolean>(false)
+    const [voiceUrl, setVoiceUrl] = useState<string>("")
 
     const columns = [
         { key: 'id', label: 'id' },
@@ -45,8 +48,12 @@ export default function QADataList({qaData}){
 
     const listenVoice = (id) => {
         const selectedData = qaData.filter((item) => item.id == id)
-        const voiceId = selectedData[0].voiceId     
+        const vUrl = selectedData[0].voiceUrl
+        setIsAudio(true)
+        setVoiceUrl(vUrl)
+        setAnswer(selectedData[0].answer)
     }
+
 
     useEffect(() => {
         console.log(isForeign)
@@ -56,9 +63,14 @@ export default function QADataList({qaData}){
         console.log(foreignData)
     }, [foreignData])
 
+    useEffect(() => {
+        console.log(voiceUrl)
+    }, [voiceUrl])
+
     return (
         <div>
             <div className="container mx-auto p-4">
+            {}
             <table className="min-w-full border border-gray-300">
                 <thead>
                 <tr className="bg-gray-100">
@@ -146,7 +158,10 @@ export default function QADataList({qaData}){
                 )}
                 {isModal && (
                     <ModalModal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile} />
-                )}              
+                )}  
+                {isAudio && (
+                    <ListenVoice setIsAudio={setIsAudio} voiceUrl={voiceUrl} answer={answer} />
+                )}                       
             </div>
             </div>
         </div>

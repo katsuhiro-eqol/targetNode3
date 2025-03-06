@@ -9,7 +9,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
     const params = await req.json()
     const answer = params.answer
     const language = params.language
-    console.log(language)
+    console.log("request", language)
     const foreignLang = {"日本語":"ja-JP", "英語":"en-US", "中国語（簡体）":"zh-CN", "中国語（繁体）":"zh-TW", "韓国語":"ko-KR", "フランス語":"fr-FR", "ポルトガル語":"pt-BR","スペイン語":"es-ES"}
     const langCode = foreignLang[language]
     console.log(langCode)

@@ -1,9 +1,10 @@
 'use client';
 import React from "react";
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MenuItem } from './menuItem';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight, Home, Users, HardDriveUpload, BriefcaseBusiness, LogOut } from 'lucide-react';
+import { Home, Users, HardDriveUpload, BriefcaseBusiness, LogOut, NotebookText } from 'lucide-react';
 
 const menuItems = [
   {
@@ -17,9 +18,10 @@ const menuItems = [
     icon: BriefcaseBusiness,
     submenu: true,
     submenuItems: [
-      { title: 'イベント一覧', path: '/user/eventList' },
+      { title: 'イベント情報一覧', path: '/user/eventList' },
       { title: '新規登録', path: '/user/createEvent' },
-      { title: 'オプション設定', path: '/user/eventOption' }
+      { title: 'オプション設定', path: '/user/eventOption' },
+      { title: '進捗状況', path: '/user/eventInspector' }
     ]
   },
   {
@@ -27,12 +29,20 @@ const menuItems = [
     icon: HardDriveUpload,
     submenu: true,
     submenuItems: [
-      { title: 'Q&Aデータ一覧', path: '/user/qaList' },
       { title: '新規登録', path: '/user/createQA' },
       { title: 'Q&Aデータ回答修正', path: '/user/updateQA' },
       { title: 'Q&Aデータ追加', path: '/user/addQA' },
       { title: 'Q&A添付書類修正', path: '/user/updateFile' },
       { title: 'Q&Aデータ初期化', path: '/user/deleteQA' }
+    ]
+  },
+  {
+    title: '手順書・マニュアル',
+    icon: NotebookText,
+    submenu: true,
+    submenuItems: [
+      { title: '管理者用マニュアル', path: '/user/manual' },
+      { title: 'AIコンユーザーマニュアル', path: '/aicon/manual' }
     ]
   },
   {
@@ -52,6 +62,21 @@ const menuItems = [
 export const Sidebar = () => {
     const [activeItem, setActiveItem] = useState('');
     const [currentUser, setCurrentUser] = useState<string>("")
+    const router = useRouter()
+
+
+    const confirmUser = () => {
+      const org = sessionStorage.getItem("user")
+      if (!org){
+        router.push("/auth")
+      } else {
+        setCurrentUser(org)
+      }
+    }
+
+    useEffect(() => {
+      confirmUser()
+    }, [currentUser])
 
     return (
       <div className="w-64 bg-slate-50 h-screen shadow-lg py-6 px-3 fixed left-0 top-0">

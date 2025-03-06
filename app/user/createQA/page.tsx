@@ -3,8 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {Sidebar} from "../../components/sideBar"
 import UploadFiles from "../../components/uploadFiles"
-import { db } from "@/firebase"
-import { doc, getDoc, collection, setDoc, query, where } from "firebase/firestore"
+import { db, storage } from "@/firebase"
+import { doc, getDoc, getDocs, collection, setDoc, query, where, updateDoc } from "firebase/firestore"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import md5 from 'md5';
 
 interface CsvData {
@@ -80,10 +81,85 @@ export default function RegisterCSV(props) {
         }
     });
 
+    const base64toBlob = (base64Data) => {
+        if (base64Data){
+        const sliceSize = 1024
+        const cleanedBase64 = base64Data.trim().replace(/\s/g, '')//追加
+        const byteCharacters = atob(cleanedBase64)
+        const bytesLength = byteCharacters.length
+    
+        const slicesCount = Math.ceil(bytesLength/sliceSize)
+        const byteArrays = new Array(slicesCount)
+        console.log("bytesLength", bytesLength)
+        for (let sliceIndex=0; sliceIndex<slicesCount; ++sliceIndex){
+            const begin = sliceIndex * sliceSize
+            const end = Math.min(begin + sliceSize, bytesLength)
+            const bytes = new Array(end - begin)
+            for (let offset = begin, i=0; offset<end; ++i, ++offset){
+                bytes[i] = byteCharacters[offset].charCodeAt(0)
+            }
+            byteArrays[sliceIndex] = new Uint8Array(bytes)
+        }
+        return new Blob(byteArrays, {type:'audio/wav'})
+        } else {
+            console.log("base64エラー")
+            return null
+        }
+    }
+
+    const saveVoiceData = async(id, text, audioContent) => {
+        const blob = base64toBlob(audioContent)
+        const frame = frameCount(audioContent)
+        const fileName = id + ".wav"
+        const storage = getStorage()
+        const path = "aicon_audio/" + fileName
+        const storageRef = ref(storage, path)
+        await uploadBytes(storageRef, blob)
+        await getDownloadURL(ref(storage, path))
+        .then((url) => {
+            registrationVoiceData(id, frame, url, text)
+        })
+        .catch((error) => {
+          // Handle any errors
+        });
+    }
+
+    const updateVoiceDataToQADB = async (voiceId, frame, url) => {
+        const eventId = organization + "_" + event
+        const data2 = {
+            voiceUrl: url,
+            frame: frame
+        }
+        const qaRef = collection(db, "Events", eventId, "QADB")
+        const q = query(qaRef, where("voiceId", "==", voiceId))
+        const querySnapshot = await getDocs(q)
+        console.log(querySnapshot.docs.length)
+        for (const document of querySnapshot.docs) {
+            const docRef = doc(db, "Events",eventId,"QADB", document.id);
+            await setDoc(docRef, data2, {merge:true});
+          }
+    }
+
+    const registrationVoiceData = async(id, frame, url, text) => {
+        const fileName = id + ".wav"
+        const data = {
+            answer: text,
+            filename: fileName,
+            url: url,
+            frame:frame
+        }
+        const voiceRef = doc(db, "Voice", id);
+        await setDoc(voiceRef, data, {merge:true}) 
+
+        await updateVoiceDataToQADB(id, frame, url)
+    }
+
   //音声合成し、Voiceに登録
     const registerVoice = async () => {
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
+        const answerCount = answerSet.size
+        let n = 1
         for (const answer of answerSet){
             try {
                 const response = await fetch("/api/createAudioData", {
@@ -96,26 +172,18 @@ export default function RegisterCSV(props) {
                 const audio = await response.json();
                 
                 if (audio.status == "0"){
-                    continue
+                    await updateVoiceDataToQADB(audio.voiceId, audio.frame, audio.url)
                 } else {
-                //URLsafe Base64からの変換
-                const audioString = audio.audioContent.replace(/-/g, '+').replace(/_/g, '/')
-                const frame = frameCount(audioString)
-                const data = {
-                    id: audio.voiceId,
-                    audio: audioString,
-                    frame:frame,
-                    answer: answer
-                }
-                const voiceId = audio.voiceId
-                const voiceRef = doc(db, "Voice",voiceId)
-                await setDoc(voiceRef,data)
+                    await saveVoiceData(audio.voiceId, answer, audio.audioContent)
             }
+            n += 1
+            const ratio = Math.floor(n*30/jsonData.length) + 70
+            setStatus(String(ratio) + "%のデータ登録完了済み")
             } catch (error) {
             console.log(error);
             }
         }
-        setStatus("40%完了")
+        setStatus("99%完了")
     }
 
     //EmbeddingをEventのサブコレクションQADBに登録
@@ -168,7 +236,7 @@ export default function RegisterCSV(props) {
                 const docRef = doc(db, "Events", id, "QADB", item.id)
                 await setDoc(docRef,data2)
                 count += 1
-                const ratio = Math.floor(count*60/jsonData.length) + 40
+                const ratio = Math.floor(count*60/jsonData.length) + 10
                 setStatus(String(ratio) + "%のデータ登録完了済み")
             } catch (error) {
               console.log(error);
@@ -212,29 +280,29 @@ export default function RegisterCSV(props) {
             qaData:true
         }
         const eventRef = doc(db, "Events", id)
-        await setDoc(eventRef,data)
+        await updateDoc(eventRef,data)
     }
 
     const registerToFirestore = async () => {
         const translated = await registerForeignLang()
-        await registerVoice()
         await registerQADB(translated)
+        await registerVoice()
         await updateEventStatus()
         setStatus("Q&Aデータベースの登録が完了しました")
     }
 
     const frameCount = (base64Data) => {
-        const byteCharacters = atob(base64Data)
+        const audioString = base64Data.replace(/-/g, '+').replace(/_/g, '/')
+        const byteCharacters = atob(audioString)
         const bytesLength = byteCharacters.length
         const frameCount = bytesLength/2
         return frameCount
     }
 
     const loadEvents = async () => {
+        if (organization){
         try {
-            const org = sessionStorage.getItem("user")
-            setOrganization(org)
-            const docRef = doc(db, "Users", org)
+            const docRef = doc(db, "Users", organization)
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data()
@@ -248,8 +316,9 @@ export default function RegisterCSV(props) {
                 alert("ログインから始めてください")
             }
         } catch (error) {
-            alert("データベースエラー")
+            console.log(error)
         }
+    }
     }
 
     const loadEventData = async () => {
@@ -261,12 +330,9 @@ export default function RegisterCSV(props) {
                 if (docSnap.exists()) {
                     const data = docSnap.data()
                     if (data.qaData){
-                        let overwrite = confirm("Q6Aデータは既に登録されています。データを上書きしますか？")
-                        if (overwrite){
-                            setEventData(data)
-                        } else {
-                            setEvent("")
-                        }
+                        alert("既にデータ設定されています。新たなQAデータを登録される場合は、メニューよりQAデータ初期化を行なってください。")
+                    } else{
+                        setEventData(data)
                     }
                 }
             } catch (error) {
@@ -326,6 +392,12 @@ export default function RegisterCSV(props) {
 
     useEffect(() => {
         loadEvents()
+    },[organization])
+
+    useEffect(() => {
+        const org = sessionStorage.getItem("user")
+        console.log(org)
+        setOrganization(org)
     },[])
 
     return (

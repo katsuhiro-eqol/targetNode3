@@ -16,6 +16,7 @@ export default function CreateEvent(){
     const [other, setOther] = useState<string>("")//他言語
     const [voice, setVoice] = useState<string>("bauncer")//音声モデル
     const [model, setModel] = useState<string>("text-embedding-3-small")//embeddingモデル
+    const [image, setImage] = useState<string>("AI-con_man_01.png")
 
     //<EventOption />で設定する項目：UIの画像、利用期間
     const [startTime, setStartTime] = useState<string>("制限なし")//利用開始時間
@@ -27,10 +28,8 @@ export default function CreateEvent(){
     const uiOptions = ["AI-con_woman_01","AI-con_man_01","AI-con_woman_02","AI-con_man_02"]
 
     const loadEvents = async () => {
-        try {
-            const org = sessionStorage.getItem("user")
-            setOrganization(org)
-            const docRef = doc(db, "Users", org)
+        try {           
+            const docRef = doc(db, "Users", organization)
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data()
@@ -39,7 +38,7 @@ export default function CreateEvent(){
                 alert("ログインから始めてください")
             }
         } catch (error) {
-            alert("データベースエラー")
+            console.log(error)
         }
     }
 
@@ -72,8 +71,19 @@ export default function CreateEvent(){
             return true
         }
     }
+
+    const randomStr = (length) => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
     const registerEvent = async () => {
         const judge = judgeNewEvent()
+        const code = randomStr(4)
         console.log(judge)
         if (judge){
             try {
@@ -86,7 +96,9 @@ export default function CreateEvent(){
                 startTime: startTime,
                 endTime: endTime,
                 embedding: model,
-                qaData: false
+                image:image,
+                qaData: false,
+                code: code
             }
             
                 const eventRef = collection(db, "Events")
@@ -144,11 +156,20 @@ export default function CreateEvent(){
 
     const toggleState = () => {
         setIsEventOption((prev) => !prev); // 現在の状態を反転させる
-      };
+    };
 
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const value = sessionStorage.getItem('user');
+            const org = sessionStorage.getItem("user")
+            console.log("user", org)
+            setOrganization(org)
+          }
+    }, [])
+    
+    useEffect(() => {
         loadEvents()
-    },[])
+    },[organization])
 
     useEffect(() => {
         console.log(events)
