@@ -350,21 +350,58 @@ export default function RegisterCSV(props) {
         window.location.reload()
     }
 
-    useEffect(() => {
-        console.log(jsonData)
-        if (jsonData.length>0){
-            setIsSecondStep(false)
+    const judgeNewQA = () => {
+        const qaCount = jsonData.length
+        const idL = jsonData.map((item) => item.id)
+        const idList = idL.filter((item) => item != "")
+        const idSet = new Set(idList)
+        const qL = jsonData.map((item) => item.question)
+        const qList = qL.filter((item) => item != "")
+        const qSet = new Set(qList)
+        const aL = jsonData.map((item) => item.answer)
+        const aList = aL.filter((item) => item != "")
+        if (idList.length != qaCount){
+            alert("idの値に欠損があります")
+            return false
+        } else if (idList.length != idSet.size){
+            alert("idに重複があります")
+            return false
+        } else if (qList.length != qaCount){
+            alert("questionに欠損があります")
+            return false
+        } else if (qList.length != qSet.size){
+            alert("questionに重複があります")
+            return false
+        } else if (aList.length != qaCount){
+            alert("answerに欠損があります")
+            return false
+        } else if (qList.includes("分類不能の場合")){
+            alert("「分類不能の場合」のQ&Aがありません")
+            return false
+        } else {
+            return true
         }
-        const array1 = jsonData.map(item => item.modal_file)
-        const array2 = array1.filter(item => item != "")
-        const array3 = [...new Set(array2)]
-        //const files = array3.toString()
-        setModalFiles(array3)
-        if (array3.length != 0){
-            setIsModal(true)
-            setIsThirdStep(true)
-        } else if (array3.length == 0 && jsonData.length > 0) {
-            setIsReady(true)
+    }
+
+    useEffect(() => {
+        const judge = judgeNewQA()
+        if (judge){
+            setIsSecondStep(false)
+
+        } else {
+            setJsonData([])
+            alert("CSVファイルを修正して再登録してください")
+
+            const array1 = jsonData.map(item => item.modal_file)
+            const array2 = array1.filter(item => item != "")
+            const array3 = [...new Set(array2)]
+            setModalFiles(array3)
+            if (array3.length != 0){
+                setIsModal(true)
+                setIsThirdStep(true)
+            } else if (array3.length == 0 && jsonData.length > 0) {
+                setIsReady(true)
+            }
         }
     }, [jsonData])
 
@@ -456,7 +493,7 @@ export default function RegisterCSV(props) {
 
         {isModal && (
             <div>
-            <div className="py-4">データ数: {jsonData.length}</div>
+            <div className="py-4">CSVファイルの読み込みができました。Q&Aデータ数: {jsonData.length}</div>
             <div className="text-base">ステップ３：添付ファイルがある場合はファイルを登録</div>
             {isThirdStep && (
                 <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event}/>
@@ -469,9 +506,10 @@ export default function RegisterCSV(props) {
         {isReady && (
             <div>
             <div className="text-base">ステップ４：データベースに登録する準備ができました</div>
+            <div className="">Q&Aデータ数: {jsonData.length}</div>
             <div className="flex flex-row gap-x-4">
-            <button className="h-10 my-10 px-2 border-2" onClick={pageReload}>キャンセル</button>
-            <button className="h-10 my-10 px-2 border-2 bg-amber-200" onClick={() => registerToFirestore()}>データベースに登録</button>
+            <button className="h-10 my-10 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
+            <button className="h-10 my-10 px-2 border-2 bg-amber-200 rounded" onClick={() => registerToFirestore()}>データベースに登録</button>
             </div>
             <div className="text-lime-500">{status}</div>
             </div>

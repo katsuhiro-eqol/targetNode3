@@ -17,6 +17,7 @@ export default function CreateEvent(){
     const [voice, setVoice] = useState<string>("bauncer")//音声モデル
     const [model, setModel] = useState<string>("text-embedding-3-small")//embeddingモデル
     const [image, setImage] = useState<string>("AI-con_man_01.png")
+    const [isEventOption, setIsEventOption] = useState<boolean>(false)
 
     //<EventOption />で設定する項目：UIの画像、利用期間
     const [startTime, setStartTime] = useState<string>("制限なし")//利用開始時間
@@ -183,6 +184,10 @@ export default function CreateEvent(){
         console.log(comment)
     },[comment])
 
+    useEffect(() => {
+        console.log(image)
+    },[image])
+
     return (
         <div className="flex">
         <div>
@@ -233,28 +238,17 @@ export default function CreateEvent(){
             return <option key={name} value={name}>{name}</option>;
             })}
             </select>
-            
-            <div className="font-semibold text-sm ml-3 mt-5">AIコン画像</div>
             <div className="flex flex-row gap-x-4">
-            {options.map((option) => (
-                <div
-                key={option}
-                className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-3 rounded"
-                onClick={() => handleOptionClick(option)}
-                >
-                {/* 選択されている場合は CircleDot、それ以外は Circle を表示 */}
-                {selectedOptions.includes(option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
-                <span className="ml-2 text-gray-700 text-sm">{option}</span>
-                </div>
-            ))}
-            <select className="mx-8 my-3 w-20 h-4 text-xs text-center" value={other} label="other" onChange={selectOtherLanguage}>
-            {otherOptions.map((name) => {
-            return <option key={name} value={name}>{name}</option>;
-            })}
-            </select>
+            <div className="text-base font-semibold text-gray-700">ステップ３: イベントオプション設定  </div>
+            {!isEventOption && (
+                <button className="text-sm px-2 border-2 bg-slate-200 rounded" onClick={toggleState} >オプション入力</button>
+            )}
             </div>
-
-            
+            <div className="text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
+            {isEventOption && (
+                <EventOption organization={organization} image={image} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
+            )}
+                       
             <div className="flex flex-row gap-x-4">
             <button className="h-10 mt-10 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
             <button className="h-10 mt-10 px-2 border-2 bg-amber-200 rounded" onClick={() => registerEvent()} >新規イベント登録</button>
@@ -266,15 +260,24 @@ export default function CreateEvent(){
 }
 
 /*
-<div className="flex flex-row gap-x-4">
-            <div className="text-base font-semibold text-gray-700">ステップ３: イベントオプション設定  </div>
-            {!isEventOption && (
-                <button className="text-sm px-2 border-2 bg-slate-200 rounded" onClick={toggleState} >オプション入力</button>
-            )}
-            </div>
-            <div className="text-xs text-red-600">（イベント設定後に何度でも修正できる項目です）</div>        
-            {isEventOption && (
-                <EventOption />
-            )}
 
+    <div className="font-semibold text-sm ml-3 mt-5">AIコン画像</div>
+    <div className="flex flex-row gap-x-4">
+    {options.map((option) => (
+        <div
+        key={option}
+        className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-3 rounded"
+        onClick={() => handleOptionClick(option)}
+        >
+
+        {selectedOptions.includes(option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
+        <span className="ml-2 text-gray-700 text-sm">{option}</span>
+        </div>
+    ))}
+    <select className="mx-8 my-3 w-20 h-4 text-xs text-center" value={other} label="other" onChange={selectOtherLanguage}>
+    {otherOptions.map((name) => {
+    return <option key={name} value={name}>{name}</option>;
+    })}
+    </select>
+    </div>
 */

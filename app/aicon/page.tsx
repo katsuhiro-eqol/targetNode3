@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, Send, Eraser } from 'lucide-react';
 import { db } from "@/firebase";
-import { collection, query, where, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 
 //aicon_audio/no_sound.wav
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
@@ -44,30 +44,29 @@ export default function Aicon() {
     const attribute = searchParams.get("attribute");
     const code = searchParams.get("code");
 
-    async function onSubmit(event) {
-        event.preventDefault();
+    async function getAnswer() {
         const today = new Date()
+        /*
         if (today.getTime() > endLimit){
             alert("アプリ利用期間が終わりました")
             setUserInput("")
             setWavReady(false)
             return
         }
+        */
         setWavUrl("")
         setRecord(false)
         setCanSend(false)//同じInputで繰り返し送れないようにする
         setUserInput("")
-        const s1 = new Array(1).fill("00_talk01.jpg")
-        setSlides(s1)
+        setSlides(initialSlides)
 
         try {
-        const response = await fetch("/api/embedding", {
+        const response = await fetch("/api/embedding2", {
             method: "POST",
             headers: {
             "Content-Type": "application/json",
             },
-            //body: JSON.stringify({ input: userInput, character: character, fewShot: fewShot, previousData: previousData, sca: scaList[character] }),
-            body: JSON.stringify({ input: userInput, attribute:attribute, modelnumber:modelnumber }),
+            body: JSON.stringify({ input: userInput, model: eventData.model, language: language }),
         });
 
         const data = await response.json();
@@ -78,20 +77,18 @@ export default function Aicon() {
         const similarityList = findMostSimilarQuestion(data.embedding)
 
         if (similarityList.similarity > 0.5){
-            setWavUrl(embeddingsData[similarityList.index].url)
+            setWavUrl(embeddingsData[similarityList.index].voiceUrl)
             setResult(embeddingsData[similarityList.index].answer)
-            const sl = createSlides(embeddingsData[similarityList.index].duration)
+            const sl = createSlides(embeddingsData[similarityList.index].frame)
             setSlides(sl)
         }else{
-            const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できない質問")
+            const badQuestion = embeddingsData.filter((obj) => obj.question == "意図が不明な質問")
             const n = Math.floor(Math.random() * badQuestion.length)
-            setWavUrl(badQuestion[n].url)
+            setWavUrl(badQuestion[n].voiceUrl)
             setResult(badQuestion[n].answer)
-            const sl = createSlides(badQuestion[n].duration)
+            const sl = createSlides(badQuestion[n].frame)
             setSlides(sl)           
         }
-
-
         console.log(similarityList.similarity)
         console.log(embeddingsData[similarityList.index])
 
@@ -118,7 +115,7 @@ export default function Aicon() {
         const inputVector = binaryToList(base64Data)
         const similarities = embeddingsData.map((item, index) => ({
             index,
-            similarity: cosineSimilarity(inputVector, item.vector1)
+            similarity: cosineSimilarity(inputVector, item.vector)
           }));
         similarities.sort((a, b) => b.similarity - a.similarity);
 
@@ -139,18 +136,32 @@ export default function Aicon() {
     }
 
 
-    const createSlides = (duration) => {
-        let imageList = []
-        const n = Math.floor(duration*2)+1
-        for (let i = 0; i<n; i++){
-            const s1 = new Array(1).fill("00_talk01.jpg")
-            const s2 = new Array(1).fill("00_base.jpg")
-            imageList = imageList.concat(s1)
-            imageList = imageList.concat(s2)
+    const createSlides = (frame) => {
+        let imageArray = []
+        switch (initialSlides) {
+            case "AI-con_man_01.png":
+                imageArray = ["AI-con_man_02.png","AI-con_man_01.png"]
+                break;
+            case "AI-con_man2_01.png":
+                imageArray = ["AI-con_man2_02.png","AI-con_man2_01.png"]
+                break;
+            case "AI-con_woman_01.png":
+                imageArray = ["AI-con_woman_02.png","AI-con_woman_01.png"]
+                break;
+            case "AI-con_woman2_01.png":
+                imageArray = ["AI-con_woman2_02.png","AI-con_woman2_01.png"]
+                break;
+            default:
+                imageArray = ["AI-con_man_02.png","AI-con_man_01.png"]
+                break;
         }
-        const s = new Array(1).fill("00_base.jpg")
-        imageList = imageList.concat(s)
 
+        let imageList = []
+        const n = Math.floor(eventData.frame/44100/2)+1
+        for (let i = 0; i<n; i++){
+            imageList = imageList.concat(imageArray)
+        }
+        imageList = imageList.concat(initialSlides)
         return imageList
     }
 
@@ -348,11 +359,11 @@ export default function Aicon() {
             入力クリア(clear)
             </button>)}
         {canSend ? (
-            <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-sm" onClick={(event) => onSubmit(event)}>
+            <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-sm" onClick={() => getAnswer()}>
             <Send />
             送信(send)
             </button>):(
-            <button className="flex items-center ml-5 mx-auto border-2 bg-slate-200 text-slate-400 p-2 text-sm" disabled={true} onClick={(event) => onSubmit(event)}>
+            <button className="flex items-center ml-5 mx-auto border-2 bg-slate-200 text-slate-400 p-2 text-sm">
             <Send />
             送信(send)
             </button>
