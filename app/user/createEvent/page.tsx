@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { db } from "@/firebase"
 import { doc, getDoc, collection, setDoc, updateDoc, arrayUnion } from "firebase/firestore"
 import { Sidebar } from "../../components/sideBar"
+import {menuItems} from "../../components/menuData"
 import EventOption from "../../components/eventOption"
 import { Circle, CircleDot } from 'lucide-react';
 
@@ -48,7 +49,7 @@ export default function CreateEvent(){
             alert("イベント名が記入されていません")
             console.log("イベント名が記入されていません")
             return false
-        } else if (events.length == 0){
+        } else if (!events){
             return true
         } else if (events.includes(newEvent)){
             alert("既に同じ名前のイベントが登録されています")
@@ -191,7 +192,7 @@ export default function CreateEvent(){
     return (
         <div className="flex">
         <div>
-            <Sidebar />
+            <Sidebar menuItems={menuItems} />
         </div>
         <div className="ml-64 p-8 w-full">
             <div>

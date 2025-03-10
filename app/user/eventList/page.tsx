@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { db } from "@/firebase"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import {Sidebar} from "../../components/sideBar"
+import {menuItems} from "../../components/menuData"
 import EventsList from "../../components/eventsList"
 import QADataList from "../../components/qADataList"
 
@@ -114,7 +115,9 @@ export default function EventList(){
     },[eventsData])
 
     useEffect(() => {
-        loadEventsData()
+        if (events){
+            loadEventsData()
+        }
     },[events])
 
     useEffect(() => {
@@ -130,7 +133,7 @@ export default function EventList(){
     return (
         <div className="flex">
         <div>
-            <Sidebar />
+            <Sidebar menuItems={menuItems} />
         </div>
         <div className="ml-64 p-8 w-full">
             <div>

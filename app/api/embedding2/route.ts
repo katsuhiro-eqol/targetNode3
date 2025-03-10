@@ -29,26 +29,36 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
         const data = await response.json();
         const decoded = decode(data.data.translations[0].translatedText)
         console.log(decoded)
-        getEmbedding(decoded, model)
+        try {
+            const response = await openai.embeddings.create({
+            model: model,
+            input: decoded,
+            encoding_format: "float",
+            });
+    
+            const embedding = response.data[0].embedding;
+            const buffer = new Float32Array(embedding);
+            const vectorBase64 = Buffer.from(buffer.buffer).toString('base64');
+            return NextResponse.json({ prompt: input, embedding: vectorBase64 });
+        } catch (error) {
+            return NextResponse.json({ embedding: error });
+        }        
     } else {
-        getEmbedding(input, model)
+        try {
+            console.log(input)
+            const response = await openai.embeddings.create({
+            model: model,
+            input: input,
+            encoding_format: "float",
+            });
+    
+            const embedding = response.data[0].embedding;
+            const buffer = new Float32Array(embedding);
+            const vectorBase64 = Buffer.from(buffer.buffer).toString('base64');
+            return NextResponse.json({ prompt: input, embedding: vectorBase64 });
+        } catch (error) {
+            return NextResponse.json({ embedding: error });
+        }        
     }
 }
 
-async function getEmbedding(input, model){
-    try {
-        const response = await openai.embeddings.create({
-        model: model,
-        input: input,
-        encoding_format: "float",
-        });
-
-        const embedding = response.data[0].embedding;
-        const buffer = new Float32Array(embedding);
-        const vectorBase64 = Buffer.from(buffer.buffer).toString('base64');
-
-        return NextResponse.json({ prompt: input, embedding: vectorBase64 });
-    } catch (error) {
-        return NextResponse.json({ embedding: error });
-    }
-}

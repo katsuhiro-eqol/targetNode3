@@ -3,9 +3,9 @@ import React from "react";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MenuItem } from './menuItem';
-import Link from 'next/link';
 import { Home, Users, HardDriveUpload, BriefcaseBusiness, LogOut, NotebookText } from 'lucide-react';
 
+/*
 const menuItems = [
   {
     title: 'ホーム',
@@ -58,8 +58,9 @@ const menuItems = [
     submenu: false
   }
 ];
+*/
 
-export const Sidebar = () => {
+export const Sidebar = ({menuItems}) => {
     const [activeItem, setActiveItem] = useState('');
     const [currentUser, setCurrentUser] = useState<string>("")
     const router = useRouter()

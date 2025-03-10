@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {Sidebar} from "../../components/sideBar"
+import {menuItems} from "../../components/menuData"
 import UploadFiles from "../../components/uploadFiles"
 import { db, storage } from "@/firebase"
 import { doc, getDoc, getDocs, collection, setDoc, query, where, updateDoc } from "firebase/firestore"
@@ -375,23 +376,18 @@ export default function RegisterCSV(props) {
         } else if (aList.length != qaCount){
             alert("answerに欠損があります")
             return false
-        } else if (qList.includes("分類不能の場合")){
-            alert("「分類不能の場合」のQ&Aがありません")
+        } else if (!qList.includes("分類できなかった質問")){
+            alert("「分類できなかった質問」のQ&Aがありません")
             return false
         } else {
             return true
         }
     }
 
-    useEffect(() => {
-        const judge = judgeNewQA()
-        if (judge){
+    useEffect(() => {        //const judge = judgeNewQA()
+        if (jsonData){
             setIsSecondStep(false)
-
-        } else {
-            setJsonData([])
-            alert("CSVファイルを修正して再登録してください")
-
+            console.log(jsonData.length)
             const array1 = jsonData.map(item => item.modal_file)
             const array2 = array1.filter(item => item != "")
             const array3 = [...new Set(array2)]
@@ -402,6 +398,11 @@ export default function RegisterCSV(props) {
             } else if (array3.length == 0 && jsonData.length > 0) {
                 setIsReady(true)
             }
+
+        } else {
+            setJsonData([])
+            alert("CSVファイルを修正して再登録してください")
+            console.log("csvエラー")
         }
     }, [jsonData])
 
@@ -411,11 +412,13 @@ export default function RegisterCSV(props) {
     }, [modalData])
 
     useEffect(() => {
-        loadEventData()
-        setJsonData([])
-        setIsThirdStep(false)
-        setIsModal(false)
-        setModalData([])
+        if (event){
+            loadEventData()
+            setJsonData([])
+            setIsThirdStep(false)
+            setIsModal(false)
+            setModalData([])
+        }
     }, [event])
 
     useEffect(() => {
@@ -440,7 +443,7 @@ export default function RegisterCSV(props) {
     return (
         <div className="flex">
             <div>
-                <Sidebar />
+                <Sidebar menuItems={menuItems} />
             </div>
             <div className="ml-64 p-8 w-full">
             <div>
