@@ -57,7 +57,7 @@ export default function EventList(){
                         id: id,
                         name: item,
                         code: data.code,
-                        image: data.image,
+                        image: data.image.name,
                         voice: data.voice,
                         languages: lang,
                         period: period,

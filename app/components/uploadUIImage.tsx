@@ -1,10 +1,10 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { db } from "@/firebase"
-import { doc, getDoc, collection, setDoc, updateDoc, arrayUnion } from "firebase/firestore"
+import { doc,setDoc } from "firebase/firestore"
 
-import { FileText, Image, File, X, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Image, File, X, AlertCircle } from 'lucide-react';
 
 export default function UploadUIImage({organization, setIsOriginal, uiOption, setUiOption}) {
   const [files, setFiles] = useState([]);

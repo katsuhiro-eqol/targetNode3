@@ -4,7 +4,7 @@ import { useDropzone } from 'react-dropzone';
 import {Sidebar} from "../../components/sideBar"
 import {menuItems} from "../../components/menuData"
 import UploadFiles from "../../components/uploadFiles"
-import { db, storage } from "@/firebase"
+import { db } from "@/firebase"
 import { doc, getDoc, getDocs, collection, setDoc, query, where, updateDoc } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import md5 from 'md5';

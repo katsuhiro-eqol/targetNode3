@@ -162,7 +162,7 @@ export default function CreateEvent(){
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const value = sessionStorage.getItem('user');
+            //const value = sessionStorage.getItem('user');
             const org = sessionStorage.getItem("user")
             console.log("user", org)
             setOrganization(org)
@@ -188,6 +188,11 @@ export default function CreateEvent(){
     useEffect(() => {
         console.log(image)
     },[image])
+
+    useEffect(() => {
+        console.log(startTime)
+        console.log(endTime)
+    }, [startTime, endTime])
 
     return (
         <div className="flex">
@@ -247,7 +252,7 @@ export default function CreateEvent(){
             </div>
             <div className="text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
             {isEventOption && (
-                <EventOption organization={organization} image={image} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
+                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
             )}
                        
             <div className="flex flex-row gap-x-4">

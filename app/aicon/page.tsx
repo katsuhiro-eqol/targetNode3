@@ -21,7 +21,8 @@ type Message = {
   };
 
 export default function Aicon() {
-    const initialSlides = new Array(1).fill("AI-con_man_01.png")
+    const [initialSlides, setInitialSlides] = useState<string[]>(["AI-con_man_01.png"])
+    //const initialSlides = new Array(1).fill("AI-con_man_01.png")
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
     const [prompt, setPrompt] = useState<string>("")
@@ -57,8 +58,9 @@ export default function Aicon() {
     const code = searchParams.get("code");
 
     async function getAnswer() {
-        const today = new Date()
+        
         /*
+        const today = new Date()
         if (today.getTime() > endLimit){
             alert("アプリ利用期間が終わりました")
             setUserInput("")
@@ -66,6 +68,7 @@ export default function Aicon() {
             return
         }
         */
+        sttStop()
         setWavUrl(no_sound)
         setRecord(false)
         setCanSend(false)//同じInputで繰り返し送れないようにする
@@ -221,7 +224,7 @@ export default function Aicon() {
             const memocode = data.code
             if (memocode == code){
                 const event_data = {
-                    image:data.image,
+                    image:data.image.name,
                     languages:data.languages,
                     voice:data.voice,
                     embeddingModel:data.embedding,
@@ -244,13 +247,13 @@ export default function Aicon() {
     }
     
     const talkStart = async () => {
-    audioPlay()
-    setWavReady(true)
-    sttStart()
-    setTimeout(() => {
-        sttStop()
-        resetTranscript()
-    }, 500);
+        audioPlay()
+        setWavReady(true)
+        sttStart()
+        setTimeout(() => {
+            sttStop()
+            resetTranscript()
+        }, 500);
     }
 
     const audioPlay = () => {
@@ -258,6 +261,11 @@ export default function Aicon() {
             console.log(error)
         })
         setCurrentIndex(0)
+    }
+
+    const inputClear = () => {
+        sttStop()
+        setUserInput("")
     }
 
     const sttStart = () => {
@@ -292,6 +300,8 @@ export default function Aicon() {
     useEffect(() => {
         console.log(eventData)
         getLanguageList()
+        const s = new Array(1).fill(eventData.image)
+        setInitialSlides(s)
     }, [eventData])
     
     useEffect(() => {

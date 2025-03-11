@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+//import { useSearchParams } from "next/navigation";
 import {Sidebar} from "../components/sideBar"
 import {menuItems} from "../components/menuData"
 
@@ -10,7 +10,6 @@ export default function User(){
 
 
     useEffect(() => {
-
         console.log("storage", sessionStorage.getItem("user"))
     }, [])
 

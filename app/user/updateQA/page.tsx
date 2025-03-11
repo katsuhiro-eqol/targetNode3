@@ -1,8 +1,8 @@
 "use client"
 import React from "react";
-import { useState, useEffect } from "react";
-import { storage } from "@/firebase"
-import { ref, getDownloadURL } from "firebase/storage";
+//import { useState, useEffect } from "react";
+//import { storage } from "@/firebase"
+//import { ref, getDownloadURL } from "firebase/storage";
 import {Sidebar} from "../../components/sideBar"
 import {menuItems} from "../../components/menuData"
 

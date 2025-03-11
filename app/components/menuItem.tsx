@@ -3,7 +3,7 @@ import React from "react";
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronRight, Home, Settings, Users, FileText, BarChart2 } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 
 export const MenuItem = ({ item, isActive, setActiveItem }) => {

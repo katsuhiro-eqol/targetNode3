@@ -1,7 +1,7 @@
 "use client"
 import React from "react";
 import { useState, useEffect } from "react";
-import { db, storage } from "@/firebase"
+import { db } from "@/firebase"
 import { doc, getDoc, getDocs, collection, setDoc, deleteDoc } from "firebase/firestore"
 import {Sidebar} from "../../components/sideBar"
 import {menuItems} from "../../components/menuData"

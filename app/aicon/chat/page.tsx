@@ -5,7 +5,7 @@ import Head from "next/head";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Mic, Send, Eraser } from 'lucide-react';
+import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import Modal from "../../components/modalModal"
@@ -16,16 +16,15 @@ const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-3945
 type Message = {
     id: string;
     text: string;
-    sender: 'user' | 'other';
-    timestamp: Date;
+    sender: 'user' | 'AIcon';
+    modalUrl: string | null;
+    modalFile: string | null;
   };
 
 export default function Aicon() {
-    const initialSlides = new Array(1).fill("AI-con_man_01.png")
+    const [initialSlides, setInitialSlides] = useState<string[]>(["/AI-con_man_01.png"])
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
-    const [prompt, setPrompt] = useState<string>("")
-    const [result, setResult] = useState<string>("")
     const [eventData, setEventData] = useState({})
     const [langList, setLangList] = useState([])
     const [language, setLanguage] = useState<string>("日本語")
@@ -40,9 +39,10 @@ export default function Aicon() {
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string|null>(null)
     const [modalFile, setModalFile] = useState<string|null>(null)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
-    const [endLimit, setEndLimit] = useState<number>(1767193199000) //2025-12-31
+    //const [endLimit, setEndLimit] = useState<number>(1767193199000) //2025-12-31
     const audioRef = useRef<HTMLAudioElement>(null)
     const intervalRef = useRef(null)
     const {
@@ -57,22 +57,24 @@ export default function Aicon() {
     const code = searchParams.get("code");
 
     async function getAnswer() {
-        const today = new Date()
-        /*
-        if (today.getTime() > endLimit){
-            alert("アプリ利用期間が終わりました")
-            setUserInput("")
-            setWavReady(false)
-            return
-        }
-        */
+        
+        sttStop()
         setWavUrl(no_sound)
         setRecord(false)
         setCanSend(false)//同じInputで繰り返し送れないようにする
-        setUserInput("")
         setSlides(initialSlides)
         setModalUrl(null)
         setModalFile(null)
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            text: userInput,
+            sender: 'user',
+            modalUrl:null,
+            modalFile:null,
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
 
         try {
             const response = await fetch("/api/embedding2", {
@@ -82,37 +84,66 @@ export default function Aicon() {
                 },
                 body: JSON.stringify({ input: userInput, model: eventData.embeddingModel, language: language }),
             });
-
+            setUserInput("")
             const data = await response.json();
             if (response.status !== 200) {
                 throw data.error || new Error(`Request failed with status ${response.status}`);
                 }
-            setPrompt(data.prompt)
             const similarityList = findMostSimilarQuestion(data.embedding)
 
-            if (similarityList.similarity > 0.5){
+            if (similarityList.similarity > 0.45){
                 console.log("voiceUrl:",embeddingsData[similarityList.index].voiceUrl)
                 setWavUrl(embeddingsData[similarityList.index].voiceUrl)
-                setResult(embeddingsData[similarityList.index].answer)
-                const sl = createSlides(embeddingsData[similarityList.index].frame)
-                console.log(sl)
-                setSlides(sl)
                 if (embeddingsData[similarityList.index].modalUrl){
-                    setModalUrl(embeddingsData[similarityList.index].modalUrl)
-                    setModalFile(embeddingsData[similarityList.index].modalFile)
+                    const aiMessage: Message = {
+                        id: Date.now().toString(),
+                        text: embeddingsData[similarityList.index].answer,
+                        sender: 'AIcon',
+                        modalUrl:embeddingsData[similarityList.index].modalUrl,
+                        modalFile:embeddingsData[similarityList.index].modalFile,
+                    };
+                    setMessages(prev => [...prev, aiMessage]);
+                } else {
+                    const aiMessage: Message = {
+                        id: Date.now().toString(),
+                        text: embeddingsData[similarityList.index].answer,
+                        sender: 'AIcon',
+                        modalUrl:null,
+                        modalFile:null,
+                    };
+                    setMessages(prev => [...prev, aiMessage]);
                 }
+                const sl = createSlides(embeddingsData[similarityList.index].frame)
+                setSlides(sl)
 
             }else{
                 const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できなかった質問")
                 const n = Math.floor(Math.random() * badQuestion.length)
                 setWavUrl(badQuestion[n].voiceUrl)
-                setResult(badQuestion[n].answer)
+                if (badQuestion[n].modalUrl){
+                    const aiMessage: Message = {
+                        id: Date.now().toString(),
+                        text: badQuestion[n].answer,
+                        sender: 'AIcon',
+                        modalUrl:badQuestion[n].modalUrl,
+                        modalFile:badQuestion[n].modalFile,
+                    };
+                    setMessages(prev => [...prev, aiMessage]);
+                } else {
+                    const aiMessage: Message = {
+                        id: Date.now().toString(),
+                        text: badQuestion[n].answer,
+                        sender: 'AIcon',
+                        modalUrl:null,
+                        modalFile:null,
+                    };
+                    setMessages(prev => [...prev, aiMessage]);
+                }                
                 const sl = createSlides(badQuestion[n].frame)
                 setSlides(sl)           
             }
             console.log(similarityList.similarity)
             console.log(embeddingsData[similarityList.index])
-
         } catch(error) {
         console.error(error);
         alert(error.message);
@@ -160,20 +191,20 @@ export default function Aicon() {
     const createSlides = (frame) => {
         let imageArray = []
         switch (initialSlides) {
-            case "AI-con_man_01.png":
-                imageArray = ["AI-con_man_02.png","AI-con_man_01.png"]
+            case ["/AI-con_man_01.png"]:
+                imageArray = ["/AI-con_man_02.png","/AI-con_man_01.png"]
                 break;
-            case "AI-con_man2_01.png":
-                imageArray = ["AI-con_man2_02.png","AI-con_man2_01.png"]
+            case ["/AI-con_man2_01.png"]:
+                imageArray = ["/AI-con_man2_02.png","/AI-con_man2_01.png"]
                 break;
-            case "AI-con_woman_01.png":
-                imageArray = ["AI-con_woman_02.png","AI-con_woman_01.png"]
+            case ["/AI-con_woman_01.png"]:
+                imageArray = ["/AI-con_woman_02.png","/AI-con_woman_01.png"]
                 break;
-            case "AI-con_woman2_01.png":
-                imageArray = ["AI-con_woman2_02.png","AI-con_woman2_01.png"]
+            case ["/AI-con_woman2_01.png"]:
+                imageArray = ["/AI-con_woman2_02.png","/AI-con_woman2_01.png"]
                 break;
             default:
-                imageArray = ["AI-con_man_02.png","AI-con_man_01.png"]
+                imageArray = ["/AI-con_man_02.png","/AI-con_man_01.png"]
                 break;
         }
 
@@ -221,7 +252,7 @@ export default function Aicon() {
             const memocode = data.code
             if (memocode == code){
                 const event_data = {
-                    image:data.image,
+                    image:data.image.url,
                     languages:data.languages,
                     voice:data.voice,
                     embeddingModel:data.embedding,
@@ -244,13 +275,13 @@ export default function Aicon() {
     }
     
     const talkStart = async () => {
-    audioPlay()
-    setWavReady(true)
-    sttStart()
-    setTimeout(() => {
-        sttStop()
-        resetTranscript()
-    }, 500);
+        audioPlay()
+        setWavReady(true)
+        sttStart()
+        setTimeout(() => {
+            sttStop()
+            resetTranscript()
+        }, 500);
     }
 
     const audioPlay = () => {
@@ -258,6 +289,11 @@ export default function Aicon() {
             console.log(error)
         })
         setCurrentIndex(0)
+    }
+
+    const inputClear = () => {
+        sttStop()
+        setUserInput("")
     }
 
     const sttStart = () => {
@@ -277,6 +313,12 @@ export default function Aicon() {
         console.log(japaneseName[e.target.value])
     }
 
+    const handleCloseWindow = () => {
+        if (typeof window !== "undefined") {
+          window.close()
+        }
+      }
+
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
@@ -290,8 +332,14 @@ export default function Aicon() {
     },[])
 
     useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages]);
+
+    useEffect(() => {
         console.log(eventData)
         getLanguageList()
+        const s = new Array(1).fill(eventData.image)
+        setInitialSlides(s)
     }, [eventData])
     
     useEffect(() => {
@@ -350,7 +398,7 @@ export default function Aicon() {
     }, [userInput])
 
   return (
-    <div className="w-full h-full bg-stone-100">
+    <div className="w-full h-full bg-stone-200">
         <div className="flex flex-col h-screen">
         <Head>
             <title>target</title>
@@ -359,39 +407,69 @@ export default function Aicon() {
       <div>
       {(wavReady) ? (
       <div className="flex flex-col h-screen">
-        <img className="max-w-full md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl mx-auto" src={slides[currentIndex]} alt="Image" />
-        <div className="mt-5 w-3/4 font-semibold mx-auto">{prompt}</div>
-        <div className="mt-5 w-3/4 font-bold mx-auto">{result}</div>
+        <img className="max-h-72 max-w-96 md:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl mx-auto" src={slides[currentIndex]} alt="Image" />
+
+        <div>
+        <div className="h-72 flex-1 p-4 overflow-y-auto">
+        {messages.map((message) => (
+          <div 
+            key={message.id} 
+            className={`mb-2 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div 
+              className={`max-w-xs p-3 rounded-lg ${
+                message.sender === 'user' 
+                  ? 'bg-blue-500 text-white rounded-br-none text-xs' 
+                  : 'bg-yellow-50 rounded-bl-none shadow text-xs'
+              }`}
+            >
+            <div className="flex flex-row gap-x-4 justify-center">
+              <p>{message.text}</p>
+              {message.modalUrl && <Paperclip size={16} onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
+            </div>
+            {isModal && (<Modal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile} />)}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+        </div>
         <div className="hidden">{currentIndex}</div>
+        <div className="absolute top-1 right-1" onClick={handleCloseWindow}>
+            <div className="flex flex-row gap-x-4 border-2 bg-white">
+            <X size={20} />
+            <div className="text-sm ml-1">終了</div>
+            </div>
+        </div>
         <div className="">
-        <div className="absolute bottom-6">
+        <div className="absolute bottom-4">
         <div className="flex flex-col w-screen">
-        <textarea className="w-5/6 mx-auto mb-5 px-2 py-1"
+        <textarea className="w-5/6 mx-auto mb-2 px-2 py-1 text-xs"
             type="text"
             name="message"
             placeholder="質問内容(question)"
-            rows="3"
+            rows="2"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
         />
         <div  className="flex flex-row gap-x-4 justify-center">
         {!record ?(     
-            <button className="flex items-center mr-5 mx-auto border-2 border-sky-600 p-2 text-sky-800 bg-white text-sm" disabled={!wavReady} onClick={sttStart}>
-            <Mic />
+            <button className="flex items-center mr-5 mx-auto border-2 border-sky-600 p-2 text-sky-800 bg-white text-xs rounded" disabled={!wavReady} onClick={sttStart}>
+            <Mic size={16} />
             音声入力(mic)
             </button>
         ):(
-            <button color="secondary" className="flex items-center mr-5 mx-auto text-sm " onClick={sttStop}>
-            <Eraser />
-            入力クリア(clear)
+            <button className="flex items-center mr-5 mx-auto text-xs border-2 bg-pink-600 text-white p-2 rounded" onClick={inputClear}>
+            <Eraser size={16} />
+            クリア(clear)
             </button>)}
         {canSend ? (
-            <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-sm rounded" onClick={() => getAnswer()}>
-            <Send />
+            <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-xs rounded" onClick={() => getAnswer()}>
+            <Send size={16} />
             送信(send)
             </button>):(
-            <button className="flex items-center ml-5 mx-auto border-2 bg-slate-200 text-slate-400 p-2 text-sm rounded">
-            <Send />
+            <button className="flex items-center ml-5 mx-auto border-2 bg-slate-200 text-slate-400 p-2 text-xs rounded">
+            <Send size={16}/>
             送信(send)
             </button>
             )}

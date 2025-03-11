@@ -3,7 +3,7 @@ import React from "react";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MenuItem } from './menuItem';
-import { Home, Users, HardDriveUpload, BriefcaseBusiness, LogOut, NotebookText } from 'lucide-react';
+//import { Home, Users, HardDriveUpload, BriefcaseBusiness, LogOut, NotebookText } from 'lucide-react';
 
 /*
 const menuItems = [

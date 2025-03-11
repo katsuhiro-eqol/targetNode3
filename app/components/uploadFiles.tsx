@@ -1,8 +1,8 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { FileText, Image, File, X, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Image, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function FileUploadPage({modal, setIsReady, setModalData, organization, event}) {
   const [files, setFiles] = useState([]);
