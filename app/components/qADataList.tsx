@@ -4,10 +4,15 @@ import {useState, useEffect} from "react"
 import ForeignModal from "./foreignModal"
 import ModalModal from "./modalModal"
 import ListenVoice from "./listenVoice"
+import { QaData, Foreign } from "@/types"
 
-export default function QADataList({qaData}){
+interface QADataProps {
+    qaData:QaData[];
+}
+
+export default function QADataList({qaData}: QADataProps){
     const [isForeign, setIsForeign] = useState<boolean>(false)
-    const [foreignData, setForeignData] = useState({})
+    const [foreignData, setForeignData] = useState<Foreign[]|null>(null)
     const [answer, setAnswer] = useState<string>("")
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string>("")
@@ -25,7 +30,7 @@ export default function QADataList({qaData}){
         { key: 'vector', label: 'Embedding' }
     ]
 
-    const showModal = (id) => {
+    const showModal = (id:string) => {
         const selectedData = qaData.filter((item) => item.id == id)
         const url = selectedData[0].modalUrl
         const file = selectedData[0].modalFile
@@ -36,17 +41,22 @@ export default function QADataList({qaData}){
         setModalFile(file)
     }
 
-    const showForeign = (id) => {
+    const showForeign = (id:string) => {
         console.log("foreign", id)
         const selectedData = qaData.filter((item) => item.id == id)
-        const foreign = selectedData[0].foreign
+        if (selectedData[0].foreign){
+            const foreign = selectedData[0].foreign
+            setForeignData(foreign)
+        } else {
+            setForeignData(null)
+        }
+        
         setIsForeign(true)
-        setForeignData(foreign)
+        
         setAnswer(selectedData[0].answer)
-        console.log(foreign)
     }
 
-    const listenVoice = (id) => {
+    const listenVoice = (id:string) => {
         const selectedData = qaData.filter((item) => item.id == id)
         const vUrl = selectedData[0].voiceUrl
         setIsAudio(true)
@@ -138,7 +148,7 @@ export default function QADataList({qaData}){
                                   </div>
                                   </td>
                             )
-                        }                        
+                        }           
                         return (
                         <td 
                             key={`${row.id}-${column.key}`}

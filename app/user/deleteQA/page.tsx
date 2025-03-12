@@ -84,7 +84,7 @@ export default function DeleteQA(){
         }
     }
 
-    const selectEvent = (e) => {
+    const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEvent(e.target.value);
         console.log(e.target.value);
     }
@@ -101,8 +101,9 @@ export default function DeleteQA(){
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
-        console.log(org)
-        setOrganization(org)
+        if (org){
+            setOrganization(org)
+        }
     },[])
 
     return (
@@ -114,7 +115,7 @@ export default function DeleteQA(){
             <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2">
             <div className="font-bold text-xl">Q&Aデータの初期化</div>
             <div className="text-base">QAデータを初期化するイベントを選択</div>
-            <select className="my-3 w-48 h-8 text-center border-2 border-lime-600" value={event} label="event" onChange={selectEvent}>
+            <select className="my-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}

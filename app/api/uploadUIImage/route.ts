@@ -4,8 +4,6 @@ import { storage } from '@/firebase'; // あなたのFirebase設定ファイル�
 
 // 許可するファイルタイプ
 const ALLOWED_FILE_TYPES = [
-  'application/pdf',
-  'text/plain',
   'image/jpeg',
   'image/png'
 ];

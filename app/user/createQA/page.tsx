@@ -7,14 +7,9 @@ import UploadFiles from "../../components/uploadFiles"
 import { db } from "@/firebase"
 import { doc, getDoc, getDocs, collection, setDoc, query, where, updateDoc } from "firebase/firestore"
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ModalFile, EventData, ForeignAnswers, CsvData } from "@/types"
 import md5 from 'md5';
 
-interface CsvData {
-  [key: string]: string;
-}
-interface ModalData {
-    [key: string]: string;
-}
 
 export default function RegisterCSV() {
     const [jsonData, setJsonData] = useState<CsvData[]>([]);
@@ -25,8 +20,8 @@ export default function RegisterCSV() {
     const [organization, setOrganization] = useState<string>("")
     const [isModal, setIsModal] = useState<boolean>(false)
     const [isReady, setIsReady] = useState<boolean>(false)
-    const [modalData, setModalData] = useState<ModalData[]>([])
-    const [eventData, setEventData] = useState({})
+    const [modalData, setModalData] = useState<ModalFile[]>([])
+    const [eventData, setEventData] = useState<EventData|null>(null)
     //const [translatedAnswers, setTranslatedAnswers] = useState({})
     const [isSecondStep, setIsSecondStep] = useState<boolean>(false)
     const [isThirdStep, setIsThirdStep] = useState<boolean>(true)
@@ -83,7 +78,7 @@ export default function RegisterCSV() {
         }
     });
 
-    const base64toBlob = (base64Data) => {
+    const base64toBlob = (base64Data: string) => {
         if (base64Data){
         const sliceSize = 1024
         const cleanedBase64 = base64Data.trim().replace(/\s/g, '')//追加
@@ -109,9 +104,12 @@ export default function RegisterCSV() {
         }
     }
 
-    const saveVoiceData = async(id, text, audioContent) => {
+    const saveVoiceData = async(id:string, text:string, audioContent:string) => {
         const blob = base64toBlob(audioContent)
         const frame = frameCount(audioContent)
+        if (!blob) {
+            return;
+        }
         const fileName = id + ".wav"
         const storage = getStorage()
         const path = "aicon_audio/" + fileName
@@ -126,7 +124,7 @@ export default function RegisterCSV() {
         });
     }
 
-    const updateVoiceDataToQADB = async (voiceId, frame, url) => {
+    const updateVoiceDataToQADB = async (voiceId:string, frame:number, url:string) => {
         const eventId = organization + "_" + event
         const data2 = {
             voiceUrl: url,
@@ -142,7 +140,7 @@ export default function RegisterCSV() {
           }
     }
 
-    const registrationVoiceData = async(id, frame, url, text) => {
+    const registrationVoiceData = async(id:string, frame:number, url:string, text:string) => {
         const fileName = id + ".wav"
         const data = {
             answer: text,
@@ -169,7 +167,7 @@ export default function RegisterCSV() {
                     headers: {
                     "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ answer: answer, voice: eventData.voice}),
+                    body: JSON.stringify({ answer: answer, voice: eventData?.voice}),
                 });
                 const audio = await response.json();
                 
@@ -189,7 +187,7 @@ export default function RegisterCSV() {
     }
 
     //EmbeddingをEventのサブコレクションQADBに登録
-    const registerQADB = async (foreinLang) => {
+    const registerQADB = async (foreinAnswers:ForeignAnswers) => {
         let count = 0
         for (const item of jsonData){
             if (item.id=="" || item.question=="" || item.answer==""){
@@ -202,12 +200,12 @@ export default function RegisterCSV() {
                       "Content-Type": "application/json",
                     },
                     //body: JSON.stringify({ input: userInput, character: character, fewShot: fewShot, previousData: previousData, sca: scaList[character] }),
-                    body: JSON.stringify({ input: item.question, model: eventData.embedding}),
+                    body: JSON.stringify({ input: item.question, model: eventData?.embedding}),
                   });
                 const embedding = await response.json()
 
                 const hashString = md5(item.answer)
-                const voiceId = eventData.voice + "-" + hashString
+                const voiceId = eventData?.voice + "-" + hashString
                 
                 let data2 = {}
                 if (item.modal_file){
@@ -220,7 +218,7 @@ export default function RegisterCSV() {
                         modalPath: modalList[0].path,
                         vector: embedding.embedding,
                         voiceId: voiceId,
-                        foreign:foreinLang[item.answer]
+                        foreign:foreinAnswers[item.answer]
                     }          
                 } else {
                     data2 = {
@@ -231,7 +229,7 @@ export default function RegisterCSV() {
                         modalPath: "",
                         vector: embedding.embedding,
                         voiceId: voiceId,
-                        foreign:foreinLang[item.answer]
+                        foreign:foreinAnswers[item.answer]
                     }          
                 }
                 const id = organization + "_" + event
@@ -251,10 +249,10 @@ export default function RegisterCSV() {
         setStatus("0%完了")
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
-        const languages = eventData.languages
+        const languages = eventData?.languages ?? ["日本語"]
         const translateLang = languages.filter((item) => item != "日本語")
 
-        const translated = {}
+        let translated:ForeignAnswers = {}
         for (const answer of answerSet){
             translated[answer] = []
             for (const language of translateLang){
@@ -295,7 +293,7 @@ export default function RegisterCSV() {
         }
     }
 
-    const frameCount = (base64Data) => {
+    const frameCount = (base64Data:string) => {
         const audioString = base64Data.replace(/-/g, '+').replace(/_/g, '/')
         const byteCharacters = atob(audioString)
         const bytesLength = byteCharacters.length
@@ -336,7 +334,14 @@ export default function RegisterCSV() {
                     if (data.qaData){
                         alert("既にデータ設定されています。新たなQAデータを登録される場合は、メニューよりQAデータ初期化を行なってください。")
                     } else{
-                        setEventData(data)
+                        const data3 = {
+                            image: data.image,
+                            languages: data.languages,
+                            voice: data.voice,
+                            embedding: data.embedding,
+                            qaData: data.qaData
+                        }
+                        setEventData(data3)
                     }
                 }
             } catch (error) {
@@ -346,7 +351,7 @@ export default function RegisterCSV() {
         }
     }
 
-    const selectEvent = (e) => {
+    const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEvent(e.target.value);
         console.log(e.target.value);
     }
@@ -430,17 +435,14 @@ export default function RegisterCSV() {
     }, [eventData])
 
     useEffect(() => {
-        console.log(translatedAnswers)
-    }, [translatedAnswers])
-
-    useEffect(() => {
         loadEvents()
     },[organization])
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
-        console.log(org)
-        setOrganization(org)
+        if (org){
+            setOrganization(org)
+        }
     },[])
 
     return (
@@ -453,7 +455,7 @@ export default function RegisterCSV() {
             <div className="font-bold text-xl my-3">CSVファイルからQ&Aデータベースを作成</div>
             <div className="text-base">ステップ１: イベント（Q&Aデータセット名）を選択</div>
             <div className="text-xs">（未設定の場合は「イベント管理」メニューから「イベント新規登録」を行なってください）</div>
-            <select className="my-3 w-48 h-8 text-center border-2 border-lime-600" value={event} label="event" onChange={selectEvent}>
+            <select className="my-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}

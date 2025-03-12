@@ -1,7 +1,13 @@
 "use client"
 import React from "react";
+import { Foreign } from "@/types"
 
-export default function ForeignModal({setIsForeign, foreignData, answer}){
+interface ForeignModalProps {
+    setIsForeign: (isForeign: boolean ) => void;
+    foreignData: Foreign[]|null;
+    answer: string;
+}
+export default function ForeignModal({setIsForeign, foreignData, answer}:ForeignModalProps){
 
     const closeModal = () => {
         setIsForeign(false)

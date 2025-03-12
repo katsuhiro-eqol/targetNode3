@@ -21,10 +21,12 @@ const vits_param = {
     }
 }
 
+type VoiceType = keyof typeof vits_param;
+
 export async function POST(req: NextRequest): Promise<NextResponse>  {
     const params = await req.json()
     const answer = params.answer
-    const voice = params.voice
+    const voice = params.voice as VoiceType
 
     //const audioString = processedString(answer)
     const hashString = md5(answer)

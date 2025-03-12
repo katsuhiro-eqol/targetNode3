@@ -1,16 +1,25 @@
 'use client';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-
 import { FileText, Image, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { ModalFile, FILE } from "@/types"
 
-export default function FileUploadPage({modal, setIsReady, setModalData, organization, event}) {
-  const [files, setFiles] = useState([]);
+interface FileUploadProps {
+  modal: string[];
+  setIsReady:(isReady:boolean) => void;
+  setModalData:(modalData:ModalFile[]) => void;
+  organization:string;
+  event:string;
+}
+
+
+export default function FileUploadPage({modal, setIsReady, setModalData, organization, event}:FileUploadProps) {
+  const [files, setFiles] = useState<FILE[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null); 
 
   // ファイルタイプに応じたアイコンを返す関数
-  const getFileIcon = (fileType) => {
+  const getFileIcon = (fileTyp:string) => {
     if (fileType.includes('pdf')) return <FileText className="h-8 w-8 text-red-500" />;
     if (fileType.includes('text')) return <FileText className="h-8 w-8 text-blue-500" />;
     if (fileType.includes('image')) return <Image className="h-8 w-8 text-green-500" />;
@@ -18,14 +27,14 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
   };
 
   // ファイルサイズをフォーマットする関数
-  const formatFileSize = (size) => {
+  const formatFileSize = (size: number) => {
     if (size < 1024) return size + ' B';
     else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
     else return (size / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   // ドロップゾーンの設定
-  const onDrop = useCallback((acceptedFiles) => {
+  const onDrop = useCallback((acceptedFiles:File[]) => {
     // 既存のファイルと新しいファイルを結合
     const newFiles = acceptedFiles.map(file => 
       Object.assign(file, {
@@ -51,7 +60,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
   });
 
   // ファイルリストから特定のファイルを削除
-  const removeFile = (index) => {
+  const removeFile = (index: number) => {
     setFiles(prevFiles => {
       const newFiles = [...prevFiles];
       // プレビューURLがある場合はメモリリークを防ぐためにリボークする
@@ -89,9 +98,6 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
         throw new Error('アップロードに失敗しました');
       }
       
-      // アップロード成功
-      setUploadStatus('success');
-      
       const data = await response.json()
       console.log(data.uploads)
       setModalData(data.uploads)
@@ -106,12 +112,10 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
         setIsReady(true)
         //元のページに戻る
         
-        
-      }, 3000);
+      }, 1000);
 
     } catch (error) {
       console.error('アップロードエラー:', error);
-      setUploadStatus('error');
     } finally {
       setUploading(false);
     }

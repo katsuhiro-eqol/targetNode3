@@ -1,7 +1,13 @@
 "use client"
 import React from "react";
 
-export default function ModalModal({setIsModal, modalUrl, modalFile}){
+interface ModalProps {
+    setIsModal: (isModal: boolean ) => void;
+    modalUrl: string;
+    modalFile: string;
+}
+
+export default function ModalModal({setIsModal, modalUrl, modalFile}: ModalProps){
 
     const closeModal = () => {
         setIsModal(false)

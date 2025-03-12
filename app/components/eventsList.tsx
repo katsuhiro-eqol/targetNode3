@@ -2,9 +2,15 @@
 import React from "react";
 import { useState, useEffect } from 'react';
 import { Circle, CircleDot } from 'lucide-react';
+import { Event } from "@/types"
 
-export default function EventsList({eventsData, setEventId}){
-    const [selectedRowId, setSelectedRowId] = useState(null)
+interface EventsListProps {
+    eventsData: Event[];
+    setEventId: (id: string | null) => void;
+}
+
+export default function EventsList({eventsData, setEventId}:EventsListProps){
+    const [selectedRowId, setSelectedRowId] = useState<string|null>(null)
     const [comment, setComment] = useState<string>("")
 
     const columns = [
@@ -13,11 +19,11 @@ export default function EventsList({eventsData, setEventId}){
         { key: 'code', label: 'コード' },
         { key: 'image', label: 'UI画像' },
         { key: 'voice', label: 'Voice' },
-        { key: 'languages', label: '対応外国語' },
+        { key: 'langString', label: '対応外国語' },
         { key: 'period', label: '利用期間' }
     ]
 
-    const toggleRowSelection = (rowId) => {
+    const toggleRowSelection = (rowId: string) => {
         if (selectedRowId === rowId) {
             setSelectedRowId(null); // 選択解除
         } else {
@@ -33,7 +39,7 @@ export default function EventsList({eventsData, setEventId}){
             setEventId(selectedRowId)
             setComment(event)
         } else {
-            setComment(`${event}はQ6Aデータ未登録です`)
+            setComment(`${event}はQ&Aデータ未登録です`)
         }
     }
 
@@ -104,7 +110,7 @@ export default function EventsList({eventsData, setEventId}){
             </table>
             <div>
                 <div className="flex flex-row gap-x-4">
-                <button className="bg-cyan-500 hover:bg-cyan-700 text-white ml-3 mt-3 px-2 py-1 rounded text-xs" onClick={() => loadQAData(selectedRowId)}>Q&Aデータ表示</button>
+                <button className="bg-cyan-500 hover:bg-cyan-700 text-white ml-3 mt-3 px-2 py-1 rounded text-xs" onClick={loadQAData}>Q&Aデータ表示</button>
                 <div className="ml-5 mt-3 px-2 py-1 text-base font-bold">{comment}</div>
                 </div>
             </div>

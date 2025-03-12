@@ -4,9 +4,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { MenuItem } from "@/types"
 
+interface MenuProps {
+  item: MenuItem;
+  isActive: string;
+  setActiveItem: (activeItem: string) => void;
+}
 
-export const MenuItem = ({ item, isActive, setActiveItem }) => {
+export default function MenuITEM({ item, isActive, setActiveItem }: MenuProps){
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter()
   
@@ -19,7 +25,7 @@ export const MenuItem = ({ item, isActive, setActiveItem }) => {
         }
       } else {
         setActiveItem(item.title);
-        router.push(item.path);
+        router.push(item.path!);
       }
     };
   
@@ -45,7 +51,7 @@ export const MenuItem = ({ item, isActive, setActiveItem }) => {
         {/* サブメニュー */}
         {item.submenu && isOpen && (
           <div className="ml-6 mt-2 space-y-2">
-            {item.submenuItems.map((subItem, index) => (
+            {item.submenuItems?.map((subItem, index) => (
               <Link href={subItem.path} key={index}>
                 <div className="text-sm px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-100">
                   {subItem.title}

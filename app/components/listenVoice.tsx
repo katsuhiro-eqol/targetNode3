@@ -2,7 +2,13 @@
 import React from "react";
 import {useRef} from "react"
 
-export default function ListenVoice({voiceUrl, answer, setIsAudio}){
+interface VoiceProps {
+    voiceUrl: string;
+    answer: string;
+    setIsAudio: (isAudio: boolean ) => void;
+}
+
+export default function ListenVoice({voiceUrl, answer, setIsAudio}:VoiceProps){
     const audioRef = useRef(null)
 
     const closeAudio = () => {

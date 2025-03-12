@@ -5,14 +5,26 @@ import { db } from "@/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import UIOption from "./uiOption"
 import { Circle, CircleDot } from 'lucide-react';
-
+import { Image } from "@/types"
 const yearOption = ["2025", "2026", "2027", "2028"]
 const monthOption = ["01","02","03","04","05","06","07","08","09","10","11","12"]
 const dayOption = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"]
 const hourOption =["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"]
 
-export default function EventOption({organization, setImage, setStartTime, setEndTime}){
-    const [uiOption, setUiOption] = useState<string[]>([])
+interface EventOptionProps {
+    organization: string;
+    setImage: (image: string) => void;
+    setStartTime: (strtTime: string) => void;
+    setEndTime: (endTime: string) => void;
+}
+/*
+interface Image {
+    [key: string]: string;
+}
+    */
+
+export default function EventOption({organization, setImage, setStartTime, setEndTime}: EventOptionProps){
+    const [uiOption, setUiOption] = useState<Image[]>([])
     const [noLimitStart, setNoLimitStart] = useState<boolean>(true)
     const [noLimitEnd, setNoLimitEnd] = useState<boolean>(true)
     const [startYear, setStartYear] = useState<string>(yearOption[0])
@@ -40,42 +52,42 @@ export default function EventOption({organization, setImage, setStartTime, setEn
             console.log(error)
         }        
     }
-    const selectStartYear = (e) => {
+    const selectStartYear = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setStartYear(e.target.value)
         const start = `${e.target.value}-${startMonth}-${startDay}T${startHour}:00`
         setStartTime(start)
     }
-    const selectEndYear = (e) => {
+    const selectEndYear = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEndYear(e.target.value)
         const end = `${e.target.value}-${endMonth}-${endDay}T${endHour}:00`
         setEndTime(end)
     }
-    const selectStartMonth = (e) => {
+    const selectStartMonth = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setStartMonth(e.target.value)
         const start = `${startYear}-${e.target.value}-${startDay}T${startHour}:00`
         setStartTime(start)
     }
-    const selectEndMonth = (e) => {
+    const selectEndMonth = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEndMonth(e.target.value)
         const end = `${endYear}-${e.target.value}-${endDay}T${endHour}:00`
         setEndTime(end)        
     }
-    const selectStartDay = (e) => {
+    const selectStartDay = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setStartDay(e.target.value)
         const start = `${startYear}-${startMonth}-${e.target.value}T${startHour}:00`
         setStartTime(start)
     }
-    const selectEndDay = (e) => {
+    const selectEndDay = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEndDay(e.target.value)
         const end = `${endYear}-${endMonth}-${e.target.value}T${endHour}:00`
         setEndTime(end)        
     }
-    const selectStartHour = (e) => {
+    const selectStartHour = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setStartHour(e.target.value)
         const start = `${startYear}-${startMonth}-${startDay}T${e.target.value}:00`
         setStartTime(start)
     }
-    const selectEndHour = (e) => {
+    const selectEndHour = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEndHour(e.target.value)
         const end = `${endYear}-${endMonth}-${endDay}T${e.target.value}:00`
         setEndTime(end)        
@@ -106,22 +118,22 @@ export default function EventOption({organization, setImage, setStartTime, setEn
                     <div className="mt-3 text-xs">指定なし</div>
                     <CircleDot className="mt-3 w-4 h-4 text-blue-500" />
                     <div className="mt-3 text-xs">設定</div>
-                    <select className="ml-8 my-3 w-20 h-5 text-xs text-center border-2" value={startYear} label="endYear" onChange={selectStartYear}>
+                    <select className="ml-8 my-3 w-20 h-5 text-xs text-center border-2" value={startYear} onChange={selectStartYear}>
                     {yearOption.map((year) => {
                     return <option key={year} value={year}>{year}</option>;
                     })}
                     </select>
-                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={startMonth} label="endMonth" onChange={selectStartMonth}>
+                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={startMonth} onChange={selectStartMonth}>
                     {monthOption.map((month) => {
                     return <option key={month} value={month}>{month}</option>;
                     })}
                     </select>
-                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={startDay} label="endDay" onChange={selectStartDay}>
+                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={startDay} onChange={selectStartDay}>
                     {dayOption.map((day) => {
                     return <option key={day} value={day}>{day}</option>;
                     })}
                     </select>
-                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={startHour} label="endHour" onChange={selectStartHour}>
+                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={startHour} onChange={selectStartHour}>
                     {hourOption.map((hour) => {
                     return <option key={hour} value={hour}>{hour}</option>;
                     })}
@@ -144,22 +156,22 @@ export default function EventOption({organization, setImage, setStartTime, setEn
                     <div className="mt-4 text-xs">指定なし</div>
                     <CircleDot className="mt-4 w-4 h-4 text-blue-500" />
                     <div className="mt-4 text-xs">設定</div>
-                    <select className="ml-8 my-3 w-20 h-5 text-xs text-center border-2" value={endYear} label="endYear" onChange={selectEndYear}>
+                    <select className="ml-8 my-3 w-20 h-5 text-xs text-center border-2" value={endYear} onChange={selectEndYear}>
                     {yearOption.map((year) => {
                     return <option key={year} value={year}>{year}</option>;
                     })}
                     </select>
-                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={endMonth} label="endMonth" onChange={selectEndMonth}>
+                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={endMonth} onChange={selectEndMonth}>
                     {monthOption.map((month) => {
                     return <option key={month} value={month}>{month}</option>;
                     })}
                     </select>
-                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={endDay} label="endDay" onChange={selectEndDay}>
+                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={endDay} onChange={selectEndDay}>
                     {dayOption.map((day) => {
                     return <option key={day} value={day}>{day}</option>;
                     })}
                     </select>
-                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={endHour} label="endHour" onChange={selectEndHour}>
+                    <select className="my-3 w-20 h-5 text-xs text-center border-2" value={endHour} onChange={selectEndHour}>
                     {hourOption.map((hour) => {
                     return <option key={hour} value={hour}>{hour}</option>;
                     })}

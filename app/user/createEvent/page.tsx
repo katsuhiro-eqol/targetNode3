@@ -74,7 +74,7 @@ export default function CreateEvent(){
         }
     }
 
-    const randomStr = (length) => {
+    const randomStr = (length: number) => {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
         for (let i = 0; i < length; i++) {
@@ -118,27 +118,21 @@ export default function CreateEvent(){
         }
     }
 
-    // 選択されたオプションを管理する状態（配列）
-
-
-    // オプションがクリックされたときのハンドラー
     const handleOptionClick = (option: string) => {
         setSelectedOptions((prev) => {
         if (prev.includes(option)) {
-            // すでに選択されている場合は削除
             return prev.filter((item) => item !== option);
         } else {
-            // 選択されていない場合は追加
             return [...prev, option];
         }
         });
     };
 
-    const selectVoice =(e) => {
+    const selectVoice =(e: React.ChangeEvent<HTMLSelectElement>) => {
         setVoice(e.target.value)
     }
 
-    const selectOtherLanguage = (e) => {
+    const selectOtherLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (e.target.value == "その他"){
             return
         }
@@ -165,8 +159,9 @@ export default function CreateEvent(){
         if (typeof window !== 'undefined') {
             //const value = sessionStorage.getItem('user');
             const org = sessionStorage.getItem("user")
-            console.log("user", org)
-            setOrganization(org)
+            if (org){
+                setOrganization(org)
+            }
           }
     }, [])
     
@@ -226,7 +221,7 @@ export default function CreateEvent(){
                 <span className="ml-2 text-gray-700 text-sm">{option}</span>
                 </div>
             ))}
-            <select className="mx-8 my-3 w-20 h-4 text-xs text-center" value={other} label="other" onChange={selectOtherLanguage}>
+            <select className="mx-8 my-3 w-20 h-4 text-xs text-center" value={other} onChange={selectOtherLanguage}>
             {otherOptions.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}
@@ -240,7 +235,7 @@ export default function CreateEvent(){
                 </p>
             </div>
             <div className="font-semibold mt-5 text-sm ml-3">AIボイス</div>
-            <select className="my-3 w-48 h-8 text-sm text-center border-2 mb-6" value={voice} label="voice" onChange={selectVoice}>
+            <select className="my-3 w-48 h-8 text-sm text-center border-2 mb-6" value={voice} onChange={selectVoice}>
             {voiceList.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}

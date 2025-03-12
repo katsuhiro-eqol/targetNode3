@@ -9,10 +9,11 @@ import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Modal from "../components/modalModal"
-
+import {EmbeddingsData, EventData} from "@/types"
 //aicon_audio/no_sound.wav
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
+/*
 type EmbeddingsData = {
     vector: number[];
     question: string;
@@ -35,6 +36,7 @@ type EventData = {
 interface Image {
     [key: string]: string;
 }
+    */
 
 export default function Aicon() {
     const [initialSlides, setInitialSlides] = useState<string[]>(["/AI-con_man_01.png"])

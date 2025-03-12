@@ -7,14 +7,15 @@ import {Sidebar} from "../../components/sideBar"
 import {menuItems} from "../../components/menuData"
 import EventsList from "../../components/eventsList"
 import QADataList from "../../components/qADataList"
+import { Event, QaData } from "@/types"
 
 export default function EventList(){
     const [events, setEvents] = useState<string[]>([""]) //firestoreから読み込む
-    const [eventsData, setEventsData] = useState({})
+    const [eventsData, setEventsData] = useState<Event[]>([])
     //const [selectedRowId, setSelectedRowId] = useState(null)
-    const [eventId, setEventId] = useState<string>("")
+    const [eventId, setEventId] = useState<string|null>(null)
     const [organization, setOrganization] = useState<string>("")
-    const [qaData, setQaData] = useState([])
+    const [qaData, setQaData] = useState<QaData[]>([])
     const [isQAData, setIsQAData] = useState<boolean>(false)
 
 
@@ -44,7 +45,7 @@ export default function EventList(){
     }
 
     const loadEventsData = async () => {
-        const esData = []
+        const esData:Event[] = []
         for (const item  of events){
             try {
                 const id = organization + "_" + item
@@ -54,17 +55,18 @@ export default function EventList(){
                     const data = docSnap.data()
                     const lang = data.languages.toString()
                     const period = "開始日時：" + data.startTime + "〜  終了日時:" + data.endTime
-                    const eventData = {
+                    const eData:Event = {
                         id: id,
                         name: item,
                         code: data.code,
                         image: data.image.name,
                         voice: data.voice,
-                        languages: lang,
+                        languages: data.languages,
                         period: period,
-                        qaData:data.qaData
+                        qaData:data.qaData,
+                        langString:lang
                     }
-                    esData.push(eventData)
+                    esData.push(eData)
                 }
             } catch (error) {
                 console.log(error)
@@ -77,12 +79,12 @@ export default function EventList(){
     const loadQADB = async () => {
         if (eventId){
         const querySnapshot = await getDocs(collection(db, "Events", eventId, "QADB"));
-        const qa = []
+        const qa:QaData[] = []
         querySnapshot.forEach((doc) => {
             const data = doc.data()
             console.log(data.foreign)
             const vector = data.vector.substr(0,10) + "..."
-            const qadata = {
+            const qadata:QaData = {
                 id: doc.id,
                 code:data.code,
                 question:data.question,
@@ -96,7 +98,7 @@ export default function EventList(){
             }
             qa.push(qadata)
           })
-          qa.sort((a, b) => a.id - b.id);
+          qa.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id));
           setQaData(qa)
         }
     }
@@ -128,8 +130,9 @@ export default function EventList(){
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
-        console.log(org)
-        setOrganization(org)
+        if (org){
+            setOrganization(org)
+        }
     },[])
 
     return (

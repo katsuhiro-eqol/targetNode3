@@ -3,29 +3,39 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { db } from "@/firebase"
 import { doc,setDoc } from "firebase/firestore"
-
 import { Image, File, X, AlertCircle } from 'lucide-react';
+import { FILE } from "@/types"
 
-export default function UploadUIImage({organization, setIsOriginal, uiOption, setUiOption}) {
-  const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
+interface UploadUIImageProps {
+    organization: string;
+    setIsOriginal: (isOriginal:boolean) => void;
+    uiOption: Image[];
+    setUiOption:(uiOption:Image[]) => void;
+}
+interface Image {
+    [key: string]: string;
+}
+
+export default function UploadUIImage({organization, setIsOriginal, uiOption, setUiOption}:UploadUIImageProps) {
+  const [files, setFiles] = useState<FILE[]>([]);
+  const [uploading, setUploading] = useState<boolean>(false);
   //const [uploadStatus, setUploadStatus] = useState(null); 
 
   // ファイルタイプに応じたアイコンを返す関数
-  const getFileIcon = (fileType) => {
+  const getFileIcon = (fileType: string) => {
     if (fileType.includes('image')) return <Image className="h-8 w-8 text-green-500" />;
     return <File className="h-8 w-8 text-gray-500" />;
   };
 
   // ファイルサイズをフォーマットする関数
-  const formatFileSize = (size) => {
+  const formatFileSize = (size: number) => {
     if (size < 1024) return size + ' B';
     else if (size < 1024 * 1024) return (size / 1024).toFixed(1) + ' KB';
     else return (size / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   // ドロップゾーンの設定
-  const onDrop = useCallback((acceptedFiles) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     // 既存のファイルと新しいファイルを結合
     const newFiles = acceptedFiles.map(file => 
       Object.assign(file, {
@@ -49,7 +59,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
   });
 
   // ファイルリストから特定のファイルを削除
-  const removeFile = (index) => {
+  const removeFile = (index: number) => {
     setFiles(prevFiles => {
       const newFiles = [...prevFiles];
       // プレビューURLがある場合はメモリリークを防ぐためにリボークする
@@ -114,7 +124,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
     handleUpload()
   }
 
-  const saveUIImage = async (uploadData) => {
+  const saveUIImage = async (uploadData: Image[]) => {
     console.log(uploadData)
     const newImages = uiOption.concat(uploadData)
     console.log(newImages)

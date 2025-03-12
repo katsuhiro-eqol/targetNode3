@@ -2,15 +2,23 @@
 import React from "react";
 import { useState, useEffect } from 'react';
 import UploadUIImage from "./uploadUIImage"
+import { Image } from "@/types"
 
-export default function UiOption({uiOption, setUiOption, setImage, organization}){
+interface UiOptionProps {
+    uiOption: Image[];
+    setUiOption:(uiOption: Image[]) => void;
+    setImage:(image: string) => void;
+    organization: string;
+}
+
+export default function UiOption({uiOption, setUiOption, setImage, organization}:UiOptionProps){
     const [selectedIndex, setSelectedIndex] = useState<number>(0)
     const [isOriginal, setIsOriginal] = useState<boolean>(false)
-    const [originalImages, setOriginalImages] = useState([])
+    const [originalImages, setOriginalImages] = useState<Image|null>(null)
 
-    const selectUIImage = (n) => {
+    const selectUIImage = (n: number) => {
         setSelectedIndex(n)
-        setImage(uiOption[n])
+        setImage(uiOption[n].url)
     }
 
     useEffect(() => {
@@ -19,8 +27,10 @@ export default function UiOption({uiOption, setUiOption, setImage, organization}
     }, [uiOption])
 
     useEffect(() => {
-        const newImages = uiOption.concat(originalImages)
-        setUiOption(newImages)
+        if (originalImages){
+            const newImages = uiOption.concat(originalImages)
+            setUiOption(newImages)
+        }
     }, [originalImages])
 
     return (
@@ -40,7 +50,7 @@ export default function UiOption({uiOption, setUiOption, setImage, organization}
                 <button className="text-xs px-2 py-1 border-2 bg-slate-200 rounded" onClick={() => setIsOriginal(true)}>オリジナル画像を登録する</button>
             )}
             {isOriginal && (
-                <UploadUIImage organization={organization} setIsOriginal={setIsOriginal} setOriginalImages={setOriginalImages} uiOption={uiOption} setUiOption={setUiOption} />
+                <UploadUIImage organization={organization} setIsOriginal={setIsOriginal} uiOption={uiOption} setUiOption={setUiOption} />
             )}
         </div>
     )

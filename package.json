@@ -13,6 +13,7 @@
     "cookie": "^1.0.2",
     "firebase": "^11.3.1",
     "html-entities": "^2.5.2",
+    "html-to-image": "^1.11.13",
     "jose": "^6.0.6",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.475.0",
@@ -22,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
+    "react-qr-code": "^2.0.15",
     "react-speech-recognition": "^3.10.0",
     "regenerator-runtime": "^0.14.1"
   },
@@ -29,6 +31,7 @@
     "@eslint/eslintrc": "^3",
     "@types/cookie": "^1.0.0",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/md5": "^2.3.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
