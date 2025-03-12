@@ -9,7 +9,7 @@ import { Image, File, X, AlertCircle } from 'lucide-react';
 export default function UploadUIImage({organization, setIsOriginal, uiOption, setUiOption}) {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState(null); 
+  //const [uploadStatus, setUploadStatus] = useState(null); 
 
   // ファイルタイプに応じたアイコンを返す関数
   const getFileIcon = (fileType) => {
@@ -66,7 +66,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
     if (files.length === 0) return;
     
     setUploading(true);
-    setUploadStatus(null);
+    //setUploadStatus(null);
     
     try {
       // FormDataの作成
@@ -88,7 +88,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
       }
       
       // アップロード成功
-      setUploadStatus('success');
+      //setUploadStatus('success');
       
       const data = await response.json()
       await saveUIImage(data.uploads)
@@ -104,7 +104,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
 
     } catch (error) {
       console.error('アップロードエラー:', error);
-      setUploadStatus('error');
+      //setUploadStatus('error');
     } finally {
       setUploading(false);
     }

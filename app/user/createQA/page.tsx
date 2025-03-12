@@ -16,7 +16,7 @@ interface ModalData {
     [key: string]: string;
 }
 
-export default function RegisterCSV(props) {
+export default function RegisterCSV() {
     const [jsonData, setJsonData] = useState<CsvData[]>([]);
     const [error, setError] = useState<string>('');
     const [modalFiles, setModalFiles] = useState<string[]>([])
@@ -27,7 +27,7 @@ export default function RegisterCSV(props) {
     const [isReady, setIsReady] = useState<boolean>(false)
     const [modalData, setModalData] = useState<ModalData[]>([])
     const [eventData, setEventData] = useState({})
-    const [translatedAnswers, setTranslatedAnswers] = useState({})
+    //const [translatedAnswers, setTranslatedAnswers] = useState({})
     const [isSecondStep, setIsSecondStep] = useState<boolean>(false)
     const [isThirdStep, setIsThirdStep] = useState<boolean>(true)
     const [status, setStatus] = useState<string>("")
@@ -53,7 +53,8 @@ export default function RegisterCSV(props) {
 
         return result;
         } catch (error) {
-        throw new Error('CSVの解析に失敗しました');
+            console.log(error)
+            throw new Error('CSVの解析に失敗しました');
         }
     };
 
@@ -159,7 +160,7 @@ export default function RegisterCSV(props) {
     const registerVoice = async () => {
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
-        const answerCount = answerSet.size
+        //const answerCount = answerSet.size
         let n = 1
         for (const answer of answerSet){
             try {
@@ -253,7 +254,7 @@ export default function RegisterCSV(props) {
         const languages = eventData.languages
         const translateLang = languages.filter((item) => item != "日本語")
 
-        let translated = {}
+        const translated = {}
         for (const answer of answerSet){
             translated[answer] = []
             for (const language of translateLang){
@@ -285,11 +286,13 @@ export default function RegisterCSV(props) {
     }
 
     const registerToFirestore = async () => {
-        const translated = await registerForeignLang()
-        await registerQADB(translated)
-        await registerVoice()
-        await updateEventStatus()
-        setStatus("Q&Aデータベースの登録が完了しました")
+        if (judgeNewQA()){
+            const translated = await registerForeignLang()
+            await registerQADB(translated)
+            await registerVoice()
+            await updateEventStatus()
+            setStatus("Q&Aデータベースの登録が完了しました")
+        }
     }
 
     const frameCount = (base64Data) => {
@@ -337,6 +340,7 @@ export default function RegisterCSV(props) {
                     }
                 }
             } catch (error) {
+                console.log(error)
                 console.log("イベントデータ取得に失敗しました")
             }
         }
@@ -398,7 +402,6 @@ export default function RegisterCSV(props) {
             } else if (array3.length == 0 && jsonData.length > 0) {
                 setIsReady(true)
             }
-
         } else {
             setJsonData([])
             alert("CSVファイルを修正して再登録してください")

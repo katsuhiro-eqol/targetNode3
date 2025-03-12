@@ -44,7 +44,7 @@ export default function DeleteQA(){
                 if (docSnap.exists()) {
                     const data = docSnap.data()
                     if (data.qaData){
-                        let overwrite = confirm(`${event}のQAデータを初期化しますか？`)
+                        const overwrite = confirm(`${event}のQAデータを初期化しますか？`)
                         if (overwrite){
                             setIsInitialize(true)
                         }
@@ -53,6 +53,7 @@ export default function DeleteQA(){
                     }
                 }
             } catch (error) {
+                console.log(error)
                 console.log("イベントデータ取得に失敗しました")
             }
         }
@@ -78,7 +79,7 @@ export default function DeleteQA(){
                 await setDoc(doc(db, "Events", eventId), data, {merge:true})
                 setStatus(`${event}のQAデータ初期化を完了しました`)
             } catch (error) {
-
+                console.log(error)
             }
         }
     }

@@ -104,12 +104,14 @@ export async function POST(request: NextRequest) {
 }
 
 // ファイルのMIMEタイプからStorageのフォルダパスを取得する補助関数
+/*
 function getFolderByFileType(mimeType: string): string {
   if (mimeType.includes('pdf')) return 'pdf';
   if (mimeType.includes('text')) return 'text';
   if (mimeType.includes('image')) return 'images';
   return 'other';
 }
+  */
 /*
 import { NextRequest, NextResponse } from 'next/server';
 import {db} from "@/firebase"

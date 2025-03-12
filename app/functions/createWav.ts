@@ -1,3 +1,4 @@
+/*
 import { db } from "@/firebase"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 
@@ -46,3 +47,4 @@ export default async function CreateWav(voiceId:string){
     const audioUrl = URL.createObjectURL(blob)
     return audioUrl
 }
+    */

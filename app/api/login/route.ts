@@ -39,6 +39,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
             return NextResponse.json({ error: 'ユーザー登録されていません' }, { status: 401 });
         }
     } catch (error) {
+        console.log(error)
         return NextResponse.json({ error: 'サーバーエラー' }, { status: 500 });
     }
 }

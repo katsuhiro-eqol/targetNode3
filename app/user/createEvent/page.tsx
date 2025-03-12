@@ -27,7 +27,7 @@ export default function CreateEvent(){
     const options = ["英語", "中国語（簡体）", "中国語（繁体）", "韓国語"];
     const otherOptions = ["その他","フランス語","ポルトガル語","スペイン語"]
     const voiceList = ["bauncer", "silva"]
-    const uiOptions = ["AI-con_woman_01","AI-con_man_01","AI-con_woman_02","AI-con_man_02"]
+    //const uiOptions = ["AI-con_woman_01","AI-con_man_01","AI-con_woman_02","AI-con_man_02"]
 
     const loadEvents = async () => {
         try {           
@@ -110,6 +110,7 @@ export default function CreateEvent(){
                 await updateDoc(doc(usersRef, organization), {events: arrayUnion(newEvent)})
                 setComment("データ登録完了しました")
             } catch (error) {
+                console.log(error)
                 setComment("データ登録時にエラーが発生しました")
         }
         } else {
@@ -239,7 +240,7 @@ export default function CreateEvent(){
                 </p>
             </div>
             <div className="font-semibold mt-5 text-sm ml-3">AIボイス</div>
-            <select className="my-3 w-48 h-8 text-sm text-center border-2 mb-6" value={voice} label="other" onChange={selectVoice}>
+            <select className="my-3 w-48 h-8 text-sm text-center border-2 mb-6" value={voice} label="voice" onChange={selectVoice}>
             {voiceList.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}

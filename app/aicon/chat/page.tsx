@@ -1,13 +1,13 @@
 "use client"
 import "regenerator-runtime";
 import React from "react";
-import Head from "next/head";
+//import Head from "next/head";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
 import { db } from "@/firebase";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Modal from "../../components/modalModal"
 
 //aicon_audio/no_sound.wav
@@ -19,16 +19,38 @@ type Message = {
     sender: 'user' | 'AIcon';
     modalUrl: string | null;
     modalFile: string | null;
-  };
+}
+type EmbeddingsData = {
+    vector: number[];
+    question: string;
+    answer: string;
+    modalUrl: string;
+    modalFile: string;
+    foreign: Foreign;
+    voiceUrl: string;
+    frame: number;
+}
+interface Foreign {
+    [key: string]: string;
+}
+type EventData = {
+    image:Image;
+    languages:string[];
+    voice:string;
+    embedding:string;
+}
+interface Image {
+    [key: string]: string;
+}
 
 export default function Aicon() {
     const [initialSlides, setInitialSlides] = useState<string[]>(["/AI-con_man_01.png"])
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
-    const [eventData, setEventData] = useState({})
-    const [langList, setLangList] = useState([])
+    const [eventData, setEventData] = useState<EventData|null>(null)
+    const [langList, setLangList] = useState<string[]>([])
     const [language, setLanguage] = useState<string>("日本語")
-    const [embeddingsData, setEmbeddingsData] = useState([])
+    const [embeddingsData, setEmbeddingsData] = useState<EmbeddingsData[]>([])
     //wavUrl：cloud storageのダウンロードurl。初期値は無音ファイル。これを入れることによって次からセッティングされるwavUrlで音がなるようになる。
     const [wavUrl, setWavUrl] = useState<string>(no_sound);
     const [slides, setSlides] = useState<string[]>(initialSlides)
@@ -39,22 +61,21 @@ export default function Aicon() {
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string|null>(null)
     const [modalFile, setModalFile] = useState<string|null>(null)
+    const [convId, setConvId] = useState<string>("")
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
     //const [endLimit, setEndLimit] = useState<number>(1767193199000) //2025-12-31
     const audioRef = useRef<HTMLAudioElement>(null)
-    const intervalRef = useRef(null)
+    const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const {
         transcript,
-        listening,
-        resetTranscript,
-        browserSupportsSpeechRecognition
+        resetTranscript
     } = useSpeechRecognition();
 
-    const searchParams = useSearchParams();
-    const attribute = searchParams.get("attribute");
-    const code = searchParams.get("code");
+    const searchParams = useSearchParams()
+    const attribute = searchParams.get("attribute")
+    const code = searchParams.get("code")
 
     async function getAnswer() {
         
@@ -82,7 +103,7 @@ export default function Aicon() {
                 headers: {
                 "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ input: userInput, model: eventData.embeddingModel, language: language }),
+                body: JSON.stringify({ input: userInput, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
             });
             setUserInput("")
             const data = await response.json();
@@ -146,11 +167,10 @@ export default function Aicon() {
             console.log(embeddingsData[similarityList.index])
         } catch(error) {
         console.error(error);
-        alert(error.message);
         }
     }
 
-    function cosineSimilarity(vec1, vec2) {
+    function cosineSimilarity(vec1:number[], vec2:number[]) {
         if (vec1.length !== vec2.length) {
           throw new Error('ベクトルの次元数が一致しません');
         }
@@ -163,7 +183,7 @@ export default function Aicon() {
         return dotProduct / (magnitude1 * magnitude2);
       }
     
-    function findMostSimilarQuestion(base64Data){
+    function findMostSimilarQuestion(base64Data:string){
         const inputVector = binaryToList(base64Data)
         const similarities = embeddingsData.map((item, index) => ({
             index,
@@ -175,7 +195,7 @@ export default function Aicon() {
         return similarities[0];
     }
 
-    function binaryToList(binaryStr){
+    function binaryToList(binaryStr:string){
         const decodedBuffer = Buffer.from(binaryStr, 'base64')
         const embeddingsArray = new Float32Array(
             decodedBuffer.buffer, 
@@ -183,12 +203,11 @@ export default function Aicon() {
             decodedBuffer.byteLength / Float32Array.BYTES_PER_ELEMENT
           )
           const embeddingsList = Array.from(embeddingsArray)
-    
           return embeddingsList
     }
 
 
-    const createSlides = (frame) => {
+    const createSlides = (frame:number) => {
         let imageArray = []
         switch (initialSlides) {
             case ["/AI-con_man_01.png"]:
@@ -209,17 +228,17 @@ export default function Aicon() {
         }
 
         console.log(imageArray)
-        let imageList = []
+        let imageList:string[] = []
         const n = Math.floor(frame/44100*2)+2
         console.log("n:", n)
         for (let i = 0; i<n; i++){
             imageList = imageList.concat(imageArray)
         }
-        imageList = imageList.concat(initialSlides)
+        //imageList = imageList.concat(initialSlides)
         return imageList
     }
 
-    async function loadQAData(attr){
+    async function loadQAData(attr:string){
         try {
             const querySnapshot = await getDocs(collection(db, "Events",attr, "QADB"));
             const qaData = querySnapshot.docs.map((doc) => {
@@ -243,7 +262,7 @@ export default function Aicon() {
         }
     }
     
-    async function loadEventData(attribute, code){
+    async function loadEventData(attribute:string, code:string){
         console.log("event", attribute)
         const eventRef = doc(db, "Events", attribute);
         const eventSnap = await getDoc(eventRef);
@@ -255,7 +274,7 @@ export default function Aicon() {
                     image:data.image.url,
                     languages:data.languages,
                     voice:data.voice,
-                    embeddingModel:data.embedding,
+                    embedding:data.embedding,
                 }
                 setEventData(event_data)
                 loadQAData(attribute)
@@ -267,11 +286,24 @@ export default function Aicon() {
         }
     }
 
+    const createConvField = async (id:string, attr:string) => {
+        await setDoc(doc(db,"Events",attr,"Conversation",id), {"conversations":[]})
+    }
+
     const getLanguageList = () => {
-        if (eventData.languages){
-            const langs = eventData.languages.map((item) => {return nativeName[item]})
+        if (eventData?.languages){
+            const langs = eventData.languages.map((item) => {return nativeName[item as keyof typeof nativeName]})
             setLangList(langs)
         }
+    }
+
+    const randomStr = (length:number) => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
     }
     
     const talkStart = async () => {
@@ -285,10 +317,13 @@ export default function Aicon() {
     }
 
     const audioPlay = () => {
-        audioRef.current.play().catch((error) => {
+        if (audioRef){
+        audioRef.current?.play().catch((error) => {
             console.log(error)
         })
+        }
         setCurrentIndex(0)
+    
     }
 
     const inputClear = () => {
@@ -307,39 +342,46 @@ export default function Aicon() {
         SpeechRecognition.stopListening()
     }
 
-    const selectLanguage = (e) => {
+    const selectLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setLanguage(e.target.value);
-        console.log(e.target.value);
-        console.log(japaneseName[e.target.value])
     }
 
-    const handleCloseWindow = () => {
-        if (typeof window !== "undefined") {
-          window.close()
-        }
-      }
+    const closeApp = () => {
+        console.log("close app")
+    }
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current !== null){
+                clearInterval(intervalRef.current);
+                intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
+            }
+            resetTranscript()
+        };
+    },[])
 
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
-        }
-        
-        return () => {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
-            resetTranscript()
-        };
-    },[])
+            const convid = randomStr(12)
+            console.log(convid)
+            if (!convId){
+                setConvId(convid)
+                createConvField(convid, attribute)
+            }
+        }        
+    }, [attribute, code])
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, [messages]);
 
     useEffect(() => {
-        console.log(eventData)
-        getLanguageList()
-        const s = new Array(1).fill(eventData.image)
-        setInitialSlides(s)
+        if (eventData){
+            getLanguageList()
+            const s = new Array(1).fill(eventData?.image)
+            setInitialSlides(s)
+        }
     }, [eventData])
     
     useEffect(() => {
@@ -353,13 +395,12 @@ export default function Aicon() {
         audioPlay()
         setCurrentIndex(0)
         if (slides.length !== 1){
-        if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
-            return;
-        }
-        //intervalはcreateBauncerSlides()に合わせる
-        intervalRef.current = setInterval(() => {
-            setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
-        }, 250)
+            if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
+                return;
+            }
+            intervalRef.current = setInterval(() => {
+                setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
+            }, 250)
 
         } else {
 
@@ -375,9 +416,11 @@ export default function Aicon() {
         if (currentIndex === slides.length-2 && currentIndex != 0){
             const s = initialSlides
             setCurrentIndex(0)
-            setSlides(s)
-            clearInterval(intervalRef.current);
-            intervalRef.current = null
+            setSlides(initialSlides)
+            if (intervalRef.current !== null){
+                clearInterval(intervalRef.current);
+                intervalRef.current = null
+            }
             if (modalUrl){
                 setIsModal(true)
             } 
@@ -400,10 +443,7 @@ export default function Aicon() {
   return (
     <div className="w-full h-full bg-stone-200">
         <div className="flex flex-col h-screen">
-        <Head>
-            <title>target</title>
-            Feature-Policy: autoplay 'self' https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/
-        </Head>
+
       <div>
       {(wavReady) ? (
       <div className="flex flex-col h-screen">
@@ -435,7 +475,7 @@ export default function Aicon() {
       </div>
         </div>
         <div className="hidden">{currentIndex}</div>
-        <div className="absolute top-1 right-1" onClick={handleCloseWindow}>
+        <div className="absolute top-1 right-1" onClick={closeApp}>
             <div className="flex flex-row gap-x-4 border-2 bg-white">
             <X size={20} />
             <div className="text-sm ml-1">終了</div>
@@ -445,10 +485,9 @@ export default function Aicon() {
         <div className="absolute bottom-4">
         <div className="flex flex-col w-screen">
         <textarea className="w-5/6 mx-auto mb-2 px-2 py-1 text-xs"
-            type="text"
             name="message"
             placeholder="質問内容(question)"
-            rows="2"
+            rows={2}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
         />
@@ -485,7 +524,7 @@ export default function Aicon() {
         <div className="flex flex-col h-screen">
         <button className="bg-cyan-500 hover:bg-cyan-700 text-white mx-auto mt-24 px-4 py-2 rounded text-base font-bold" onClick={() => {talkStart()}}>AIコンを始める</button>
         <div className="mx-auto mt-32 text-sm">使用言語(language)</div>
-        <select className="mt-3 mx-auto text-sm w-36 h-8 text-center border-2 border-lime-600" value={language} label="event" onChange={selectLanguage}>
+        <select className="mt-3 mx-auto text-sm w-36 h-8 text-center border-2 border-lime-600" value={language} onChange={selectLanguage}>
             {langList.map((lang, index) => {
             return <option key={index} value={lang}>{lang}</option>;
             })}
@@ -499,3 +538,9 @@ export default function Aicon() {
     </div>
   );
 }
+/*
+<Head>
+    <title>target</title>
+    Feature-Policy: autoplay 'self' https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/
+</Head>
+*/

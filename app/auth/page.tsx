@@ -23,12 +23,12 @@ export default function AUTH() {
               console.log(data)
               if (data.success){
                 sessionStorage.setItem("user", data.user)
-                const path = "/user"
                 router.push("/user")
               } else {
                 alert('認証に失敗しました');
               }
         } catch (error){
+            console.log(error)
             alert("認証エラー")
         }
     }

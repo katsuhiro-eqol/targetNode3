@@ -1,11 +1,6 @@
 "use client"
 import React from "react";
 import {useRef} from "react"
-//import { db } from "@/firebase"
-//import { doc, getDoc } from "firebase/firestore"
-//import createWav from "../functions/createWav"
-
-const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/setto%2Fno_sound.mp3?alt=media&token=99787bd0-3edc-4f9a-9521-0b73ad65eb0a"
 
 export default function ListenVoice({voiceUrl, answer, setIsAudio}){
     const audioRef = useRef(null)

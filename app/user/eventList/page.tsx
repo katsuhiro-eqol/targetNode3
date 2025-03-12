@@ -35,6 +35,7 @@ export default function EventList(){
             }
         }
         } catch (error) {
+            console.log(error)
             alert("データベースエラー")
         }
         }else{
@@ -43,7 +44,7 @@ export default function EventList(){
     }
 
     const loadEventsData = async () => {
-        let esData = []
+        const esData = []
         for (const item  of events){
             try {
                 const id = organization + "_" + item
@@ -66,6 +67,7 @@ export default function EventList(){
                     esData.push(eventData)
                 }
             } catch (error) {
+                console.log(error)
                 console.log("イベントデータ取得に失敗しました")
             }     
         }
