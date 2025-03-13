@@ -19,11 +19,10 @@ export default function EventList(){
     const [isQAData, setIsQAData] = useState<boolean>(false)
 
 
-    const loadEvents = async () => {
-        if (organization){
+    const loadEvents = async (org:string) => {
         try {
-            if (organization){
-            const docRef = doc(db, "Users", organization)
+            if (org){
+            const docRef = doc(db, "Users", org)
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data()
@@ -37,10 +36,6 @@ export default function EventList(){
         }
         } catch (error) {
             console.log(error)
-            alert("データベースエラー")
-        }
-        }else{
-            
         }
     }
 
@@ -70,7 +65,6 @@ export default function EventList(){
                 }
             } catch (error) {
                 console.log(error)
-                console.log("イベントデータ取得に失敗しました")
             }     
         }
         setEventsData(esData)
@@ -82,7 +76,6 @@ export default function EventList(){
         const qa:QaData[] = []
         querySnapshot.forEach((doc) => {
             const data = doc.data()
-            console.log(data.foreign)
             const vector = data.vector.substr(0,10) + "..."
             const qadata:QaData = {
                 id: doc.id,
@@ -106,32 +99,34 @@ export default function EventList(){
     useEffect(() => {
         if (qaData.length > 0){
             setIsQAData(true)
-
         }
     }, [qaData])
 
     useEffect(() => {
-        loadQADB()
+        if (eventId){
+            loadQADB()
+        }
     }, [eventId])
 
+    /*
     useEffect(() => {
-        console.log(eventsData)
     },[eventsData])
-
+    */
     useEffect(() => {
         if (events){
             loadEventsData()
         }
     },[events])
-
+/*
     useEffect(() => {
         loadEvents()
     },[organization])
-
+*/
     useEffect(() => {
         const org = sessionStorage.getItem("user")
         if (org){
             setOrganization(org)
+            loadEvents(org)
         }
     },[])
 

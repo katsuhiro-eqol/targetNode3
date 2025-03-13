@@ -19,7 +19,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
   const [uploadStatus, setUploadStatus] = useState(null); 
 
   // ファイルタイプに応じたアイコンを返す関数
-  const getFileIcon = (fileTyp:string) => {
+  const getFileIcon = (fileType:string) => {
     if (fileType.includes('pdf')) return <FileText className="h-8 w-8 text-red-500" />;
     if (fileType.includes('text')) return <FileText className="h-8 w-8 text-blue-500" />;
     if (fileType.includes('image')) return <Image className="h-8 w-8 text-green-500" />;
@@ -101,9 +101,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
       const data = await response.json()
       console.log(data.uploads)
       setModalData(data.uploads)
-      
 
-      // アップロード成功後、ファイルリストをクリア
       setTimeout(() => {
         files.forEach(file => {
           if (file.preview) URL.revokeObjectURL(file.preview);
@@ -145,17 +143,17 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
       {/* ドロップゾーン */}
       <div 
         {...getRootProps()} 
-        className={`border-2 border-dashed rounded-lg p-8 mb-6 text-center cursor-pointer transition-colors
+        className={`border-2 border-dashed rounded-lg p-3 mb-3 text-center cursor-pointer transition-colors
           ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
       >
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center space-y-3">
+        <div className="flex flex-col items-center justify-center space-y-1">
           {isDragActive ? (
-            <p className="text-blue-500">ファイルをドロップしてください</p>
+            <p className="text-blue-500 text-sm">ファイルをドロップしてください</p>
           ) : (
             <>
-              <p className="text-gray-600">ファイルをドラッグ＆ドロップしてください</p>
-              <p className="text-sm text-gray-500">対応ファイル: PDF, TXT, JPG, PNG (最大 5MB)</p>
+              <p className="text-gray-600 text-sm">ファイルをドラッグ＆ドロップしてください</p>
+              <p className="text-xs text-gray-500">対応ファイル: PDF, TXT, JPG, PNG (最大 5MB)</p>
             </>
           )}
         </div>
@@ -181,9 +179,8 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
       
       {/* 選択されたファイルのリスト */}
       {files.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">選択されたファイル</h2>
-          <ul className="space-y-3">
+        <div className="mb-3">
+          <ul className="space-y-1">
             {files.map((file, index) => (
               <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                 <div className="flex items-center">
@@ -195,7 +192,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
                 </div>
                 {/* 画像プレビュー */}
                 {file.preview && (
-                  <div className="h-12 w-12 flex-shrink-0">
+                  <div className="h-8 w-8 flex-shrink-0">
                     <img
                       src={file.preview}
                       alt={file.name}
@@ -221,13 +218,13 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
           <button
             onClick={uploadfiles}
             disabled={uploading}
-            className={`px-6 py-2 rounded-lg font-medium flex items-center space-x-2
+            className={`text-sm px-3 py-1 rounded-lg flex items-center space-x-2
               ${uploading 
                 ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                : 'bg-blue-400 hover:bg-blue-500 text-white'}`}
           >
             
-            <span>{uploading ? 'アップロード中...' : 'アップロード'}</span>
+            <span>{uploading ? '登録中...' : '登録'}</span>
           </button>
           
           {/* アップロードステータスの表示 */}

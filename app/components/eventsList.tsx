@@ -32,14 +32,18 @@ export default function EventsList({eventsData, setEventId}:EventsListProps){
     }
 
     const loadQAData = () => {
-        const selectedData = eventsData.filter((item) => item.id === selectedRowId)
-        const qaData = selectedData[0].qaData
-        const event = selectedData[0].name
-        if (qaData){
-            setEventId(selectedRowId)
-            setComment(event)
+        if (selectedRowId){
+            const selectedData = eventsData.filter((item) => item.id === selectedRowId)
+            const qaData = selectedData[0].qaData
+            const event = selectedData[0].name
+            if (qaData){
+                setEventId(selectedRowId)
+                setComment(event)
+            } else {
+                setComment(`${event}はQ&Aデータ未登録です`)
+            }
         } else {
-            setComment(`${event}はQ&Aデータ未登録です`)
+            alert("イベントが選択されていません")
         }
     }
 
@@ -48,12 +52,16 @@ export default function EventsList({eventsData, setEventId}:EventsListProps){
     },[comment])
 
     useEffect(() => {
-        console.log(selectedRowId)
+        if (!selectedRowId){
+            setComment("")
+        }
     }, [selectedRowId])
 
+    /*
     useEffect(() => {
         console.log(eventsData)
     }, [eventsData])
+    */
 
     return (
         <div>

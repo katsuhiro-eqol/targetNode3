@@ -64,7 +64,7 @@ export default function QADataList({qaData}: QADataProps){
         setAnswer(selectedData[0].answer)
     }
 
-
+/*
     useEffect(() => {
         console.log(isForeign)
     }, [isForeign])
@@ -76,7 +76,7 @@ export default function QADataList({qaData}: QADataProps){
     useEffect(() => {
         console.log(voiceUrl)
     }, [voiceUrl])
-
+*/
     return (
         <div>
             <div className="container mx-auto p-4">

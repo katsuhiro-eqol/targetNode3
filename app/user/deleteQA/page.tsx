@@ -13,26 +13,25 @@ export default function DeleteQA(){
     const [isInitialize, setIsInitialize] = useState<boolean>(false)
     const [status, setStatus] = useState<string>("")
 
-    const loadEvents = async () => {
-        if (organization){
-            try {
-                const docRef = doc(db, "Users", organization)
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data()
-                    const array1 = [""]
-                    const array2 = array1.concat(data.events)
-                    setEvents(array2)
-                    if (!data.events){
-                        alert("イベントが登録されていません")
-                    }
-                } else {
-                    alert("ログインから始めてください")
+    const loadEvents = async (org:string) => {
+        try {
+            const docRef = doc(db, "Users", org)
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data()
+                const array1 = [""]
+                const array2 = array1.concat(data.events)
+                setEvents(array2)
+                if (!data.events){
+                    alert("イベントが登録されていません")
                 }
-            } catch (error) {
-                console.log(error)
+            } else {
+                alert("ログインから始めてください")
             }
+        } catch (error) {
+            console.log(error)
         }
+
     }
 
     const confirmEventStatus = async () => {
@@ -54,7 +53,6 @@ export default function DeleteQA(){
                 }
             } catch (error) {
                 console.log(error)
-                console.log("イベントデータ取得に失敗しました")
             }
         }
     }
@@ -86,7 +84,6 @@ export default function DeleteQA(){
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEvent(e.target.value);
-        console.log(e.target.value);
     }
 
     useEffect(() => {
@@ -95,14 +92,16 @@ export default function DeleteQA(){
         }
     },[event])
 
+    /*
     useEffect(() => {
         loadEvents()
     },[organization])
-
+    */
     useEffect(() => {
         const org = sessionStorage.getItem("user")
         if (org){
             setOrganization(org)
+            loadEvents(org)
         }
     },[])
 

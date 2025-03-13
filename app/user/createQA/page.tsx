@@ -9,6 +9,7 @@ import { doc, getDoc, getDocs, collection, setDoc, query, where, updateDoc } fro
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { ModalFile, EventData, ForeignAnswers, CsvData } from "@/types"
 import md5 from 'md5';
+import { Check} from 'lucide-react';
 
 
 export default function RegisterCSV() {
@@ -24,7 +25,7 @@ export default function RegisterCSV() {
     const [eventData, setEventData] = useState<EventData|null>(null)
     //const [translatedAnswers, setTranslatedAnswers] = useState({})
     const [isSecondStep, setIsSecondStep] = useState<boolean>(false)
-    const [isThirdStep, setIsThirdStep] = useState<boolean>(true)
+    const [isThirdStep, setIsThirdStep] = useState<boolean>(false)
     const [status, setStatus] = useState<string>("")
     
     const parseCsv = (csvText: string): CsvData[] => {
@@ -177,13 +178,12 @@ export default function RegisterCSV() {
                     await saveVoiceData(audio.voiceId, answer, audio.audioContent)
             }
             n += 1
-            const ratio = Math.floor(n*30/jsonData.length) + 70
-            setStatus(String(ratio) + "%のデータ登録完了済み")
+            const ratio = Math.floor(n*100/jsonData.length)
+            setStatus(`音声合成：${ratio}%完了`)
             } catch (error) {
             console.log(error);
             }
         }
-        setStatus("99%完了")
     }
 
     //EmbeddingをEventのサブコレクションQADBに登録
@@ -236,8 +236,8 @@ export default function RegisterCSV() {
                 const docRef = doc(db, "Events", id, "QADB", item.id)
                 await setDoc(docRef,data2)
                 count += 1
-                const ratio = Math.floor(count*60/jsonData.length) + 10
-                setStatus(String(ratio) + "%のデータ登録完了済み")
+                const ratio = Math.floor(count*100/jsonData.length)
+                setStatus(`ベクトル化：${ratio}%完了`)
             } catch (error) {
               console.log(error);
             }
@@ -246,13 +246,13 @@ export default function RegisterCSV() {
     }
 
     const registerForeignLang = async () => {
-        setStatus("0%完了")
+        setStatus("外国語に翻訳しています: 0%")
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
         const languages = eventData?.languages ?? ["日本語"]
         const translateLang = languages.filter((item) => item != "日本語")
-
-        let translated:ForeignAnswers = {}
+        let count = 0
+        const translated:ForeignAnswers = {}
         for (const answer of answerSet){
             translated[answer] = []
             for (const language of translateLang){
@@ -269,8 +269,10 @@ export default function RegisterCSV() {
                 //const key = answer + "-" + language
                 translated[answer].push({[language]:lang.foreign})
             }
+            count += 1
+            const ratio = Math.floor(count*100/answerSet.size)
+            setStatus(`外国語翻訳：${ratio}%完了`)
         }
-        setStatus("10%完了")
         return translated
     }
 
@@ -301,10 +303,9 @@ export default function RegisterCSV() {
         return frameCount
     }
 
-    const loadEvents = async () => {
-        if (organization){
+    const loadEvents = async (org:string) => {
         try {
-            const docRef = doc(db, "Users", organization)
+            const docRef = doc(db, "Users", org)
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data()
@@ -321,19 +322,20 @@ export default function RegisterCSV() {
             console.log(error)
         }
     }
-    }
 
-    const loadEventData = async () => {
-        if (event){
+    const loadEventData = async (Event:string) => {
+        if (Event){
             try {
-                const id = organization + "_" + event
+                const id = organization + "_" + Event
                 const docRef = doc(db, "Events", id)
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data()
                     if (data.qaData){
+                        setIsSecondStep(false)
                         alert("既にデータ設定されています。新たなQAデータを登録される場合は、メニューよりQAデータ初期化を行なってください。")
                     } else{
+                        setIsSecondStep(true)
                         const data3 = {
                             image: data.image,
                             languages: data.languages,
@@ -346,14 +348,20 @@ export default function RegisterCSV() {
                 }
             } catch (error) {
                 console.log(error)
-                console.log("イベントデータ取得に失敗しました")
             }
+        } else {
+            alert("イベントを選択してください")
+            setIsSecondStep(false)
         }
     }
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEvent(e.target.value);
-        console.log(e.target.value);
+        loadEventData(e.target.value)
+        setJsonData([])
+        setIsThirdStep(false)
+        setIsModal(false)
+        setModalData([])
     }
   
     const pageReload = () => {
@@ -395,7 +403,6 @@ export default function RegisterCSV() {
 
     useEffect(() => {        //const judge = judgeNewQA()
         if (jsonData){
-            setIsSecondStep(false)
             console.log(jsonData.length)
             const array1 = jsonData.map(item => item.modal_file)
             const array2 = array1.filter(item => item != "")
@@ -414,34 +421,16 @@ export default function RegisterCSV() {
         }
     }, [jsonData])
 
+    
     useEffect(() => {
-        console.log(modalData)
-        setIsThirdStep(false)
+        //setIsThirdStep(false)
     }, [modalData])
-
-    useEffect(() => {
-        if (event){
-            loadEventData()
-            setJsonData([])
-            setIsThirdStep(false)
-            setIsModal(false)
-            setModalData([])
-        }
-    }, [event])
-
-    useEffect(() => {
-        console.log(eventData)
-        setIsSecondStep(true)
-    }, [eventData])
-
-    useEffect(() => {
-        loadEvents()
-    },[organization])
-
+    
     useEffect(() => {
         const org = sessionStorage.getItem("user")
         if (org){
             setOrganization(org)
+            loadEvents(org)
         }
     },[])
 
@@ -452,74 +441,92 @@ export default function RegisterCSV() {
             </div>
             <div className="ml-64 p-8 w-full">
             <div>
-            <div className="font-bold text-xl my-3">CSVファイルからQ&Aデータベースを作成</div>
-            <div className="text-base">ステップ１: イベント（Q&Aデータセット名）を選択</div>
-            <div className="text-xs">（未設定の場合は「イベント管理」メニューから「イベント新規登録」を行なってください）</div>
-            <select className="my-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
+            <div className="font-bold text-xl mt-3 mb-7">CSVファイルからQ&Aデータベースを作成</div>
+
+            <div className="flex flex-row gap-x-4">
+            <div className="text-base font-bold">・ステップ１: イベント（Q&Aデータセット名）を選択 </div>
+            {isSecondStep && <Check className="text-green-500"/>}
+            </div>
+
+            <div className="text-xs ml-3">（未設定の場合は「イベント管理」メニューから「イベント新規登録」を行なってください）</div>
+            <select className="mt-3 ml-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}
             </select>
-            {event && (
-                <div>
-            <div className="text-base">ステップ２: CSVファイルを登録</div>
-            {isSecondStep && (
-                <div 
-                {...getRootProps()} 
-                className={`
-                p-8 
-                text-center 
-                border-2 
-                border-dashed 
-                rounded-lg
-                cursor-pointer 
-                transition-colors
-                ${isDragActive 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-300 hover:border-gray-400'
-                }
-                `}
-                    >
-                <input {...getInputProps()} />
-                <p className="text-gray-600">
-                {isDragActive 
-                    ? 'ファイルをドロップしてください' 
-                    : 'ここにCSVファイルをドラッグ&ドロップしてください'
-                }
-                </p>
-            </div>
-            )}
 
+            <div className="mt-10">
+            <div className="flex flex-row gap-x-4">
+            <div className="text-base font-bold">・ステップ２: CSVファイルを登録</div>
+            {(isThirdStep||isReady) && (
+                <div>
+                <Check className="text-green-500"/>
                 </div>
             )}
+            </div>
+            </div>
+            {isSecondStep && (
+            <div className="ml-3">
+            <div 
+            {...getRootProps()} 
+            className={`
+            p-6
+            text-center 
+            border-2 
+            border-dashed 
+            rounded-lg
+            cursor-pointer 
+            transition-colors
+            ${isDragActive 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-300 hover:border-gray-400'
+            }
+            `}
+                >
+            <input {...getInputProps()} />
+            <p className="text-gray-600 text-sm ml-3">
+            {isDragActive 
+                ? 'ファイルをドロップしてください' 
+                : 'ここにCSVファイルをドラッグ&ドロップしてください'
+            }
+            </p>
+        </div>
+        </div>
+        )}
 
         {error && (
             <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg">
             {error}
             </div>
         )}
-
-        {isModal && (
-            <div>
-            <div className="py-4">CSVファイルの読み込みができました。Q&Aデータ数: {jsonData.length}</div>
-            <div className="text-base">ステップ３：添付ファイルがある場合はファイルを登録</div>
-            {isThirdStep && (
-                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event}/>
-            )}
-            
-            </div>       
+        {(isThirdStep||isReady) && (
+            <div className="text-sm text-green-500 ml-3">Q&Aデータ数: {jsonData.length}</div>
         )}
-
-
-        {isReady && (
-            <div>
-            <div className="text-base">ステップ４：データベースに登録する準備ができました</div>
-            <div className="">Q&Aデータ数: {jsonData.length}</div>
+            <div className="mt-10">
             <div className="flex flex-row gap-x-4">
-            <button className="h-10 my-10 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
-            <button className="h-10 my-10 px-2 border-2 bg-amber-200 rounded" onClick={() => registerToFirestore()}>データベースに登録</button>
+            <div className="text-base font-bold">・ステップ３：添付ファイルがある場合はファイルを登録</div>
+            
+            {(isReady) && (
+                <div><Check className="text-green-500"/>
+                </div>
+            )}
             </div>
-            <div className="text-lime-500">{status}</div>
+            </div>
+            {isThirdStep && (
+                <div className="ml-3">
+                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
+                </div>
+            )}
+            {isReady && (<div className="text-sm text-green-500 ml-3">登録済ファイル: {modalFiles.toString()}</div>)}
+
+            <div className="text-base font-bold mt-10">・ステップ４：データベース新規登録</div>
+            {isReady && (
+            <div className="ml-3">
+            <div className="flex flex-row gap-x-4">
+            <button className="h-10 my-5 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
+            <button className="h-10 my-5 px-2 border-2 bg-amber-200 rounded" onClick={() => registerToFirestore()}>データベースに登録</button>
+            </div>
+            <div className="text-green-500 font-semibold">{status}</div>
             </div>
             )}
         </div>
