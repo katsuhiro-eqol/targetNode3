@@ -41,7 +41,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
       Object.assign(file, {
         preview: file.type.startsWith('image/') 
           ? URL.createObjectURL(file) 
-          : null
+          : ""
       })
     );
     

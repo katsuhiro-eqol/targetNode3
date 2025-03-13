@@ -13,31 +13,6 @@ import {EmbeddingsData, EventData} from "@/types"
 //aicon_audio/no_sound.wav
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
-/*
-type EmbeddingsData = {
-    vector: number[];
-    question: string;
-    answer: string;
-    modalUrl: string;
-    modalFile: string;
-    foreign: Foreign;
-    voiceUrl: string;
-    frame: number;
-}
-interface Foreign {
-    [key: string]: string;
-}
-type EventData = {
-    image:Image;
-    languages:string[];
-    voice:string;
-    embedding:string;
-}
-interface Image {
-    [key: string]: string;
-}
-    */
-
 export default function Aicon() {
     const [initialSlides, setInitialSlides] = useState<string[]>(["/AI-con_man_01.png"])
     const [userInput, setUserInput] = useState<string>("")
@@ -236,11 +211,12 @@ export default function Aicon() {
             const data = eventSnap.data()
             const memocode = data.code
             if (memocode == code){
-                const event_data = {
+                const event_data:EventData = {
                     image:data.image.url,
                     languages:data.languages,
                     voice:data.voice,
                     embedding:data.embedding,
+                    qaData:data.qaData
                 }
                 setEventData(event_data)
                 const s = new Array(1).fill(data.image.url)

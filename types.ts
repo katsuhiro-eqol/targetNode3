@@ -1,4 +1,3 @@
-
 export interface Image {
     [key: string]: string;
 };
@@ -15,13 +14,9 @@ export interface Modal {
     url:string;
 };
 
-export interface FILE {
-    name: string;
-    type: string;
-    size: number;
-    preview: string;
-    lastModified: string;
-};
+export interface FILE extends File {
+    preview?: string;
+}
 
 export interface ModalFile {
     [key: string]: string;
@@ -62,12 +57,14 @@ export interface EmbeddingsData {
     frame: number;
 }
 
+/*
 export interface EventData {
     image:Image;
     languages:string[];
     voice:string;
     embedding:string;
 }
+*/
 
  export interface Event {
     id: string;
@@ -104,9 +101,10 @@ export interface QaData {
     modalUrl: string;
     voiceId: string;
     voiceUrl: string;
-    foreign: Foreign[]|null;
+    foreignStr: string;
+    foreign: Foreign[];
     vector: string;
-    [key: string]: string | Foreign[] | null;
+    [key: string]: string | Foreign[];
 }
 
 export interface ModalData {

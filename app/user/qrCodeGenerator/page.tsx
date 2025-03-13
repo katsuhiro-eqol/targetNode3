@@ -5,8 +5,10 @@ import { toPng, toJpeg } from 'html-to-image';
 import {Sidebar} from "../../components/sideBar"
 import {menuItems} from "../../components/menuData"
 
-export default function DownloadableQRCode({ value = "https://example.com", size = 256 }){
+export default function DownloadableQRCode(){
   const qrCodeRef = useRef(null);
+  const url:string = "https://example.com"
+  const size:number = 256
   
   // PNG形式でダウンロード
   const downloadQRAsPNG = () => {
@@ -55,7 +57,7 @@ export default function DownloadableQRCode({ value = "https://example.com", size
         style={{ display: 'inline-block' }}
       >
         <QRCode 
-          value={value} 
+          value={url} 
           size={size}
           level="H"
         />

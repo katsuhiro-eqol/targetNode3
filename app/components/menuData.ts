@@ -62,16 +62,18 @@ export const menuItems: MenuItem[] = [
     }
   ];
 
-  export const adminItems = [
+  export const adminItems:MenuItem[] = [
     {
       title: 'ホーム',
       icon: Home,
-      path: '/user',
-      submenu: false
+      path: '/',
+      submenu: false,
+      submenuItems: null
     },
     {
       title: 'ユーザー管理',
       icon: BriefcaseBusiness,
+      path: '/',
       submenu: true,
       submenuItems: [
         { title: 'ユーザー登録', path: '/admin/userRegistration' },
@@ -81,6 +83,7 @@ export const menuItems: MenuItem[] = [
     {
       title: '手順書・マニュアル',
       icon: NotebookText,
+      path: '/',
       submenu: true,
       submenuItems: [
         { title: '管理者用マニュアル', path: '/user/manual' },
@@ -90,13 +93,15 @@ export const menuItems: MenuItem[] = [
     {
       title: 'アカウント',
       icon: Users,
-      path: '/user/account',
-      submenu: false
+      path: '/',
+      submenu: false,
+      submenuItems: null
     },
     {
       title: 'ログアウト',
       icon: LogOut,
-      path: '/user/logout',
-      submenu: false
+      path: '/',
+      submenu: false,
+      submenuItems: null
     }
   ];

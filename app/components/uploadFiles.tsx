@@ -40,7 +40,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
       Object.assign(file, {
         preview: file.type.startsWith('image/') 
           ? URL.createObjectURL(file) 
-          : null
+          : ""
       })
     );
     

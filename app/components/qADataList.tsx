@@ -12,7 +12,7 @@ interface QADataProps {
 
 export default function QADataList({qaData}: QADataProps){
     const [isForeign, setIsForeign] = useState<boolean>(false)
-    const [foreignData, setForeignData] = useState<Foreign[]|null>(null)
+    const [foreignData, setForeignData] = useState<Foreign[]>([])
     const [answer, setAnswer] = useState<string>("")
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string>("")
@@ -24,7 +24,7 @@ export default function QADataList({qaData}: QADataProps){
         { key: 'id', label: 'id' },
         { key: 'question', label: '質問' },
         { key: 'answer', label: '回答' },
-        { key: 'foreign', label: '外国語回答' },
+        { key: 'foreignStr', label: '外国語回答' },
         { key: 'modalUrl', label: '添付書類' },
         { key: 'voiceId', label: 'AI音声' },
         { key: 'vector', label: 'Embedding' }
@@ -48,7 +48,7 @@ export default function QADataList({qaData}: QADataProps){
             const foreign = selectedData[0].foreign
             setForeignData(foreign)
         } else {
-            setForeignData(null)
+            setForeignData([])
         }
         
         setIsForeign(true)
@@ -98,7 +98,7 @@ export default function QADataList({qaData}: QADataProps){
                 {Array.isArray(qaData) && qaData.map((row) => (
                     <tr key={row.id} >
                     {columns.map((column) => {
-                        if (column.key==="foreign"){
+                        if (column.key==="foreignStr"){
                             return (
                                 <td 
                                 key={`${row.id}-${column.key}`}
@@ -154,7 +154,7 @@ export default function QADataList({qaData}: QADataProps){
                             key={`${row.id}-${column.key}`}
                             className="border border-gray-300 px-2 py-2 text-xs"
                         >
-                            {row[column.key]}
+                            {row[column.key] as React.ReactNode}
                         </td>
                         );
                     })}

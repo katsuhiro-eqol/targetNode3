@@ -86,6 +86,7 @@ export default function EventList(){
                 modalUrl:data.modalUrl,
                 voiceId:data.voiceId,
                 voiceUrl:data.voiceUrl,
+                foreignStr:"",
                 foreign:data.foreign,
                 vector:vector
             }

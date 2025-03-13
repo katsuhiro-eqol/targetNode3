@@ -40,6 +40,7 @@ interface EventData {
     voice:string;
     embedding:string;
 }
+
 interface Image {
     [key: string]: string;
 }
@@ -271,11 +272,12 @@ export default function Aicon() {
             const data = eventSnap.data()
             const memocode = data.code
             if (memocode == code){
-                const event_data = {
-                    image:data.image.url,
+                const event_data:EventData = {
+                    image:data.image,
                     languages:data.languages,
                     voice:data.voice,
                     embedding:data.embedding,
+                    qaData:data.qaData
                 }
                 setEventData(event_data)
                 loadQAData(attribute)
@@ -380,7 +382,7 @@ export default function Aicon() {
     useEffect(() => {
         if (eventData){
             getLanguageList()
-            const s = new Array(1).fill(eventData?.image)
+            const s = new Array(1).fill(eventData?.image.url)
             setInitialSlides(s)
         }
     }, [eventData])
