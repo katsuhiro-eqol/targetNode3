@@ -13,7 +13,8 @@ interface UploadUIImageProps {
     setUiOption:(uiOption:Image[]) => void;
 }
 interface Image {
-    [key: string]: string;
+    name: string;
+    url: string;
 }
 
 export default function UploadUIImage({organization, setIsOriginal, uiOption, setUiOption}:UploadUIImageProps) {
@@ -101,7 +102,8 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
       //setUploadStatus('success');
       
       const data = await response.json()
-      await saveUIImage(data.uploads)
+      const uploads = data.uploads
+      await saveUIImage(uploads)
 
       // アップロード成功後、ファイルリストをクリア
       setTimeout(() => {

@@ -11,29 +11,35 @@ export const menuItems: MenuItem[] = [
       submenuItems:null
     },
     {
-      title: 'イベント管理',
+        title: 'データ新規登録',
+        icon: BriefcaseBusiness,
+        path: null,
+        submenu: true,
+        submenuItems: [
+          { title: 'イベント登録', path: '/user/createEvent' },
+          { title: 'Q&Aデータ登録', path: '/user/createQA' },
+        ]
+      },
+    {
+      title: 'データ更新・削除',
       icon: BriefcaseBusiness,
       path: null,
       submenu: true,
       submenuItems: [
-        { title: 'イベント情報一覧', path: '/user/eventList' },
-        { title: '新規登録', path: '/user/createEvent' },
-        { title: 'オプション設定', path: '/user/eventOption' },
-        { title: 'QRコード', path: '/user/qrCodeGenerator' },
-        { title: '進捗状況', path: '/user/eventInspector' }
+        { title: 'イベント情報更新', path: '/user/updateEvent' },
+        { title: 'Q&Aデータ更新', path: '/user/updateQA' },
+        { title: 'イベント削除', path: '/user/deleteEvent' }
       ]
     },
     {
-      title: 'Q&Aデータ管理',
+      title: 'イベント管理',
       icon: HardDriveUpload,
       path: null,
       submenu: true,
       submenuItems: [
-        { title: '新規登録', path: '/user/createQA' },
-        { title: 'Q&Aデータ回答修正', path: '/user/updateQA' },
-        { title: 'Q&Aデータ追加', path: '/user/addQA' },
-        { title: 'Q&A添付書類修正', path: '/user/updateFile' },
-        { title: 'Q&Aデータ初期化', path: '/user/deleteQA' }
+        { title: '登録情報一覧', path: '/user/eventList' },
+        { title: 'QRコード発行', path: '/user/qrCodeGenerator' },
+        { title: '進捗状況', path: '/user/eventInspector' }
       ]
     },
     {

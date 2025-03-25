@@ -31,7 +31,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
     //const audioString = processedString(answer)
     const hashString = md5(answer)
     const voiceId = voice + "-" + hashString
-
+    console.log(voiceId)
     const docRef = doc(db, "Voice", voiceId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {

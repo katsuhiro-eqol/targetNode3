@@ -2,12 +2,12 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FileText, Image, File, X, CheckCircle, AlertCircle } from 'lucide-react';
-import { ModalFile, FILE } from "@/types"
+import { ModalData, FILE } from "@/types"
 
 interface FileUploadProps {
   modal: string[];
   setIsReady:(isReady:boolean) => void;
-  setModalData:(modalData:ModalFile[]) => void;
+  setModalData:(modalData:ModalData[]|null) => void;
   organization:string;
   event:string;
 }

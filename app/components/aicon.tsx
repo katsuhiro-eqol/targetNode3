@@ -1,6 +1,7 @@
 "use client"
 import "regenerator-runtime";
 import React from "react";
+//import Head from "next/head";
 import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
@@ -8,7 +9,7 @@ import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Modal from "../components/modalModal"
-import {EmbeddingsData, EventData} from "@/types"
+import {Message, EmbeddingsData, EventData} from "@/types"
 //aicon_audio/no_sound.wav
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
@@ -196,7 +197,8 @@ export default function Aicon() {
                     modalFile:data.modalFile,
                     foreign:data.foreign,
                     voiceUrl:data.voiceUrl,
-                    frame:data.frame
+                    frame:data.frame,
+                    read:data.read
                 }
                 return embeddingsData
                 })
@@ -219,7 +221,9 @@ export default function Aicon() {
                     languages:data.languages,
                     voice:data.voice,
                     embedding:data.embedding,
-                    qaData:data.qaData
+                    qaData:data.qaData,
+                    code:data.code,
+                    pronunciations:data.pronunciation
                 }
                 setEventData(event_data)
                 const s = new Array(1).fill(data.image.url)
@@ -378,6 +382,83 @@ export default function Aicon() {
         }
     }, [userInput])
 
+    return (
+        <div>
+        {wavReady ? (
+        <div className="fixed inset-0 flex flex-col items-center h-full bg-stone-200">
+            <div className="flex-none h-[40vh] w-full max-w-96 mb-5">
+                <img className="mx-auto" src={slides[currentIndex]} alt="Image" />
+            </div>
+
+            <div className="flex-1 h-[42vh] w-11/12 max-w-96 overflow-auto">
+                <div >
+                    <p className="text-center mb-8">{prompt}</p>
+                <div>
+                <div className="flex flex-row gap-x-4 justify-center">
+                    <p>{result}</p>
+                    {modalUrl && <Paperclip size={16} onClick={() => {setIsModal(true); setModalUrl(modalUrl); setModalFile(modalFile)}} />}
+                </div>
+                {isModal && (<Modal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile} />)}
+                </div>
+                </div>
+                <div ref={messagesEndRef} />
+            </div>
+
+            <div className="flex-none h-[18%] w-full max-w-96">
+            <div className="mt-2">
+            <textarea className="block w-5/6 max-w-96 mx-auto mb-2 px-2 py-2 text-xs"
+                name="message"
+                placeholder="質問内容(question)"
+                rows={2}
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+            />
+            <div  className="flex flex-row gap-x-4 justify-center">
+            {!record ?(     
+                <button className="flex items-center mr-5 mx-auto border-2 border-sky-600 p-2 text-sky-800 bg-white text-xs rounded" disabled={!wavReady} onClick={sttStart}>
+                <Mic size={16} />
+                音声入力(mic)
+                </button>
+            ):(
+                <button className="flex items-center mr-5 mx-auto text-xs border-2 bg-pink-600 text-white p-2 rounded" onClick={inputClear}>
+                <Eraser size={16} />
+                クリア(clear)
+                </button>)}
+            {canSend ? (
+                <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-xs rounded" onClick={() => getAnswer()}>
+                <Send size={16} />
+                送信(send)
+                </button>):(
+                <button className="flex items-center ml-5 mx-auto border-2 bg-slate-200 text-slate-400 p-2 text-xs rounded">
+                <Send size={16}/>
+                送信(send)
+                </button>
+                )}
+                </div>
+                {isModal && (
+                    <Modal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile}/>
+                )}
+                </div>
+            </div>
+        </div>):(
+            <div className="flex flex-col h-screen bg-stone-200">
+            <button className="bg-cyan-500 hover:bg-cyan-700 text-white mx-auto mt-24 px-4 py-2 rounded text-base font-bold" onClick={() => {talkStart()}}>AIコンを始める</button>
+            <div className="mx-auto mt-32 text-sm">使用言語(language)</div>
+            <select className="mt-3 mx-auto text-sm w-36 h-8 text-center border-2 border-lime-600" value={language} onChange={selectLanguage}>
+                {langList.map((lang, index) => {
+                return <option key={index} value={lang}>{lang}</option>;
+                })}
+            </select>
+            </div>            
+            )}
+            <audio src={wavUrl} ref={audioRef} preload="auto"/>
+            <div className="hidden">{wavUrl}</div>
+        </div>
+    );
+}
+
+/*
+
   return (
     <div className="w-full h-full bg-stone-200">
         <div className="flex flex-col h-screen">
@@ -466,3 +547,4 @@ export default function Aicon() {
     </div>
   );
 }
+  */

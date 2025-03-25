@@ -24,7 +24,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
     const input = params.input
     const model = params.model
     if (lang != "日本語"){
-        const langCode = foreignLanguages[lang as keyof typeof foreignLanguages]
+        //const langCode = foreignLanguages[lang as keyof typeof foreignLanguages]
         const response = await fetch(translateUrl, {
             method: 'POST',
             headers: {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
             },
             body: JSON.stringify({
               q: input,
-              target: langCode,
+              target: "ja-JP",
             }),
         });
         const data = await response.json();

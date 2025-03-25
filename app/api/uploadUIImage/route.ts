@@ -74,9 +74,6 @@ export async function POST(request: NextRequest) {
         
         uploadResults.push({
           name: file.name,
-          type: file.type,
-          size: file.size,
-          path: snapshot.ref.fullPath,
           url: downloadURL
         });
 

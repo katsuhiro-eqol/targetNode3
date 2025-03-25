@@ -4,13 +4,16 @@ import {useState, useEffect} from "react"
 import ForeignModal from "./foreignModal"
 import ModalModal from "./modalModal"
 import ListenVoice from "./listenVoice"
+import { Circle, CircleDot } from 'lucide-react';
 import { QaData, Foreign } from "@/types"
 
-interface QADataProps {
+interface QADataSelectionProps {
     qaData:QaData[];
+    selectedRowId:string|null;
+    setSelectedRowId:(selectedRowId:string|null) => void;
 }
 
-export default function QADataList({qaData}: QADataProps){
+export default function QADataSelection({qaData, selectedRowId, setSelectedRowId}: QADataSelectionProps){
     const [isForeign, setIsForeign] = useState<boolean>(false)
     const [foreignData, setForeignData] = useState<Foreign[]>([])
     const [answer, setAnswer] = useState<string>("")
@@ -21,6 +24,7 @@ export default function QADataList({qaData}: QADataProps){
     const [voiceUrl, setVoiceUrl] = useState<string>("")
 
     const columns = [
+        { key: 'selection', label: '' },
         { key: 'id', label: 'id' },
         { key: 'question', label: '質問' },
         { key: 'answer', label: '回答' },
@@ -30,6 +34,14 @@ export default function QADataList({qaData}: QADataProps){
         { key: 'voiceId', label: 'AI音声' },
         { key: 'vector', label: 'Embedding' }
     ]
+
+    const toggleRowSelection = (rowId: string) => {
+        if (selectedRowId === rowId) {
+            setSelectedRowId(null); // 選択解除
+        } else {
+            setSelectedRowId(rowId)
+        }
+    }
 
     const showModal = (id:string) => {
         const selectedData = qaData.filter((item) => item.id == id)
@@ -65,22 +77,10 @@ export default function QADataList({qaData}: QADataProps){
         setAnswer(selectedData[0].answer)
     }
 
-/*
-    useEffect(() => {
-        console.log(isForeign)
-    }, [isForeign])
-
-    useEffect(() => {
-        console.log(foreignData)
-    }, [foreignData])
-
-    useEffect(() => {
-        console.log(voiceUrl)
-    }, [voiceUrl])
-*/
     return (
         <div>
             <div className="container mx-auto p-4">
+            {}
             <table className="min-w-full border border-gray-300">
                 <thead>
                 <tr className="bg-gray-100">
@@ -98,6 +98,21 @@ export default function QADataList({qaData}: QADataProps){
                 {Array.isArray(qaData) && qaData.map((row) => (
                     <tr key={row.id} >
                     {columns.map((column) => {
+                        if (column.key === 'selection') {
+                            return (
+                                <td 
+                                key={`${row.id}-${column.key}`}
+                                className="border border-gray-300 px-4 py-2 cursor-pointer"
+                                onClick={() => toggleRowSelection(row.id)}
+                                >
+                                {selectedRowId === row.id ? (
+                                    <CircleDot size={20} className="text-blue-500 font-bold" />
+                                ) : (
+                                    <Circle size={20} className="text-gray-400 font-bold" />
+                                )}
+                                </td>
+                            );
+                                                    }
                         if (column.key==="foreignStr"){
                             return (
                                 <td 

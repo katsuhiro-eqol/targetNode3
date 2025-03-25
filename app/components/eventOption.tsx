@@ -13,7 +13,7 @@ const hourOption =["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:0
 
 interface EventOptionProps {
     organization: string;
-    setImage: (image: string) => void;
+    setImage: (image: Image) => void;
     setStartTime: (strtTime: string) => void;
     setEndTime: (endTime: string) => void;
 }
@@ -100,20 +100,20 @@ export default function EventOption({organization, setImage, setStartTime, setEn
 
     return (
         <div>
-            <div className="font-semibold mt-3 text-sm ml-3">AIコントップ画面</div>
+            <div className="font-semibold mt-3 text-sm ml-3 underline">UI画面</div>
             <UIOption uiOption={uiOption} setImage={setImage} organization={organization} setUiOption={setUiOption} />
-            <div className="font-semibold mt-5 text-sm ml-3">イベント期間（ユーザーが利用できる期間）</div>
+            <div className="font-semibold mt-6 text-sm ml-3 underline">利用期間（ユーザーが利用できる期間）</div>
             <div className="flex flex-row gap-x-4">
                 <div className="ml-3 mt-3 text-xs">利用開始日時: </div>
                 {noLimitStart ? (
-                <div className="flex flex-row gap-x-4">
+                <div className="flex flex-row gap-x-4 h-5">
                     <CircleDot className="mt-3 w-4 h-4 text-blue-500" />
                     <div className="mt-3 text-xs">指定なし</div>
                     <Circle className="mt-3 w-4 h-4 text-gray-400" onClick={()=>setNoLimitStart(false)} />
                     <div className="mt-3 text-xs">設定</div>
                 </div>
                 ):(
-                    <div className="flex flex-row gap-x-4">
+                    <div className="flex flex-row gap-x-4 h-5">
                     <Circle className="mt-3 w-4 h-4 text-gray-400" onClick={()=>setNoLimitStart(true)} />
                     <div className="mt-3 text-xs">指定なし</div>
                     <CircleDot className="mt-3 w-4 h-4 text-blue-500" />
@@ -142,20 +142,20 @@ export default function EventOption({organization, setImage, setStartTime, setEn
                 )}
                 </div>
                 <div className="flex flex-row gap-x-4">
-                <div className="ml-3 mt-4 text-xs">利用終了日時: </div>
+                <div className="ml-3 mt-3 text-xs">利用終了日時: </div>
                 {noLimitEnd ? (
-                <div className="flex flex-row gap-x-4">
+                <div className="flex flex-row gap-x-4 h-5">
                     <CircleDot className="mt-3 w-4 h-4 text-blue-500" />
                     <div className="mt-3 text-xs">指定なし</div>
                     <Circle className="mt-3 w-4 h-4 text-gray-400" onClick={()=>setNoLimitEnd(false)} />
                     <div className="mt-3 text-xs">設定</div>
                 </div>
                 ):(
-                    <div className="flex flex-row gap-x-4">
-                    <Circle className="mt-4 w-4 h-4 text-gray-400" onClick={()=>setNoLimitEnd(true)} />
-                    <div className="mt-4 text-xs">指定なし</div>
-                    <CircleDot className="mt-4 w-4 h-4 text-blue-500" />
-                    <div className="mt-4 text-xs">設定</div>
+                    <div className="flex flex-row gap-x-4 h-5">
+                    <Circle className="mt-3 w-4 h-4 text-gray-400" onClick={()=>setNoLimitEnd(true)} />
+                    <div className="mt-3 text-xs">指定なし</div>
+                    <CircleDot className="mt-3 w-4 h-4 text-blue-500" />
+                    <div className="mt-3 text-xs">設定</div>
                     <select className="ml-8 my-3 w-20 h-5 text-xs text-center border-2" value={endYear} onChange={selectEndYear}>
                     {yearOption.map((year) => {
                     return <option key={year} value={year}>{year}</option>;
@@ -182,3 +182,8 @@ export default function EventOption({organization, setImage, setStartTime, setEn
         </div>
     )
 }
+
+/*
+            <div className="font-semibold mt-5 text-sm ml-3 underline">スタート時のメッセージ</div>
+            <SetStartText />
+*/

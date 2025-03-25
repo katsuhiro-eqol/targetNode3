@@ -11,7 +11,7 @@ interface SidebarProps {
 
 
 export const Sidebar = ({menuItems}:SidebarProps) => {
-    const [activeItem, setActiveItem] = useState('');
+    const [activeItem, setActiveItem] = useState<string>("");
     const [currentUser, setCurrentUser] = useState<string>("")
     const router = useRouter()
 

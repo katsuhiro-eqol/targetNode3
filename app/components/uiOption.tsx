@@ -7,7 +7,7 @@ import { Image } from "@/types"
 interface UiOptionProps {
     uiOption: Image[];
     setUiOption:(uiOption: Image[]) => void;
-    setImage:(image: string) => void;
+    setImage:(image: Image) => void;
     organization: string;
 }
 
@@ -18,7 +18,7 @@ export default function UiOption({uiOption, setUiOption, setImage, organization}
 
     const selectUIImage = (n: number) => {
         setSelectedIndex(n)
-        setImage(uiOption[n].url)
+        setImage(uiOption[n])
     }
 
     useEffect(() => {
@@ -40,14 +40,14 @@ export default function UiOption({uiOption, setUiOption, setImage, organization}
                 <div key={index} className={`flex flex-col items-center cursor-pointer mt-2 pt-1 ${
                     selectedIndex === index ? "border-2 border-blue-500" : "border-2 border-transparent"
                   }`} onClick={() => selectUIImage(index)} >
-                <img src={`${image.url}`} alt={"Image"} className="w-24" />
+                <img src={`${image.url}`} alt={"Image"} className="w-24 max-h-32" />
                 <p className="mt-2 text-center text-xs">{image.name}</p>
                 </div>
             ))}
             </div>
-            <div className="text-xs text-red-600 mt-3">（AIコンのUI画像をオリジナルの静止画に変更することもできます）</div>
+            <div className="text-xs text-red-600 mt-3 ml-3">（AIコンのUI画像をオリジナルの静止画に変更することもできます）</div>
             {!isOriginal && (
-                <button className="text-xs px-2 py-1 border-2 bg-slate-200 rounded" onClick={() => setIsOriginal(true)}>オリジナル画像を登録する</button>
+                <button className="ml-3 text-xs px-2 py-1 border-2 bg-slate-200 rounded" onClick={() => setIsOriginal(true)}>オリジナル画像を登録する</button>
             )}
             {isOriginal && (
                 <UploadUIImage organization={organization} setIsOriginal={setIsOriginal} uiOption={uiOption} setUiOption={setUiOption} />

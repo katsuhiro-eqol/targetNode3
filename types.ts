@@ -1,5 +1,12 @@
+declare global {
+    interface RequestInit {
+      timeout?: number;
+    }
+  }
+
 export interface Image {
-    [key: string]: string;
+    name: string;
+    url: string;
 };
 
 export interface Foreign {
@@ -28,6 +35,8 @@ export interface EventData {
     voice:string;
     embedding:string;
     qaData: boolean;
+    code: string;
+    pronunciations:Pronunciation[]|null;
 }
 
 interface ForeignAnswer {
@@ -46,6 +55,7 @@ export type Message = {
     modalUrl: string | null;
     modalFile: string | null;
 }
+//aiconに読み込むデータ
 export interface EmbeddingsData {
     vector: number[];
     question: string;
@@ -55,6 +65,7 @@ export interface EmbeddingsData {
     foreign: Foreign;
     voiceUrl: string;
     frame: number;
+    read: string;
 }
 
 /*
@@ -66,6 +77,7 @@ export interface EventData {
 }
 */
 
+//EventList用
  export interface Event {
     id: string;
     name: string;
@@ -76,6 +88,7 @@ export interface EventData {
     languages: string[];
     period: string;
     qaData: boolean;
+    pronunceStr: string;
     [key: string]: string | boolean | string[]; 
 }
 
@@ -91,7 +104,7 @@ export interface SubmenuItem {
 title: string;
 path: string;
 }
-
+//データリストに読み込む形式
 export interface QaData {
     id: string;
     code: string;
@@ -104,7 +117,9 @@ export interface QaData {
     foreignStr: string;
     foreign: Foreign[];
     vector: string;
-    [key: string]: string | Foreign[];
+    read: string;
+    pronunciations:Pronunciation[];
+    [key: string]: string | Foreign[] | Pronunciation[];
 }
 
 export interface ModalData {
@@ -113,4 +128,18 @@ export interface ModalData {
     size:number;
     path:string;
     url:string;
+}
+export interface Pronunciation {
+    text: string;
+    read: string;
+}
+
+export interface EventList {
+    event:string[];
+}
+
+export interface StartText {
+    text:string;
+    url:string;
+    voice:string;
 }

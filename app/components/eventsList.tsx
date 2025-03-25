@@ -20,6 +20,7 @@ export default function EventsList({eventsData, setEventId}:EventsListProps){
         { key: 'image', label: 'UI画像' },
         { key: 'voice', label: 'Voice' },
         { key: 'langString', label: '対応外国語' },
+        { key: 'pronunceStr', label: '読み辞書' },
         { key: 'period', label: '利用期間' }
     ]
 
