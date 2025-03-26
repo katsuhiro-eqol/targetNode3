@@ -10,11 +10,12 @@ import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Modal from "../../components/modalModal"
 import {Message, EmbeddingsData, EventData, Foreign} from "@/types"
-//aicon_audio/no_sound.wav
+type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
+
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
 export default function Aicon() {
-    const [initialSlides, setInitialSlides] = useState<string>("/AI-con_man_01.png")
+    const [initialSlides, setInitialSlides] = useState<string>("")
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
     const [eventData, setEventData] = useState<EventData|null>(null)
@@ -35,12 +36,13 @@ export default function Aicon() {
     const [convId, setConvId] = useState<string>("")
     const [startText, setStartText] = useState<EmbeddingsData|null>(null)
 
-    //後ほどイベント設定に基づいて決定できるようにする
-    //const startText = {voice:"bauncer", 日本語:"こんにちは　ご質問をどうぞ",English:"Hello, any questions?",简体中文:"你好。还有其他问题吗？",繁體中文:"你好。還有其他問題嗎？",한국어:"안녕하세요. 질문을 부탁드립니다.", url:"https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fbauncer-6b363a6f921be7cede5e19a0a161ce8f.wav?alt=media&token=6c077f3b-53bc-4003-89f7-505b5a595fe4"}
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
+    
+    const foreignLanguages: Record<string, LanguageCode> = {"日本語": "ja-JP","英語": "en-US","中国語（簡体）": "zh-CN","中国語（繁体）": "zh-TW","韓国語": "ko-KR","フランス語": "fr-FR","ポルトガル語": "pt-BR","スペイン語": "es-ES"}
+
     //const [endLimit, setEndLimit] = useState<number>(1767193199000) //2025-12-31
     const audioRef = useRef<HTMLAudioElement>(null)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -362,7 +364,8 @@ export default function Aicon() {
     const sttStart = () => {
         setUserInput("")
         setRecord(true)
-        SpeechRecognition.startListening()
+        const langCode = foreignLanguages[language] || "ja-JP"
+        SpeechRecognition.startListening({language:langCode})
     }
 
     const sttStop = () => {

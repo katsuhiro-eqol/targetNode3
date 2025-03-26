@@ -139,8 +139,8 @@ export default function UpdaateQA(){
     }
 
     const buttons = [
-        { key: 'modify', label: 'Q&A修正'},
-        { key: 'modal', label: 'ファイル修正'},
+        { key: 'modify', label: 'Q&A更新'},
+        { key: 'modal', label: '添付書類更新'},
         { key: 'read', label: '読み修正'},
         { key: 'add', label: 'Q&A追加'},
         { key: 'delete', label: 'Q&A削除'}

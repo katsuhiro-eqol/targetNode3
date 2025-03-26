@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import { db } from "@/firebase"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc } from "firebase/firestore"
 import { toJpeg } from 'html-to-image';
 
 const hostUrl = process.env.NEXT_PUBLIC_HOST_URL;
@@ -13,6 +13,7 @@ export default function DownloadableQRCode(){
     const [organization, setOrganization] = useState<string>("")
     const [code, setCode] = useState<string>("")
     const [url, setUrl] = useState<string|null>(null)
+    const [status, setStatus] = useState<string>("")
     const qrCodeRef = useRef(null);
     const size:number = 256
 
@@ -44,8 +45,11 @@ export default function DownloadableQRCode(){
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data()
-                    if (data.code){
+                    if (data.qaData){
                         setCode(data.code)
+                    }else{
+                        alert("イベントにQ&Aデータが登録されていません")
+                        setEvent("")
                     }                   
                 }
             } catch (error) {
@@ -75,6 +79,29 @@ export default function DownloadableQRCode(){
         setEvent(e.target.value);
         loadEventData(e.target.value)
     }
+
+    const randomStr = (length: number) => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    const setNewEventCode = async () => {
+        const nCode = randomStr(4)
+        const eventId = organization + "_" + event
+        try {
+            await setDoc(doc(db,"Events",eventId), {code:nCode}, {merge:true})
+            setCode(nCode)
+            setStatus("イベントコードの変更が完了しました")
+        } catch (error){
+            console.log(error)
+            alert("codeの更新に失敗しました")
+        }
+    }
+
 
     useEffect(() => {
         if (code!==""){
@@ -112,7 +139,11 @@ export default function DownloadableQRCode(){
             style={{ display: 'inline-block' }}
         >
             <QRCode value={url} size={size} level="H"/>
+            <div className="flex flex-row gap-x-4">
             <button onClick={downloadQRAsJPG} className="ml-3 mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
+            <button onClick={setNewEventCode} className="ml-3 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコードを変更</button>
+            </div>
+            <div className="text-lime-500 mt-5 ml-3">{status}</div>  
             </div>
             </div>
         )}

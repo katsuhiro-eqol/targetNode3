@@ -26,7 +26,7 @@ export const menuItems: MenuItem[] = [
       path: null,
       submenu: true,
       submenuItems: [
-        { title: 'イベント情報更新', path: '/user/updateEvent' },
+        { title: 'イベント設定更新', path: '/user/updateEvent' },
         { title: 'Q&Aデータ更新', path: '/user/updateQA' },
         { title: 'イベント削除', path: '/user/deleteEvent' }
       ]
@@ -49,6 +49,7 @@ export const menuItems: MenuItem[] = [
       submenu: true,
       submenuItems: [
         { title: '管理者用マニュアル', path: '/user/manual' },
+        { title: 'Q&Aテンプレート・記入例', path: '/user/template' },
         { title: 'AIコンユーザーマニュアル', path: '/aicon/manual' }
       ]
     },

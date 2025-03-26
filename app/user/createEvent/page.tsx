@@ -14,6 +14,7 @@ export default function CreateEvent(){
     const [organization, setOrganization] = useState<string>("")
     const [events, setEvents] = useState<string[]>([])
     const [usePrevious, setUsePrevious] = useState<boolean>(false)
+    const [event, setEvent] = useState<string>("")
     const [comment, setComment] = useState<string>("")
     const [selectedOptions, setSelectedOptions] = useState<string[]>(["日本語"]);
     const [other, setOther] = useState<string>("")//他言語
@@ -192,8 +193,8 @@ export default function CreateEvent(){
     return (
         <div>
             <div>
-            <div className="font-bold text-xl my-3">イベント（Q&Aデータセット）の新規作成</div>
-            <div className="text-base font-semibold text-gray-700">・ステップ１: イベント（Q&Aデータセット名）を入力</div>
+            <div className="font-bold text-xl my-3">イベントの新規作成</div>
+            <div className="text-base font-semibold text-gray-700">・ステップ１: イベント名を入力</div>
             <input className="w-2/3 rounded-md px-4 py-2 bg-inherit border mt-2 mb-6 border-lime-600"
                 name="event"
                 placeholder="新規イベント名"
@@ -201,13 +202,8 @@ export default function CreateEvent(){
                 onChange={(e) => setNewEvent(e.target.value)}
                 />
             </div>
-            <div className="flex flex-row gap-x-4 mt-5">
             <div className="text-base font-semibold text-gray-700">・ステップ２: イベント基本設定</div>
-            <button className="bg-cyan-500 hover:bg-cyan-700 text-white ml-10 px-2 py-1 rounded text-xs" onClick={() => setUsePrevious(true)}>既存のイベント設定を使う</button>
-            </div>
-            {usePrevious ?  (
-                <div>・・・準備中・・・</div>
-            ):(
+
             <div>
             <div className="mt-2 text-xs text-red-600">（イベント登録時のみ設定できる項目です。ステップ３の「イベントオプション設定」は何度でも変更可能です。）</div>
             <div className="font-semibold text-sm ml-3 mt-5 underline">対応言語（日本語はデフォルト）</div>
@@ -265,7 +261,7 @@ export default function CreateEvent(){
                 <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
             )}
             </div>
-            )}
+            
 
                        
             <div className="flex flex-row gap-x-4">
@@ -276,26 +272,3 @@ export default function CreateEvent(){
         </div>
     )
 }
-
-/*
-
-    <div className="font-semibold text-sm ml-3 mt-5">AIコン画像</div>
-    <div className="flex flex-row gap-x-4">
-    {options.map((option) => (
-        <div
-        key={option}
-        className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-3 rounded"
-        onClick={() => handleOptionClick(option)}
-        >
-
-        {selectedOptions.includes(option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
-        <span className="ml-2 text-gray-700 text-sm">{option}</span>
-        </div>
-    ))}
-    <select className="mx-8 my-3 w-20 h-4 text-xs text-center" value={other} label="other" onChange={selectOtherLanguage}>
-    {otherOptions.map((name) => {
-    return <option key={name} value={name}>{name}</option>;
-    })}
-    </select>
-    </div>
-*/

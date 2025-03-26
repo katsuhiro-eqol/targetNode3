@@ -323,6 +323,9 @@ export default function RegisterCSV() {
         } else if (!qList.includes("分類できなかった質問")){
             alert("「分類できなかった質問」のQ&Aがありません")
             return false
+        } else if (!qList.includes("最初の挨拶")){
+            alert("「最初の挨拶」のQ&Aがありません")
+            return false
         } else {
             return true
         }
@@ -455,115 +458,3 @@ export default function RegisterCSV() {
 
     );
 }
-
-
-  /*
-    const registerVoice = async () => {
-        const answerList = jsonData.map((item) => item.answer)
-        const answerSet = new Set(answerList)
-        //const answerCount = answerSet.size
-        let n = 1
-        for (const answer of answerSet){
-            try {
-                const response = await fetch("/api/createAudioData", {
-                    method: "POST",
-                    headers: {
-                    "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ answer: answer, voice: eventData?.voice}),
-                });
-                const audio = await response.json();
-                
-                if (audio.status == "0"){
-                    await updateVoiceDataToQADB(audio.voiceId, audio.frame, audio.url)
-                } else {
-                    await saveVoiceData(audio.voiceId, answer, audio.audioContent)
-            }
-            n += 1
-            const ratio = Math.floor(n*100/jsonData.length)
-            setStatus(`音声合成：${ratio}%完了`)
-            } catch (error) {
-            console.log(error);
-            }
-        }
-    }
-        */
-
-        /*
-    const base64toBlob = (base64Data: string) => {
-        if (base64Data){
-        const sliceSize = 1024
-        const cleanedBase64 = base64Data.trim().replace(/\s/g, '')//追加
-        const byteCharacters = atob(cleanedBase64)
-        const bytesLength = byteCharacters.length
-    
-        const slicesCount = Math.ceil(bytesLength/sliceSize)
-        const byteArrays = new Array(slicesCount)
-        console.log("bytesLength", bytesLength)
-        for (let sliceIndex=0; sliceIndex<slicesCount; ++sliceIndex){
-            const begin = sliceIndex * sliceSize
-            const end = Math.min(begin + sliceSize, bytesLength)
-            const bytes = new Array(end - begin)
-            for (let offset = begin, i=0; offset<end; ++i, ++offset){
-                bytes[i] = byteCharacters[offset].charCodeAt(0)
-            }
-            byteArrays[sliceIndex] = new Uint8Array(bytes)
-        }
-        return new Blob(byteArrays, {type:'audio/wav'})
-        } else {
-            console.log("base64エラー")
-            return null
-        }
-    }
-
-    const saveVoiceData = async(id:string, text:string, audioContent:string) => {
-        const blob = base64toBlob(audioContent)
-        const frame = frameCount(audioContent)
-        if (!blob) {
-            return;
-        }
-        const fileName = id + ".wav"
-        const storage = getStorage()
-        const path = "aicon_audio/" + fileName
-        const storageRef = ref(storage, path)
-        await uploadBytes(storageRef, blob)
-        await getDownloadURL(ref(storage, path))
-        .then((url) => {
-            registrationVoiceData(id, frame, url, text)
-        })
-        .catch((error) => {
-          // Handle any errors
-        });
-    }
-
-    const updateVoiceDataToQADB = async (voiceId:string, frame:number, url:string) => {
-        const eventId = organization + "_" + event
-        const data2 = {
-            voiceUrl: url,
-            frame: frame
-        }
-        const qaRef = collection(db, "Events", eventId, "QADB")
-        const q = query(qaRef, where("voiceId", "==", voiceId))
-        const querySnapshot = await getDocs(q)
-        console.log(querySnapshot.docs.length)
-        for (const document of querySnapshot.docs) {
-            const docRef = doc(db, "Events",eventId,"QADB", document.id);
-            await setDoc(docRef, data2, {merge:true});
-          }
-    }
-        
-
-    const registrationVoiceData = async(id:string, frame:number, url:string, text:string) => {
-        const fileName = id + ".wav"
-        const data = {
-            answer: text,
-            filename: fileName,
-            url: url,
-            frame:frame
-        }
-        const voiceRef = doc(db, "Voice", id);
-        await setDoc(voiceRef, data, {merge:true}) 
-
-        await updateVoiceDataToQADB(id, frame, url)
-    }
-      */

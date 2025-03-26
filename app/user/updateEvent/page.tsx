@@ -108,7 +108,7 @@ export default function UpdateEvent(){
 
     return (
         <div>
-        <div className="font-bold text-xl">イベント情報更新</div>
+        <div className="font-bold text-xl">イベント設定更新</div>
         <div className="text-xs text-red-500">更新できる項目は「UI画像」と「利用期間」のみです</div>
         <div className="text-base mt-5">イベントを選択</div>
             <select className="mb-4 w-48 h-6 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
