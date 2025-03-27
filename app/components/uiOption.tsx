@@ -45,7 +45,7 @@ export default function UiOption({uiOption, setUiOption, setImage, organization}
                 </div>
             ))}
             </div>
-            <div className="text-xs text-red-600 mt-3 ml-3">（AIコンのUI画像をオリジナルの静止画に変更することもできます）</div>
+            <div className="text-xs text-green-600 mt-3 ml-3">（AIコンのUI画像をオリジナルの静止画に変更することもできます）</div>
             {!isOriginal && (
                 <button className="ml-3 text-xs px-2 py-1 border-2 bg-slate-200 rounded" onClick={() => setIsOriginal(true)}>オリジナル画像を登録する</button>
             )}

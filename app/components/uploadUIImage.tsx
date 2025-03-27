@@ -137,6 +137,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
 
   return (
     <div>
+    <div className="ml-3 mt-5 text-sm text-red-500 font-bold">登録できるファイルはJPGまたはPNGで、縦横比1:1または縦の方が短い画像。最大5MB</div>
       <div 
         {...getRootProps()} 
         className={`ml-3 w-96 h-32 border-2 border-dashed rounded-lg p-8 mb-6 text-center cursor-pointer transition-colors
@@ -148,7 +149,7 @@ export default function UploadUIImage({organization, setIsOriginal, uiOption, se
             <p className="text-blue-500">ファイルをドロップしてください</p>
           ) : (
             <>
-              <p className="text-gray-600 text-sm">オリジナルUI画像ファイルをドラッグ＆ドロップしてください</p>
+              <p className="text-gray-600 text-sm">ファイルをドラッグ＆ドロップしてください</p>
               <p className="text-sm text-gray-500">対応ファイル: JPG, PNG (最大 5MB)</p>
             </>
           )}

@@ -15,7 +15,7 @@ type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
 export default function Aicon() {
-    const [initialSlides, setInitialSlides] = useState<string>("")
+    const [initialSlides, setInitialSlides] = useState<string|null>(null)
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
     const [eventData, setEventData] = useState<EventData|null>(null)
@@ -25,7 +25,7 @@ export default function Aicon() {
     const [embeddingsData, setEmbeddingsData] = useState<EmbeddingsData[]>([])
     //wavUrl：cloud storageのダウンロードurl。初期値は無音ファイル。これを入れることによって次からセッティングされるwavUrlで音がなるようになる。
     const [wavUrl, setWavUrl] = useState<string>(no_sound);
-    const [slides, setSlides] = useState<string[]>(Array(1).fill(initialSlides))
+    const [slides, setSlides] = useState<string[]|null>(null)
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [wavReady, setWavReady] = useState<boolean>(false)
     const [record,setRecord] = useState<boolean>(false)
@@ -118,7 +118,6 @@ export default function Aicon() {
                     setMessages(prev => [...prev, aiMessage]);
                 }
                 const sl = createSlides(embeddingsData[similarityList.index].frame)
-                console.log(sl)
                 setSlides(sl)
 
             }else{
@@ -280,6 +279,9 @@ export default function Aicon() {
                     pronunciations:data.pronunciation
                 }
                 setEventData(event_data)
+                setInitialSlides(data.image.url)
+                setSlides(Array(1).fill(data.image.url))
+                console.log(data.image.url)
                 loadQAData(attribute)
             } else {
                 alert("QRコードをもう一度読み込んでください")
@@ -312,7 +314,6 @@ export default function Aicon() {
     const talkStart = async () => {
         audioPlay()
         setWavReady(true)
-        //sttStart()
         setTimeout(() => {
             if (startText){
                 if (language=="日本語"){
@@ -343,7 +344,7 @@ export default function Aicon() {
                 const sl = createSlides(startText.frame)
                 setSlides(sl)            
             }
-        }, 1200);
+        }, 1500);
     }
 
     const audioPlay = () => {
@@ -394,6 +395,7 @@ export default function Aicon() {
         };
     },[])
 
+
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
@@ -413,7 +415,8 @@ export default function Aicon() {
     useEffect(() => {
         if (eventData){
             getLanguageList()
-            setInitialSlides(eventData?.image.url)
+            //setInitialSlides(eventData?.image.url)
+            
         }
     }, [eventData])
     
@@ -430,7 +433,7 @@ export default function Aicon() {
             console.log(wavUrl)
         audioPlay()
         setCurrentIndex(0)
-        if (slides.length !== 1){
+        if (Array.isArray(slides) && slides.length !== 1){
             if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
                 return;
             }
@@ -449,17 +452,21 @@ export default function Aicon() {
     }, [slides])
 
     useEffect(() => {
-        if (currentIndex === slides.length-2 && currentIndex != 0){
-            const s = initialSlides
-            setCurrentIndex(0)
-            setSlides(Array(1).fill(initialSlides))
-            if (intervalRef.current !== null){
-                clearInterval(intervalRef.current);
-                intervalRef.current = null
+        if (Array.isArray(slides)){
+            if (currentIndex === slides.length-2 && currentIndex != 0){
+                const s = initialSlides
+                setCurrentIndex(0)
+                setSlides(Array(1).fill(initialSlides))
+                if (intervalRef.current !== null){
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null
+                }
+                /*
+                if (modalUrl){
+                    setIsModal(true)
+                } 
+                */
             }
-            if (modalUrl){
-                setIsModal(true)
-            } 
         }
     }, [currentIndex]);
 
@@ -481,9 +488,9 @@ export default function Aicon() {
         {wavReady ? (
         <div className="fixed inset-0 flex flex-col items-center h-full bg-stone-200">
             <div className="flex-none h-[40vh] w-full max-w-96 mb-5">
-                <img className="mx-auto" src={slides[currentIndex]} alt="Image" />
+                {Array.isArray(slides) && (<img className="mx-auto h-[40vh] " src={slides[currentIndex]} alt="Image" />)}
             </div>
-            <div className="flex-1 h-[42vh] w-11/12 max-w-96 overflow-auto">
+            <div className="flex-none h-[42vh] w-11/12 max-w-96 overflow-auto">
             {messages.map((message) => (
                 <div 
                     key={message.id} 
@@ -553,22 +560,12 @@ export default function Aicon() {
             </select>
             </div>            
             )}
-            <div className="flex flex-row w-16 h-6 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
+            <div className="flex flex-row w-20 h-6 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
             <X size={16} />
-            <div className="text-xs">閉じる</div>
+            <div className="text-xs">終了する</div>
             </div>
             <audio src={wavUrl} ref={audioRef} preload="auto"/>
             <div className="hidden">{wavUrl}</div>
         </div>
     );
 }
-
-
-
-/*
-    <Suspense fallback={
-    <div className="flex justify-center items-center h-screen">Loading...</div>
-    }>
-      <AIChat />
-    </Suspense>
-*/
