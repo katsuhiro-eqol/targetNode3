@@ -21,7 +21,7 @@ export const PronunciationRegistration = ({pronunciations, setPronunciations, is
     ]
 
     const isHiraganaOnly = (input:string) => {
-        const hiraganaRegex = /^[\u3041-\u3096\s]*$/;
+        const hiraganaRegex = /^[\u3041-\u3096\u3099-\u309C\u309Dー\s]*$/;
         return hiraganaRegex.test(input);
       }
     const registrationPronunciation = () => {

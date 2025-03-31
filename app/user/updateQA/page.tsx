@@ -215,7 +215,7 @@ export default function UpdaateQA(){
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
             setStatus("Q&Aの更新が完了しました")
-            cancelButton()
+            //cancelButton()
         } else if ((newQuestion === "" && newAnswer !== "") && selectedQA) {
             setStatus("音声合成の準備をしています・・・")
             const readText = convertPronunciation(eventData!.pronunciations, newAnswer)
@@ -235,8 +235,9 @@ export default function UpdaateQA(){
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
             setStatus("Q&Aの更新が完了しました")
-            cancelButton()
+            //cancelButton()
         } else if ((newQuestion !== "" && newAnswer === "") && selectedQA){
+            setStatus("ベクトル化を開始しました")
             const embedding = await createEmbedding(newQuestion,eventData!.embedding)
             const eventId = organization + "_" + event
             const qaId = selectedQA.id
@@ -246,7 +247,7 @@ export default function UpdaateQA(){
             }
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
-            cancelButton()
+            //cancelButton()
             setStatus("Q&Aの更新が完了しました")
         } else {
             alert("更新するquestion and/or anwerが入力されていません")
@@ -264,7 +265,7 @@ export default function UpdaateQA(){
             const docRef = doc(db, "Events", eventId, "QADB",selectedQA!.id)
             await setDoc(docRef, data, {merge:true})
             setStatus("添付書類の登録が完了しました")
-            cancelButton()
+            //cancelButton()
         } else {
             alert("更新する添付書類(modal_file)が登録されていません")
         }
@@ -286,6 +287,7 @@ export default function UpdaateQA(){
     const updateVoice = async() => {
         const readText = convertPronunciation(pronunciations, selectedQA!.read)
         console.log(readText)
+        setStatus("音声合成を開始しました")
         if (eventData && selectedQA){
             await registerVoice(organization, event, selectedQA.answer, readText, eventData.voice, selectedQA.id)
             const data = {
@@ -296,21 +298,22 @@ export default function UpdaateQA(){
             const docRef = doc(db, "Events", eventId, "QADB", selectedQA?.id)
             await setDoc(docRef, data, {merge:true})
             setStatus("読みの更新が完了しました")
-            cancelButton()
+            //cancelButton()
         }
     }
         
     const addQA = async() => {
         if (newQuestion && newAnswer){
-            setStatus("Q&A登録の準備をしています")
+            setStatus("Q&A登録を開始しました")
             //読み補正したstringに対してvoiceIdを設定する。
             const readText = convertPronunciation(eventData!.pronunciations ||null, newAnswer)
             const hashString = md5(readText)
             const voiceId = eventData!.voice + "-" + hashString
             const foreign = await createForeign(newAnswer, eventData!.languages)
+            setStatus("外国語対抗が完了しました")
             const foreignAns = foreign[newAnswer]
             const embedding = await createEmbedding(newQuestion,eventData!.embedding)
-
+            setStatus("ベクトル化が完了しました")
             const lastId = qaData.at(-1)
             if (lastId){
                 const newId = String(parseInt(lastId?.id)+1)
@@ -330,9 +333,10 @@ export default function UpdaateQA(){
                         voiceId:voiceId
                     }
                     await setDoc(docRef, data)
+                    setStatus("音声合成を開始しました")
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, "") 
                     setStatus("追加Q&Aの登録が完了しました")       
-                    cancelButton()     
+                    //cancelButton()     
                 } else if (newModal && !modalData) {
                     alert("添付書類が登録されていません")
                 } else {
@@ -351,7 +355,7 @@ export default function UpdaateQA(){
                     await setDoc(docRef, data)
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, "") 
                     setStatus("追加Q&Aの登録が完了しました")  
-                    cancelButton()
+                    //cancelButton()
                 }
             }
             
@@ -369,7 +373,7 @@ export default function UpdaateQA(){
                 const docRef = doc(db, "Events", eventId, "QADB", selectedQA.id)
                 await deleteDoc(docRef)
                 setStatus(`Q&A(id:${selectedQA.id})の削除が完了しました`) 
-                cancelButton()
+                //cancelButton()
             }
         }else{
             alert("Q&Aが選択されていまさん")
@@ -508,7 +512,7 @@ export default function UpdaateQA(){
                     </div>
                     <div className="ml-3 mt-5">
                     <div className="flex flex-row gap-x-4">
-                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
+                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
                     <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => updateQA()}>Q&A更新</button>
                     </div>
                     
@@ -537,7 +541,7 @@ export default function UpdaateQA(){
                     )}
                     <div className="ml-3 mt-5">
                     <div className="flex flex-row gap-x-4">
-                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
+                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
                     <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => updateModal()}>添付書類更新</button>
                     </div>
                     </div>                    
@@ -555,7 +559,7 @@ export default function UpdaateQA(){
                     <div className="ml-3 mt-5">
                     <div className="text-xs text-red-500">注意：現在の読みに対して追加で読み辞書を適用します。</div>
                     <div className="flex flex-row gap-x-4">
-                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
+                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
                     <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => updateVoice()}>読みを修正</button>
                     </div>
                     </div>
@@ -567,7 +571,7 @@ export default function UpdaateQA(){
                     {(selectedQA && selectedButton === "delete") && (
                     <div>
                         <div>このデータを削除しますか？</div>
-                        <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
+                        <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
                         <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => deleteQA()}>データ削除</button>
                     </div>)}
                 </div>)}
@@ -612,7 +616,7 @@ export default function UpdaateQA(){
             )}
             </div>
             <div className="flex flex-row gap-x-4">
-            <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
+            <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
             <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => addQA()}>Q&Aを追加登録</button>
             </div>
             </div>)}   

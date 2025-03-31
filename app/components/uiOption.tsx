@@ -40,7 +40,7 @@ export default function UiOption({uiOption, setUiOption, setImage, organization}
                 <div key={index} className={`flex flex-col items-center cursor-pointer mt-2 pt-1 ${
                     selectedIndex === index ? "border-2 border-blue-500" : "border-2 border-transparent"
                   }`} onClick={() => selectUIImage(index)} >
-                <img src={`${image.url}`} alt={"Image"} className="w-24 max-h-32" />
+                <img src={`${image.url}`} alt={"Image"} className="h-24" />
                 <p className="mt-2 text-center text-xs">{image.name}</p>
                 </div>
             ))}

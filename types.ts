@@ -54,6 +54,7 @@ export type Message = {
     sender: 'user' | 'AIcon';
     modalUrl: string | null;
     modalFile: string | null;
+    similarity: number | null;
 }
 //aiconに読み込むデータ
 export interface EmbeddingsData {
@@ -134,9 +135,11 @@ export interface Pronunciation {
     read: string;
 }
 
+/*
 export interface EventList {
     event:string[];
 }
+*/
 
 export interface StartText {
     text:string;

@@ -4,6 +4,7 @@ import { doc, getDocs, collection, setDoc, query, where } from "firebase/firesto
 
 export const registerVoice = async (organization:string, event:string, answer:string, read:string, voice:string, qaId:string) => {
     //既にoriginalIdが存在し、その音声ののみを変更することを想定
+
     try {
         const response = await fetch("/api/createAudioData", {
             method: "POST",
@@ -22,7 +23,7 @@ export const registerVoice = async (organization:string, event:string, answer:st
             await saveVoiceData(audio.voiceId, answer, read, audio.audioContent, organization, event, qaId)
     }
     } catch (error) {
-    console.log(error);
+        console.log(error)
     }
 }
 

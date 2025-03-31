@@ -30,6 +30,9 @@ export default function User(){
             <div className="text-sm">登録したイベントおよびQ&A情報は登録情報一覧で確認できます。自動生成した外国語翻訳文、AI音声、添付書類なども確認できます。</div>
             <div className="mt-8 font-semibold">QRコード発行</div>
             <div className="text-sm">ユーザーが使用するWEBアプリのURLをQRコードで発行することができます。</div>
+            <div className="mt-8 font-semibold">イベント進捗状況</div>
+            <div className="text-sm">ユーザーの利用状況を取得、解析するページです。ただいま構築中です。</div>            
+
         </div>
     )
 }

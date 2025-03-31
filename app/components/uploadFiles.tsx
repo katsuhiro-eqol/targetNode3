@@ -125,6 +125,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
     } else if (files.length < modal.length) {
         alert("必要なファイルが読み込まれていません")
     } else {
+        console.log(files)
         const filenames = files.map((item => item.name))
         const array = modal.filter((item => filenames.indexOf(item) == -1))
         if (array.length > 0){

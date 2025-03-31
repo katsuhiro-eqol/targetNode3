@@ -5,6 +5,7 @@ import { db } from "@/firebase"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import EventsList from "../../components/eventsList"
 import QADataList from "../../components/qADataList"
+import getQAData from "@/app/functions/getQAData"
 import { Event, QaData, Pronunciation } from "@/types"
 
 export default function EventList(){
@@ -79,6 +80,11 @@ export default function EventList(){
 
     const loadQADB = async () => {
         if (eventId){
+            const qa = await getQAData(eventId)
+            setQaData(qa)
+        }
+        /*
+        if (eventId){
         const querySnapshot = await getDocs(collection(db, "Events", eventId, "QADB"));
         const qa:QaData[] = []
         querySnapshot.forEach((doc) => {
@@ -104,6 +110,7 @@ export default function EventList(){
           qa.sort((a, b) => parseInt(a.id, 10) - parseInt(b.id));
           setQaData(qa)
         }
+          */
     }
 
     useEffect(() => {

@@ -3,13 +3,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import UploadFiles from "../../components/uploadFiles"
 import { db } from "@/firebase"
-import { doc, getDoc, getDocs, collection, setDoc, query, where, updateDoc } from "firebase/firestore"
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
+//import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {registerVoice} from "../../functions/updateWav"
+import createEmbedding from "../../functions/createEmbedding"
+import validateCreatedQA from '@/app/functions/verificationQA';
 import { ModalData, EventData, ForeignAnswers, CsvData, Pronunciation } from "@/types"
 import md5 from 'md5';
 import { Check} from 'lucide-react';
 
+interface Voice {organization:string, event:string, answer:string, read:string, voice:string, qaId:string}
 
 export default function RegisterCSV() {
     const [jsonData, setJsonData] = useState<CsvData[]>([]);
@@ -93,7 +96,6 @@ export default function RegisterCSV() {
     const voiceRegistration = async () => {
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
-        
         //const answerCount = answerSet.size
         let n = 1
         for (const answer of answerSet){
@@ -114,6 +116,8 @@ export default function RegisterCSV() {
                 alert("id、question、answerに空欄がないようにしてください")
             } else {
             try {
+                const embedding = await createEmbedding(item.question, eventData!.embedding)
+                /*
                 const response = await fetch("/api/embedding", {
                     method: "POST",
                     headers: {
@@ -122,7 +126,8 @@ export default function RegisterCSV() {
                     //body: JSON.stringify({ input: userInput, character: character, fewShot: fewShot, previousData: previousData, sca: scaList[character] }),
                     body: JSON.stringify({ input: item.question, model: eventData?.embedding}),
                   });
-                const embedding = await response.json()
+                */
+                //const embedding = await response.json()
                 //読み補正したstringに対してvoiceIdを設定する。
                 const readText = convertPronunciation(eventData?.pronunciations ||null, item.answer)
                 const hashString = md5(readText)
@@ -137,7 +142,7 @@ export default function RegisterCSV() {
                         modalFile:item.modal_file,
                         modalUrl: modalList[0].url,
                         modalPath: modalList[0].path,
-                        vector: embedding.embedding,
+                        vector: embedding,
                         voiceId: voiceId,
                         read: readText,
                         foreign:foreinAnswers[item.answer],
@@ -150,7 +155,7 @@ export default function RegisterCSV() {
                         modalFile:"",
                         modalUrl: "",
                         modalPath: "",
-                        vector: embedding.embedding,
+                        vector: embedding,
                         voiceId: voiceId,
                         read: readText,
                         foreign:foreinAnswers[item.answer],
@@ -211,15 +216,19 @@ export default function RegisterCSV() {
     }
 
     const registerToFirestore = async () => {
+
         if (judgeNewQA()){
             const translated = await registerForeignLang()
             await registerQADB(translated)
             await voiceRegistration()
+            setStatus("データを検証しています")
             await updateEventStatus()
-            setStatus("Q&Aデータベースの登録が完了しました")
+            const comment = await validateCreatedQA(organization, event, eventData!.voice, eventData!.embedding, eventData!.languages)
+            setStatus(comment)
         }
     }
 
+    /*
     const frameCount = (base64Data:string) => {
         const audioString = base64Data.replace(/-/g, '+').replace(/_/g, '/')
         const byteCharacters = atob(audioString)
@@ -227,6 +236,7 @@ export default function RegisterCSV() {
         const frameCount = bytesLength/2
         return frameCount
     }
+    */
 
     const loadEvents = async (org:string) => {
         try {
@@ -268,7 +278,7 @@ export default function RegisterCSV() {
                             embedding: data.embedding,
                             qaData: data.qaData,
                             code:data.code,
-                            pronunciations:data.pronunciation
+                            pronunciations:data.pronunciation,
                         }
                         setEventData(data3)
                     }
@@ -373,7 +383,7 @@ export default function RegisterCSV() {
             {isSecondStep && <Check className="text-green-500"/>}
             </div>
 
-            <div className="text-xs ml-3">（未設定の場合は「イベント管理」メニューから「イベント新規登録」を行なってください）</div>
+            <div className="text-xs ml-3">（未設定の場合は「データ新規登録」メニューから「イベント登録」を行なってください）</div>
             <select className="mt-3 ml-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;

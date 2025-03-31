@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
 import { db } from "@/firebase";
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import Modal from "../../components/modalModal"
 import {Message, EmbeddingsData, EventData, Foreign} from "@/types"
 type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
@@ -23,6 +23,7 @@ export default function Aicon() {
     const [dLang, setDLang] = useState<string>("日本語")//表示用言語
     const [language, setLanguage] = useState<string>("日本語")
     const [embeddingsData, setEmbeddingsData] = useState<EmbeddingsData[]>([])
+    //const [attribute, setAttribute] = useState<string|null>(null)
     //wavUrl：cloud storageのダウンロードurl。初期値は無音ファイル。これを入れることによって次からセッティングされるwavUrlで音がなるようになる。
     const [wavUrl, setWavUrl] = useState<string>(no_sound);
     const [slides, setSlides] = useState<string[]|null>(null)
@@ -75,7 +76,12 @@ export default function Aicon() {
             sender: 'user',
             modalUrl:null,
             modalFile:null,
+            similarity:null
         };
+        if (attribute){
+            await saveMessage(userMessage, attribute)
+        }
+         
         
         setMessages(prev => [...prev, userMessage]);
 
@@ -105,8 +111,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:embeddingsData[similarityList.index].modalUrl,
                         modalFile:embeddingsData[similarityList.index].modalFile,
+                        similarity:similarityList.similarity 
                     };
                     setMessages(prev => [...prev, aiMessage]);
+                    if (attribute){
+                        await saveMessage(aiMessage, attribute)
+                    }
                 } else {
                     const aiMessage: Message = {
                         id: Date.now().toString(),
@@ -114,8 +124,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:null,
                         modalFile:null,
+                        similarity:similarityList.similarity 
                     };
                     setMessages(prev => [...prev, aiMessage]);
+                    if (attribute){
+                        await saveMessage(aiMessage, attribute)
+                    }
                 }
                 const sl = createSlides(embeddingsData[similarityList.index].frame)
                 setSlides(sl)
@@ -132,8 +146,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:badQuestion[n].modalUrl,
                         modalFile:badQuestion[n].modalFile,
+                        similarity:similarityList.similarity 
                     };
                     setMessages(prev => [...prev, aiMessage]);
+                    if (attribute){
+                        await saveMessage(aiMessage, attribute)
+                    }
                 } else {
                     const aiMessage: Message = {
                         id: Date.now().toString(),
@@ -141,8 +159,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:null,
                         modalFile:null,
+                        similarity:similarityList.similarity 
                     };
                     setMessages(prev => [...prev, aiMessage]);
+                    if (attribute){
+                        await saveMessage(aiMessage, attribute)
+                    }
                 }                
                 const sl = createSlides(badQuestion[n].frame)
                 setSlides(sl)           
@@ -204,7 +226,6 @@ export default function Aicon() {
           return embeddingsList
     }
 
-
     const createSlides = (frame:number) => {
         let imageArray = []
         switch (initialSlides) {
@@ -224,8 +245,6 @@ export default function Aicon() {
                 imageArray = Array(2).fill(initialSlides)
                 break;
         }
-
-        console.log(imageArray)
         let imageList:string[] = []
         const n = Math.floor(frame/44100*2)+2
         console.log("n:", n)
@@ -291,6 +310,10 @@ export default function Aicon() {
         }
     }
 
+    const saveMessage = async (message:Message, attr:string) => {
+        await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(message)})
+    }
+
     const createConvField = async (id:string, attr:string) => {
         await setDoc(doc(db,"Events",attr,"Conversation",id), {"conversations":[]})
     }
@@ -323,6 +346,7 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:null,
                         modalFile:null,
+                        similarity:null
                     };
                     setMessages(prev => [...prev, aiMessage])
                 }else{
@@ -336,6 +360,7 @@ export default function Aicon() {
                             sender: 'AIcon',
                             modalUrl:null,
                             modalFile:null,
+                            similarity:null
                         };
                         setMessages(prev => [...prev, aiMessage])   
                     }                     
@@ -399,12 +424,17 @@ export default function Aicon() {
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
-            const convid = randomStr(12)
-            console.log(convid)
-            if (!convId){
-                setConvId(convid)
-                createConvField(convid, attribute)
+            const now = new Date().toJSON()
+            const today = now.split("T")[0]
+            const random = randomStr(6)
+            
+            const convId = `${today}-${random}`
+            console.log(convId)
+            if (convId){
+                setConvId(convId)
+                createConvField(convId, attribute)
             }
+                
         }        
     }, [attribute, code])
 
@@ -428,27 +458,45 @@ export default function Aicon() {
     }, [embeddingsData])
 
     //20240228ヴァージョンはアニメーション省略なのでwavUrlが更新されたらaudioPlayする
+    /*
     useEffect(() => {
         if (wavUrl != no_sound ){
-            console.log(wavUrl)
+            console.log("check1")
         audioPlay()
         setCurrentIndex(0)
         if (Array.isArray(slides) && slides.length !== 1){
             if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
+                console.log("check2")
                 return;
             }
+            console.log("check3")
             intervalRef.current = setInterval(() => {
                 setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
             }, 250)
 
         } else {
-
+            console.log("isArray",Array.isArray(slides))
+            console.log("slides",slides)
+            console.log("check4")
         }   
     }
     }, [wavUrl])
+    */
 
     useEffect(() => {
-        //console.log(slides)
+        if (Array.isArray(slides) && slides.length>1 && wavUrl!= no_sound){
+            audioPlay()
+            setCurrentIndex(0)
+            if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
+                console.log("check2")
+                return;
+            }
+            console.log("check3")
+            intervalRef.current = setInterval(() => {
+                setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
+            }, 250)
+
+        }
     }, [slides])
 
     useEffect(() => {
@@ -456,6 +504,7 @@ export default function Aicon() {
             if (currentIndex === slides.length-2 && currentIndex != 0){
                 const s = initialSlides
                 setCurrentIndex(0)
+                setWavUrl(no_sound)
                 setSlides(Array(1).fill(initialSlides))
                 if (intervalRef.current !== null){
                     clearInterval(intervalRef.current);
@@ -505,7 +554,7 @@ export default function Aicon() {
                     >
                     <div className="flex flex-row gap-x-4 justify-center">
                     <p>{message.text}</p>
-                    {message.modalUrl && <Paperclip size={16} onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
+                    {message.modalUrl && <Paperclip size={20} className="text-green-500" onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
                     </div>
                     {isModal && (<Modal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile} />)}
                     </div>
@@ -562,7 +611,7 @@ export default function Aicon() {
             )}
             <div className="flex flex-row w-20 h-6 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
             <X size={16} />
-            <div className="text-xs">終了する</div>
+            <div className="text-xs">{currentIndex}</div>
             </div>
             <audio src={wavUrl} ref={audioRef} preload="auto"/>
             <div className="hidden">{wavUrl}</div>

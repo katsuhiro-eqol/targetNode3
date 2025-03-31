@@ -2,7 +2,8 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { db } from "@/firebase"
-import { doc, getDoc, deleteDoc, setDoc } from "firebase/firestore"
+import { doc, getDoc, deleteDoc, setDoc, getDocs, collection, writeBatch } from "firebase/firestore"
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
 export default function Account(){
@@ -42,6 +43,7 @@ export default function Account(){
         const dEvent = confirm(`本当に${event}を削除しますか？`)
             if (dEvent){
                 if (events){
+                    //Usersのイベントリストから外す
                     const newEvents = events.filter((item) => item !== event)
                     const userRef = doc(db, "Users",organization)
                     const data = {
@@ -50,15 +52,60 @@ export default function Account(){
                     await setDoc(userRef, data, {merge:true})
                     setEvents(newEvents)
                     setEvent("")
+                    //Storageのmodalから削除
+                    await deleteStorageFolder()
                 }
+            //サブコレクションのあるドキュメントは、サブコレクションのドキュメントを１つずつ削除したのち、親のドキュメントを削除する必要がある
+            try {
                 const eventId = organization + "_" + event
-                const docRef = doc(db, "Events",eventId)
-                await deleteDoc(docRef)
+
+                await deleteSubcollections()
+                const batch = writeBatch(db);
+                batch.delete(doc(db,"Events",eventId));
+                await batch.commit()
                 setStatus(`${event}の削除が完了しました`)
+            } catch (error){
+                console.log(error)
+                setStatus("イベントの削除に失敗しました。情報一覧からデータを確認してください。")
+            }
             }
         } else {
             alert("削除するイベント名が入力されていません")
         }
+    }
+
+    const deleteSubcollections = async () => {
+        const eventId = organization + "_" + event
+        const docRef = doc(db, "Events", eventId)
+        //const subcollections = getDocs(collection(docRef,"_"))
+        const subcollection = ["QADB", "Conversation"]
+        for (const subcollectionDoc of subcollection) {
+            const subcollectionPath = `Events/${eventId}/${subcollectionDoc}`
+            const subDocsSnapshot = await getDocs(collection(db, subcollectionPath))
+            for (const subDoc of subDocsSnapshot.docs) {
+                // バッチで削除処理を行う
+                const batch = writeBatch(db);
+                batch.delete(subDoc.ref);
+                await batch.commit();
+              }
+
+        }
+    }
+
+    const deleteStorageFolder = async () => {
+        const folderPath = `modal/${organization}/${event}`
+        const response = await fetch('/api/deleteStorage', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ path: folderPath }),
+          });
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+          
+          console.log("delete comolete")
     }
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
