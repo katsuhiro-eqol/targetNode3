@@ -15,6 +15,7 @@ type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
 export default function Aicon() {
+    const [windowHeight, setWindowHeight] = useState<number>(0)
     const [initialSlides, setInitialSlides] = useState<string|null>(null)
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
@@ -411,7 +412,15 @@ export default function Aicon() {
     }
 
     useEffect(() => {
+        const updateHeight = () => {
+            setWindowHeight(window.innerHeight);
+          };
+      
+          updateHeight(); // 初期値設定
+          window.addEventListener("resize", updateHeight);
+
         return () => {
+            window.removeEventListener("resize", updateHeight);
             if (intervalRef.current !== null){
                 clearInterval(intervalRef.current);
                 intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
@@ -533,13 +542,13 @@ export default function Aicon() {
     }, [userInput])
 
     return (
-        <div>
+        <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
         {wavReady ? (
         <div className="fixed inset-0 flex flex-col items-center h-full bg-stone-200">
             <div className="flex-none h-[40vh] w-full max-w-96 mb-5">
                 {Array.isArray(slides) && (<img className="mx-auto h-[40vh] " src={slides[currentIndex]} alt="Image" />)}
             </div>
-            <div className="flex-none h-[42vh] w-11/12 max-w-96 overflow-auto">
+            <div className="flex-none h-[35vh] w-11/12 max-w-96 overflow-auto">
             {messages.map((message) => (
                 <div 
                     key={message.id} 
@@ -611,10 +620,14 @@ export default function Aicon() {
             )}
             <div className="flex flex-row w-20 h-6 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
             <X size={16} />
-            <div className="text-xs">{currentIndex}</div>
+            <div className="text-xs">終了する</div>
             </div>
             <audio src={wavUrl} ref={audioRef} preload="auto"/>
             <div className="hidden">{wavUrl}</div>
         </div>
     );
 }
+
+/*
+ className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}
+ */

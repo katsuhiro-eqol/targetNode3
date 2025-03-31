@@ -138,10 +138,11 @@ export default function DownloadableQRCode(){
             className="ml-3 bg-white"
             style={{ display: 'inline-block' }}
         >
+            
             <QRCode value={url} size={size} level="H"/>
             <div className="flex flex-row gap-x-4">
-            <button onClick={downloadQRAsJPG} className="ml-3 mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
-            <button onClick={setNewEventCode} className="ml-3 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコードを変更</button>
+            <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
+            <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>
             </div>
             <div className="text-lime-500 mt-5 ml-3">{status}</div>  
             </div>
