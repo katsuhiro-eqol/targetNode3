@@ -52,7 +52,9 @@ export default function CreateEvent(){
             alert("イベント名が記入されていません")
             console.log("イベント名が記入されていません")
             return false
-        } else if (!events){
+        } else if (!isAlphanumeric(newEvent)) {
+            alert("イベント名は半角アルファベット・数字のみです")
+        }else if (!events){
             return true
         } else if (events.includes(newEvent)){
             alert("既に同じ名前のイベントが登録されています")
@@ -118,7 +120,7 @@ export default function CreateEvent(){
                 setComment("データ登録時にエラーが発生しました")
         }
         } else {
-            alert("設定値を見直してください")
+
         }
     }
 
@@ -154,6 +156,10 @@ export default function CreateEvent(){
     const toggleState = () => {
         setIsEventOption((prev) => !prev); // 現在の状態を反転させる
     };
+
+    const isAlphanumeric = (str:string) => {
+        return /^[a-zA-Z0-9]+$/.test(str);
+    }
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -194,7 +200,7 @@ export default function CreateEvent(){
         <div>
             <div>
             <div className="font-bold text-xl my-3">イベントの新規作成</div>
-            <div className="text-base font-semibold text-gray-700">・ステップ１: イベント名を入力</div>
+            <div className="text-base font-semibold text-gray-700">・ステップ１: イベント名を入力（アルファベットと半角数字のみ）</div>
             <input className="w-2/3 rounded-md px-4 py-2 bg-inherit border mt-2 mb-6 border-lime-600"
                 name="event"
                 placeholder="新規イベント名"

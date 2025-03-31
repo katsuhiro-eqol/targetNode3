@@ -548,7 +548,7 @@ export default function Aicon() {
             <div className="flex-none h-[40vh] w-full max-w-96 mb-5">
                 {Array.isArray(slides) && (<img className="mx-auto h-[40vh] " src={slides[currentIndex]} alt="Image" />)}
             </div>
-            <div className="flex-none h-[35vh] w-11/12 max-w-96 overflow-auto">
+            <div className="flex-none h-[32vh] w-11/12 max-w-96 overflow-auto">
             {messages.map((message) => (
                 <div 
                     key={message.id} 
@@ -618,10 +618,12 @@ export default function Aicon() {
             </select>
             </div>            
             )}
+            {wavReady && (
             <div className="flex flex-row w-20 h-6 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
             <X size={16} />
             <div className="text-xs">終了する</div>
             </div>
+            )}
             <audio src={wavUrl} ref={audioRef} preload="auto"/>
             <div className="hidden">{wavUrl}</div>
         </div>

@@ -106,7 +106,6 @@ export default function DownloadableQRCode(){
     useEffect(() => {
         if (code!==""){
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
-            console.log(eventUrl)
             setUrl(eventUrl)
         }
     }, [code])
@@ -138,7 +137,7 @@ export default function DownloadableQRCode(){
             className="ml-3 bg-white"
             style={{ display: 'inline-block' }}
         >
-            
+
             <QRCode value={url} size={size} level="H"/>
             <div className="flex flex-row gap-x-4">
             <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
