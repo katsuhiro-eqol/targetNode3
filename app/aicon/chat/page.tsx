@@ -545,8 +545,8 @@ export default function Aicon() {
         <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
         {wavReady ? (
         <div className="fixed inset-0 flex flex-col items-center h-full bg-stone-200">
-            <div className="flex-none h-[40vh] w-full max-w-96 mb-5">
-                {Array.isArray(slides) && (<img className="mx-auto h-[40vh] " src={slides[currentIndex]} alt="Image" />)}
+            <div className="flex-none h-[35vh] w-full max-w-96 mb-5">
+                {Array.isArray(slides) && (<img className="mx-auto h-[35vh] " src={slides[currentIndex]} alt="Image" />)}
             </div>
             <div className="flex-none h-[32vh] w-11/12 max-w-96 overflow-auto">
             {messages.map((message) => (
@@ -571,7 +571,7 @@ export default function Aicon() {
                 ))}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="flex-none h-[18%] w-full max-w-96">
+            <div className="flex-none h-[18%] w-full max-w-96 overflow-auto">
             <div className="mt-2">
             <textarea className="block w-5/6 max-w-96 mx-auto mb-2 px-2 py-2 text-xs"
                 name="message"
