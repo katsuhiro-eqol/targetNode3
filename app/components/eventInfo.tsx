@@ -1,7 +1,6 @@
 'use client';
 import React from "react";
-import { useState, useEffect } from 'react';
-import { Circle, CircleDot } from 'lucide-react';
+import { useState } from 'react';
 import { Event } from "@/types"
 
 interface EventInfoProps {

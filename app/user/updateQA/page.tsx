@@ -5,9 +5,9 @@ import { doc, getDoc, collection, getDocs, setDoc, deleteDoc } from "firebase/fi
 import UploadFiles from "../../components/uploadFiles"
 import QADataSelection from "../../components/qaDataSelection"
 import { PronunciationRegistration } from "../../components/pronunciation"
-import {registerVoice} from "../../functions/updateWav"
-import createForeign from "../../functions/createForeign"
-import createEmbedding from "../../functions/createEmbedding"
+import {registerVoice} from "../../func/updateWav"
+import createForeign from "../../func/createForeign"
+import createEmbedding from "../../func/createEmbedding"
 import { Circle, CircleDot, ArrowBigRight } from 'lucide-react'
 import { EventData, QaData, ModalData, Pronunciation } from "@/types"
 import md5 from 'md5';

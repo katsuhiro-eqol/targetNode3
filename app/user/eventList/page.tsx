@@ -5,7 +5,7 @@ import { db } from "@/firebase"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import EventsList from "../../components/eventsList"
 import QADataList from "../../components/qADataList"
-import getQAData from "@/app/functions/getQAData"
+import getQAData from "@/app/func/getQAData"
 import { Event, QaData, Pronunciation } from "@/types"
 
 export default function EventList(){

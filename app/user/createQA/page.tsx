@@ -5,9 +5,9 @@ import UploadFiles from "../../components/uploadFiles"
 import { db } from "@/firebase"
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 //import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import {registerVoice} from "../../functions/updateWav"
-import createEmbedding from "../../functions/createEmbedding"
-import validateCreatedQA from '@/app/functions/verificationQA';
+import {registerVoice} from "../../func/updateWav"
+import createEmbedding from "../../func/createEmbedding"
+import validateCreatedQA from '@/app/func/verificationQA';
 import { ModalData, EventData, ForeignAnswers, CsvData, Pronunciation } from "@/types"
 import md5 from 'md5';
 import { Check} from 'lucide-react';

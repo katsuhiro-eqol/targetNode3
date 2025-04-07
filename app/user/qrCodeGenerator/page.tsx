@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import QRCode from 'react-qr-code';
+import {QRCodeCanvas} from 'qrcode.react'
 import { db } from "@/firebase"
 import { doc, getDoc, setDoc } from "firebase/firestore"
 import { toJpeg } from 'html-to-image';
@@ -138,7 +138,7 @@ export default function DownloadableQRCode(){
             style={{ display: 'inline-block' }}
         >
 
-            <QRCode value={url} size={size} level="H"/>
+            <QRCodeCanvas value={url} size={size} level="H"/>
             <div className="flex flex-row gap-x-4">
             <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
             <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>

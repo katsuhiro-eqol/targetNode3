@@ -247,7 +247,7 @@ export default function Aicon() {
                 break;
         }
         let imageList:string[] = []
-        const n = Math.floor(frame/44100*2)+2
+        const n = Math.floor(frame/44100*2)+4
         console.log("n:", n)
         for (let i = 0; i<n; i++){
             imageList = imageList.concat(imageArray)

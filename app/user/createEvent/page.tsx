@@ -5,6 +5,7 @@ import { db } from "@/firebase"
 import { doc, getDoc, collection, setDoc, updateDoc, arrayUnion } from "firebase/firestore"
 import { PronunciationRegistration } from "../../components/pronunciation"
 import EventOption from "../../components/eventOption"
+import VoiceSample from "../../components/voiceSample"
 import { Circle, CircleDot } from 'lucide-react'
 import { Pronunciation, Image } from "@/types"
 
@@ -18,7 +19,8 @@ export default function CreateEvent(){
     const [comment, setComment] = useState<string>("")
     const [selectedOptions, setSelectedOptions] = useState<string[]>(["日本語"]);
     const [other, setOther] = useState<string>("")//他言語
-    const [voice, setVoice] = useState<string>("bauncer")//音声モデル
+    const [isListen, setIsListen] = useState<boolean>(false)
+    const [voice, setVoice] = useState<string>("voice_m")//音声モデル
     const [model, setModel] = useState<string>("text-embedding-3-small")//embeddingモデル
     const [image, setImage] = useState<Image>({name:"AI-con_man_01.png", url:"/AI-con_man_01.png"})
     const [isEventOption, setIsEventOption] = useState<boolean>(false)
@@ -29,8 +31,7 @@ export default function CreateEvent(){
     const [endTime, setEndTime] = useState<string>("制限なし")//利用終了時間
     const options = ["英語", "中国語（簡体）", "中国語（繁体）", "韓国語"];
     const otherOptions = ["その他","フランス語","ポルトガル語","スペイン語"]
-    const voiceList = ["bauncer", "silva"]
-    //const uiOptions = ["AI-con_woman_01","AI-con_man_01","AI-con_woman_02","AI-con_man_02"]
+    const voiceList = ["voice_m", "voice_w"]
 
     const loadEvents = async () => {
         try {           
@@ -52,9 +53,7 @@ export default function CreateEvent(){
             alert("イベント名が記入されていません")
             console.log("イベント名が記入されていません")
             return false
-        } else if (!isAlphanumeric(newEvent)) {
-            alert("イベント名は半角アルファベット・数字のみです")
-        }else if (!events){
+        } else if (!events){
             return true
         } else if (events.includes(newEvent)){
             alert("既に同じ名前のイベントが登録されています")
@@ -200,7 +199,7 @@ export default function CreateEvent(){
         <div>
             <div>
             <div className="font-bold text-xl my-3">イベントの新規作成</div>
-            <div className="text-base font-semibold text-gray-700">・ステップ１: イベント名を入力（アルファベットと半角数字のみ）</div>
+            <div className="text-base font-semibold text-gray-700">・ステップ１: イベント名を入力</div>
             <input className="w-2/3 rounded-md px-4 py-2 bg-inherit border mt-2 mb-6 border-lime-600"
                 name="event"
                 placeholder="新規イベント名"
@@ -237,7 +236,8 @@ export default function CreateEvent(){
                 選択した言語: {selectedOptions.join(', ') || 'None'}
                 </p>
             </div>
-            <div className="font-semibold mt-5 text-sm ml-3 underline">AIボイス</div>
+            <div className="font-semibold mt-5 text-sm ml-3 underline">AIボイス<button className="ml-5 p-1 text-xs bg-gray-500 hover:bg-gray-600 text-white" onClick={()=>setIsListen(true)}>サンプル音声はこちら</button></div>
+            {isListen && (<VoiceSample setIsListen={setIsListen}/>)}
             <div className="flex flex-row gap-x-4">
             {voiceList.map((option) => (
                 <div
