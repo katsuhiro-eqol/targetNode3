@@ -247,11 +247,12 @@ export default function Aicon() {
                 break;
         }
         let imageList:string[] = []
-        const n = Math.floor(frame/44100*2)+4
+        const n = Math.floor(frame/44100*2)+2
         console.log("n:", n)
         for (let i = 0; i<n; i++){
             imageList = imageList.concat(imageArray)
         }
+        imageList = imageList.concat(Array(4).fill(initialSlides))
         //imageList = imageList.concat(initialSlides)
         return imageList
     }
@@ -391,8 +392,11 @@ export default function Aicon() {
     const sttStart = () => {
         setUserInput("")
         setRecord(true)
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
         const langCode = foreignLanguages[language] || "ja-JP"
-        SpeechRecognition.startListening({language:langCode})
+        SpeechRecognition.startListening({language:langCode, continuous:true})
     }
 
     const sttStop = () => {

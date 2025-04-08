@@ -19,7 +19,7 @@ export default function User(){
             <div className="font-bold text-xl my-3">「AIコンシェルジュ」管理者用ページ</div>
             <div className="text-sm">「AIコンシェルジュ」(AIコン)は、契約者自らが対話型AIのデータベースを構築し、WEBアプリケーションとしてユーザーに提供できるサービスです。この管理者用ページでデータベースを構築・管理していきます。</div>
             <div className="text-sm">データベースは「イベント」と「Q&Aデータ」からなります。複数のイベントを同時に運用することも可能です。</div>
-            <img className="w-96" src="/AIコン_イベントQA.png" alt="Image" />
+            <img className="w-1/2" src="/AIコン_イベントQA.png" alt="Image" />
             <div className="mt-8 font-semibold">イベント登録</div>
             <div className="text-sm">データベースの１セットのことをAIコンシェルジュではイベントと呼びます。最初にイベントを登録してデータベースの枠組みを作ります。</div>
             <div className="text-sm">イベントで設定する項目は、「使用する言語」「AI音声キャラ」「読み辞書」「UI画像」「利用期間」です。</div>
