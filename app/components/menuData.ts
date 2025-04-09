@@ -73,14 +73,14 @@ export const menuItems: MenuItem[] = [
     {
       title: 'ホーム',
       icon: Home,
-      path: '/',
+      path: '/admin',
       submenu: false,
       submenuItems: null
     },
     {
       title: 'ユーザー管理',
       icon: BriefcaseBusiness,
-      path: '/',
+      path: null,
       submenu: true,
       submenuItems: [
         { title: 'ユーザー登録', path: '/admin/userRegistration' },
@@ -88,9 +88,19 @@ export const menuItems: MenuItem[] = [
       ]
     },
     {
+        title: 'AdminFunctions',
+        icon: BriefcaseBusiness,
+        path: null,
+        submenu: true,
+        submenuItems: [
+            { title: '空Conversation削除', path: '/admin/deleteEmptyConversation' },
+            { title: 'ユーザー設定', path: ''}
+          ]
+      },
+    {
       title: '手順書・マニュアル',
       icon: NotebookText,
-      path: '/',
+      path: null,
       submenu: true,
       submenuItems: [
         { title: '管理者用マニュアル', path: '/user/manual' },

@@ -386,6 +386,7 @@ export default function Aicon() {
 
     const inputClear = () => {
         sttStop()
+        resetTranscript()
         setUserInput("")
     }
 
@@ -402,6 +403,7 @@ export default function Aicon() {
     const sttStop = () => {
         setRecord(false)
         SpeechRecognition.stopListening()
+        resetTranscript()
     }
 
     const selectLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
