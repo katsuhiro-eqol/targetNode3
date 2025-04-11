@@ -38,7 +38,6 @@ export default function Aicon() {
     const [convId, setConvId] = useState<string>("")
     const [startText, setStartText] = useState<EmbeddingsData|null>(null)
 
-
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
@@ -61,8 +60,7 @@ export default function Aicon() {
     const attribute = searchParams.get("attribute")
     const code = searchParams.get("code")
 
-    async function getAnswer() {
-        
+    async function getAnswer() {        
         sttStop()
         setWavUrl(no_sound)
         setRecord(false)
@@ -77,12 +75,14 @@ export default function Aicon() {
             sender: 'user',
             modalUrl:null,
             modalFile:null,
-            similarity:null
-        };
+            similarity:null,
+            nearestQ:null
+        }
+        /*
         if (attribute){
             await saveMessage(userMessage, attribute)
         }
-         
+         */
         
         setMessages(prev => [...prev, userMessage]);
 
@@ -104,7 +104,7 @@ export default function Aicon() {
             if (similarityList.similarity > 0.45){
                 console.log("voiceUrl:",embeddingsData[similarityList.index].voiceUrl)
                 setWavUrl(embeddingsData[similarityList.index].voiceUrl)
-                const answer = setAnser(embeddingsData[similarityList.index], language)
+                const answer = setAnswer(embeddingsData[similarityList.index], language)
                 if (embeddingsData[similarityList.index].modalUrl){
                     const aiMessage: Message = {
                         id: Date.now().toString(),
@@ -112,11 +112,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:embeddingsData[similarityList.index].modalUrl,
                         modalFile:embeddingsData[similarityList.index].modalFile,
-                        similarity:similarityList.similarity 
+                        similarity:similarityList.similarity,
+                        nearestQ:embeddingsData[similarityList.index].question
                     };
                     setMessages(prev => [...prev, aiMessage]);
                     if (attribute){
-                        await saveMessage(aiMessage, attribute)
+                        await saveMessage(userMessage, aiMessage, attribute)
                     }
                 } else {
                     const aiMessage: Message = {
@@ -125,11 +126,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:null,
                         modalFile:null,
-                        similarity:similarityList.similarity 
+                        similarity:similarityList.similarity,
+                        nearestQ:embeddingsData[similarityList.index].question
                     };
                     setMessages(prev => [...prev, aiMessage]);
                     if (attribute){
-                        await saveMessage(aiMessage, attribute)
+                        await saveMessage(userMessage, aiMessage, attribute)
                     }
                 }
                 const sl = createSlides(embeddingsData[similarityList.index].frame)
@@ -139,7 +141,7 @@ export default function Aicon() {
                 const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できなかった質問")
                 const n = Math.floor(Math.random() * badQuestion.length)
                 setWavUrl(badQuestion[n].voiceUrl)
-                const answer = setAnser(badQuestion[n], language)
+                const answer = setAnswer(badQuestion[n], language)
                 if (badQuestion[n].modalUrl){
                     const aiMessage: Message = {
                         id: Date.now().toString(),
@@ -147,11 +149,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:badQuestion[n].modalUrl,
                         modalFile:badQuestion[n].modalFile,
-                        similarity:similarityList.similarity 
+                        similarity:similarityList.similarity,
+                        nearestQ:null
                     };
                     setMessages(prev => [...prev, aiMessage]);
                     if (attribute){
-                        await saveMessage(aiMessage, attribute)
+                        await saveMessage(userMessage, aiMessage, attribute)
                     }
                 } else {
                     const aiMessage: Message = {
@@ -160,11 +163,12 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:null,
                         modalFile:null,
-                        similarity:similarityList.similarity 
+                        similarity:similarityList.similarity,
+                        nearestQ:null
                     };
                     setMessages(prev => [...prev, aiMessage]);
                     if (attribute){
-                        await saveMessage(aiMessage, attribute)
+                        await saveMessage(userMessage, aiMessage, attribute)
                     }
                 }                
                 const sl = createSlides(badQuestion[n].frame)
@@ -177,7 +181,7 @@ export default function Aicon() {
         }
     }
 
-    function setAnser(selectedData:EmbeddingsData, lang:string){
+    function setAnswer(selectedData:EmbeddingsData, lang:string){
         if (lang === "日本語"){
             return selectedData.answer
         } else {
@@ -312,12 +316,20 @@ export default function Aicon() {
         }
     }
 
-    const saveMessage = async (message:Message, attr:string) => {
-        await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(message)})
+    const saveMessage = async (userMessage:Message, message:Message, attr:string) => {
+        const data = {
+            id:message.id,
+            user:userMessage.text,
+            aicon:message.text,
+            nearestQ:message.nearestQ,
+            similarity:message.similarity
+        }
+        await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data)})
     }
 
+
     const createConvField = async (id:string, attr:string) => {
-        await setDoc(doc(db,"Events",attr,"Conversation",id), {"conversations":[]})
+        await setDoc(doc(db,"Events",attr,"Conversation",id), {conversations:[], langage:language})
     }
 
     const getLanguageList = () => {
@@ -348,7 +360,8 @@ export default function Aicon() {
                         sender: 'AIcon',
                         modalUrl:null,
                         modalFile:null,
-                        similarity:null
+                        similarity:null,
+                        nearestQ:null
                     };
                     setMessages(prev => [...prev, aiMessage])
                 }else{
@@ -362,7 +375,8 @@ export default function Aicon() {
                             sender: 'AIcon',
                             modalUrl:null,
                             modalFile:null,
-                            similarity:null
+                            similarity:null,
+                            nearestQ:null
                         };
                         setMessages(prev => [...prev, aiMessage])   
                     }                     
@@ -397,7 +411,7 @@ export default function Aicon() {
             audioRef.current.pause();
         }
         const langCode = foreignLanguages[language] || "ja-JP"
-        SpeechRecognition.startListening({language:langCode, continuous:true})
+        SpeechRecognition.startListening({language:langCode})
     }
 
     const sttStop = () => {
@@ -443,8 +457,7 @@ export default function Aicon() {
             const today = now.split("T")[0]
             const random = randomStr(6)
             
-            const convId = `${today}-${random}`
-            console.log(convId)
+            const convId = `${today}_${random}`
             if (convId){
                 setConvId(convId)
                 createConvField(convId, attribute)
@@ -503,10 +516,8 @@ export default function Aicon() {
             audioPlay()
             setCurrentIndex(0)
             if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
-                console.log("check2")
                 return;
             }
-            console.log("check3")
             intervalRef.current = setInterval(() => {
                 setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
             }, 250)
@@ -551,7 +562,7 @@ export default function Aicon() {
         <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
         {wavReady ? (
         <div className="fixed inset-0 flex flex-col items-center h-full bg-stone-200">
-            <div className="flex-none h-[35vh] w-full max-w-96 mb-5">
+            <div className="flex-none h-[35vh] w-full mb-5">
                 {Array.isArray(slides) && (<img className="mx-auto h-[35vh] " src={slides[currentIndex]} alt="Image" />)}
             </div>
             <div className="flex-none h-[32vh] w-11/12 max-w-96 overflow-auto">
@@ -622,6 +633,7 @@ export default function Aicon() {
                 return <option key={index} value={lang}>{lang}</option>;
                 })}
             </select>
+            <button className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>
             </div>            
             )}
             {wavReady && (

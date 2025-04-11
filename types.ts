@@ -55,6 +55,7 @@ export type Message = {
     modalUrl: string | null;
     modalFile: string | null;
     similarity: number | null;
+    nearestQ: string | null;
 }
 //aiconに読み込むデータ
 export interface EmbeddingsData {

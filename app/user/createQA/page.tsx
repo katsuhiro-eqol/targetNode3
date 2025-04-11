@@ -94,6 +94,7 @@ export default function RegisterCSV() {
     }
   //音声合成し、Voiceに登録
     const voiceRegistration = async () => {
+        setStatus("音声合成を準備しています")
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
         //const answerCount = answerSet.size
@@ -228,16 +229,6 @@ export default function RegisterCSV() {
         }
     }
 
-    /*
-    const frameCount = (base64Data:string) => {
-        const audioString = base64Data.replace(/-/g, '+').replace(/_/g, '/')
-        const byteCharacters = atob(audioString)
-        const bytesLength = byteCharacters.length
-        const frameCount = bytesLength/2
-        return frameCount
-    }
-    */
-
     const loadEvents = async (org:string) => {
         try {
             const docRef = doc(db, "Users", org)
@@ -263,12 +254,13 @@ export default function RegisterCSV() {
             try {
                 const id = organization + "_" + Event
                 const docRef = doc(db, "Events", id)
-                const docSnap = await getDoc(docRef);
+                const docSnap = await getDoc(docRef)
                 if (docSnap.exists()) {
                     const data = docSnap.data()
                     if (data.qaData){
                         setIsSecondStep(false)
-                        alert("既にデータ設定されています。新たなQAデータを登録される場合は、メニューよりQAデータ初期化を行なってください。")
+                        alert("既にデータ設定されています。別のイベントを選択してください。")
+                        setEvent("")
                     } else{
                         setIsSecondStep(true)
                         const data3 = {

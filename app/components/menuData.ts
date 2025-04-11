@@ -39,7 +39,7 @@ export const menuItems: MenuItem[] = [
       submenuItems: [
         { title: '登録情報一覧', path: '/user/eventList' },
         { title: 'QRコード発行', path: '/user/qrCodeGenerator' },
-        { title: '進捗状況', path: '/user/eventInspector' }
+        { title: '進捗確認・分析', path: '/user/eventInspector' }
       ]
     },
     {
@@ -57,13 +57,6 @@ export const menuItems: MenuItem[] = [
       title: 'アカウント',
       icon: Users,
       path: '/user/account',
-      submenu: false,
-      submenuItems: null
-    },
-    {
-      title: 'ログアウト',
-      icon: LogOut,
-      path: '/user/logout',
       submenu: false,
       submenuItems: null
     }
