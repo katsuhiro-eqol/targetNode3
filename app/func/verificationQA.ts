@@ -1,5 +1,5 @@
 import { db } from "@/firebase"
-import { getDocs, collection } from "firebase/firestore"
+import { getDocs, collection, doc, getDoc } from "firebase/firestore"
 import {registerVoice} from "./updateWav"
 import createEmbedding from "./createEmbedding"
 import createForeign from "./createForeign"
@@ -7,21 +7,25 @@ import { QaData } from "@/types"
 
 
 export default async function validateCreatedQA(organization:string, event:string, voice:string, embeddingModel:string, languages:string[]){
+    console.log("validating")
     const eventId = organization + "" + event
     const qa = await loadQA(eventId)
-    const errVoice = qa.filter((item) => !item.voiceUrl)
     try {
-        if (Array.isArray(errVoice)){
-            for (const err of errVoice){
-                await registerVoice(organization, event, err.answer, err.read, voice, err.id)
+        for (const item of qa){
+            const voiceDoc = doc(db, "Voice", item.voiceId)
+            const docSnap = await getDoc(voiceDoc)
+            if (!docSnap.exists()){
+                console.log(`${item.voiceId}の音声合成をリトライします`)
+                await registerVoice(organization, event, item.answer, item.read, voice, item.voiceId, item.id)
             }
         }
-        const errEmbedding = qa.filter((item) => !item.embedding)
+        const errEmbedding = qa.filter((item) => item.vector.length < 10)
         if (Array.isArray(errEmbedding)){
             for (const err of errEmbedding){
                 await createEmbedding(err.question, embeddingModel)
             }
         }
+        
         if (languages.length === 1){
             return "Q&Aデータの登録が完了しました"
         }else{
@@ -32,6 +36,7 @@ export default async function validateCreatedQA(organization:string, event:strin
                 }
             }
         }
+    
         return "Q&Aデータの登録が完了しました"
     } catch (error){
         console.log(error)

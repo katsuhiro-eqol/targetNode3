@@ -17,7 +17,7 @@ export default function ListenVoice({voiceUrl, answer, setIsAudio}:VoiceProps){
 
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-20 flex items-center justify-center z-50">
-            <div className="flex flex-col w-96 h-48 bg-white p-6 rounded-lg shadow-lg relative ml-auto mr-24 mt-auto mb-24">
+            <div className="flex flex-col w-96 h-60 bg-white p-6 rounded-lg shadow-lg relative ml-auto mr-24 mt-auto mb-24">
             <div className="mb-2 text-center text-sm">{answer}</div>
             <audio className="mx-auto" ref={audioRef} controls>
                 <source src={voiceUrl} type="audio/wav" />

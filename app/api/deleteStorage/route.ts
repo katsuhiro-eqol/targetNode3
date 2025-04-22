@@ -4,7 +4,9 @@ import { storage } from '@/firebase';
 
 export async function POST(request: NextRequest) {
     const params = await request.json()
-    const path = params.padh
+    const path = params.folderPath
+    console.log("post")
+    console.log(path)
     if (!path){
         return NextResponse.json({ error: "削除するパスが指定されていません" });
     }
@@ -12,6 +14,7 @@ export async function POST(request: NextRequest) {
     try {
         const listRef = ref(storage, path)
         const { items, prefixes } = await listAll(listRef);
+        console.log(items)
         items.map(async (itemRef) => {
             await deleteObject(itemRef);
         });

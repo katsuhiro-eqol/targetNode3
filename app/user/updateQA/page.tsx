@@ -8,6 +8,7 @@ import { PronunciationRegistration } from "../../components/pronunciation"
 import {registerVoice} from "../../func/updateWav"
 import createForeign from "../../func/createForeign"
 import createEmbedding from "../../func/createEmbedding"
+import getHiragana from "../../func/getHiragana"
 import { Circle, CircleDot, ArrowBigRight } from 'lucide-react'
 import { EventData, QaData, ModalData, Pronunciation } from "@/types"
 import md5 from 'md5';
@@ -195,7 +196,7 @@ export default function UpdaateQA(){
     const updateQA = async () => {
         if ((newAnswer !== ""&& newQuestion !== "") && selectedQA){
             setStatus("音声合成の準備をしています・・・")
-            const readText = convertPronunciation(eventData!.pronunciations, newAnswer)
+            const readText = await convertPronunciation(eventData!.pronunciations, newAnswer)
             const foreign = await createForeign(newAnswer, eventData!.languages)
             const foreignAns = foreign[newAnswer]
             const hashString = md5(readText)
@@ -203,7 +204,7 @@ export default function UpdaateQA(){
             const embedding = await createEmbedding(newQuestion,eventData!.embedding)
             const eventId = organization + "_" + event
             const qaId = selectedQA.id
-            await registerVoice(organization, event, newAnswer, readText, eventData!.voice, qaId)
+            await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, qaId)
             const data = {
                 question:newQuestion,
                 answer:newAnswer,
@@ -225,7 +226,7 @@ export default function UpdaateQA(){
             const voiceId = eventData!.voice + "-" + hashString
             const eventId = organization + "_" + event
             const qaId = selectedQA.id
-            await registerVoice(organization, event, newAnswer, readText, eventData!.voice, qaId)
+            await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, qaId)
             const data = {
                 answer:newAnswer,
                 read:readText,
@@ -273,23 +274,26 @@ export default function UpdaateQA(){
 
     const convertPronunciation = (pronunciations: Pronunciation[]|null, text:string) => {
         if (pronunciations){
-            let newRead = text
+            let newRead = text.trim()
             pronunciations.forEach((pronunciation) => {
                newRead = newRead?.replaceAll(pronunciation.text,pronunciation.read)
             })
+            //const readByOpenAI = await getHiragana(newRead)
             return newRead
         }else{
-            return text
+            //const readByOpenAI = await getHiragana(text)
+            return text.trim()
         }        
     }
 
 
     const updateVoice = async() => {
         const readText = convertPronunciation(pronunciations, selectedQA!.read)
-        console.log(readText)
+        const hashString = md5(readText)
+        const voiceId = eventData!.voice + "-" + hashString
         setStatus("音声合成を開始しました")
         if (eventData && selectedQA){
-            await registerVoice(organization, event, selectedQA.answer, readText, eventData.voice, selectedQA.id)
+            await registerVoice(organization, event, selectedQA.answer, readText, eventData.voice, voiceId, selectedQA.id)
             const data = {
                 read:readText,
                 pronunciations:pronunciations
@@ -334,7 +338,7 @@ export default function UpdaateQA(){
                     }
                     await setDoc(docRef, data)
                     setStatus("音声合成を開始しました")
-                    await registerVoice(organization, event, newAnswer, readText, eventData!.voice, "") 
+                    await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
                     setStatus("追加Q&Aの登録が完了しました")       
                     //cancelButton()     
                 } else if (newModal && !modalData) {
@@ -353,7 +357,7 @@ export default function UpdaateQA(){
                         voiceId:voiceId
                     }
                     await setDoc(docRef, data)
-                    await registerVoice(organization, event, newAnswer, readText, eventData!.voice, "") 
+                    await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
                     setStatus("追加Q&Aの登録が完了しました")  
                     //cancelButton()
                 }

@@ -2,9 +2,9 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "@/firebase"
 import { doc, getDocs, collection, setDoc, query, where } from "firebase/firestore"
 
-export const registerVoice = async (organization:string, event:string, answer:string, read:string, voice:string, qaId:string) => {
-    //既にoriginalIdが存在し、その音声ののみを変更することを想定
-
+export const registerVoice = async (organization:string, event:string, answer:string, read:string, voice:string, voiceId:string, qaId:string) => {
+    const maxRetries = 5
+    let retries = 0
     try {
         const response = await fetch("/api/createAudioData", {
             method: "POST",
@@ -12,7 +12,7 @@ export const registerVoice = async (organization:string, event:string, answer:st
             headers: {
             "Content-Type": "application/json",
             },
-            body: JSON.stringify({ answer: read, voice: voice}),
+            body: JSON.stringify({ answer: read, voice: voice, voiceId: voiceId}),
         });
         const audio = await response.json();
         console.log(audio.voiceId)
@@ -20,10 +20,22 @@ export const registerVoice = async (organization:string, event:string, answer:st
         if (audio.status == "0"){
             await updateVoiceDataToQADB(audio.voiceId, audio.frame, audio.url, read, organization, event, qaId)
         } else {
-            await saveVoiceData(audio.voiceId, answer, read, audio.audioContent, organization, event, qaId)
-    }
+            const frame = frameCount(audio.audioContent)
+            if (frame < 11){
+                throw new Error('no good audioContent');
+            } else {
+                await saveVoiceData(audio.voiceId, answer, read, audio.audioContent, organization, event, qaId)
+            }
+        }
     } catch (error) {
-        console.log(error)
+        retries++
+        console.log(`${voiceId}のエラーは${retries}回目`)
+        if (retries > maxRetries) {
+            console.log(`${voiceId}のエラーはmaxRetry${maxRetries}を超えました`)
+            throw error;
+        }
+        const delay = 1000 * Math.pow(2, retries - 1);
+        await new Promise(resolve => setTimeout(resolve, delay));
     }
 }
 
@@ -36,6 +48,7 @@ const saveVoiceData = async(voiceId:string, text:string, read:string, audioConte
     if (!blob) {
         return;
     }
+
     const fileName = voiceId + ".wav"
     const storage = getStorage()
     const path = "aicon_audio/" + fileName
@@ -77,23 +90,11 @@ const updateVoiceDataToQADB = async (voiceId:string, frame:number, url:string, r
         console.log("update Voice")
         const docRef = doc(db,"Events",eventId, "QADB",qaId)
         await setDoc(docRef, data2, {merge:true})
-        /*
-        const qaRef = collection(db, "Events", eventId, "QADB")
-        const q = query(qaRef, where("voiceId", "==", originalId))
-        const querySnapshot = await getDocs(q)
-        console.log(querySnapshot.docs.length)
-        for (const document of querySnapshot.docs) {
-            const docRef = doc(db, "Events",eventId,"QADB", document.id);
-            await setDoc(docRef, data2, {merge:true});
-          }
-        */
     } else {
         //createQAでは音声合成の前にqaDataが生成されていてvoiceIdも設定していることが前提
-        console.log("creating Voice")
         const qaRef = collection(db, "Events", eventId, "QADB")
-        const q = query(qaRef, where("voiceId", "==", voiceId))
+        const q = query(qaRef, where("read", "==", read))
         const querySnapshot = await getDocs(q)
-        console.log(querySnapshot.docs.length)
         for (const document of querySnapshot.docs) {
             const docRef = doc(db, "Events",eventId,"QADB", document.id);
             await setDoc(docRef, data2, {merge:true});

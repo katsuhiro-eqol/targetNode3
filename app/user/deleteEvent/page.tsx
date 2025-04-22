@@ -94,12 +94,13 @@ export default function Account(){
 
     const deleteStorageFolder = async () => {
         const folderPath = `modal/${organization}/${event}`
+        console.log(folderPath)
         const response = await fetch('/api/deleteStorage', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ path: folderPath }),
+            body: JSON.stringify({ folderPath: folderPath }),
           });
           if (!response.ok) {
             throw new Error(await response.text());

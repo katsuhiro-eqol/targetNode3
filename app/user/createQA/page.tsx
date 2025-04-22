@@ -7,12 +7,14 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 //import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {registerVoice} from "../../func/updateWav"
 import createEmbedding from "../../func/createEmbedding"
+import getHiragana from "../../func/getHiragana"
 import validateCreatedQA from '@/app/func/verificationQA';
 import { ModalData, EventData, ForeignAnswers, CsvData, Pronunciation } from "@/types"
 import md5 from 'md5';
 import { Check} from 'lucide-react';
 
-interface Voice {organization:string, event:string, answer:string, read:string, voice:string, qaId:string}
+//interface Voice {organization:string, event:string, answer:string, read:string, voice:string, qaId:string}
+interface Read {answer:string, read:string, voiceId:string}
 
 export default function RegisterCSV() {
     const [jsonData, setJsonData] = useState<CsvData[]>([]);
@@ -83,34 +85,51 @@ export default function RegisterCSV() {
 
     const convertPronunciation = (pronunciations: Pronunciation[]|null, text:string) => {
         if (pronunciations){
-            let newRead = text
+            let newRead = text.trim()
             pronunciations.forEach((pronunciation) => {
                newRead = newRead?.replaceAll(pronunciation.text,pronunciation.read)
             })
+            //const readByOpenAI = await getHiragana(newRead)
             return newRead
         }else{
-            return text
+            //const readByOpenAI = await getHiragana(text)
+            return text.trim()
         }        
     }
   //音声合成し、Voiceに登録
-    const voiceRegistration = async () => {
-        setStatus("音声合成を準備しています")
+    const readRegistration = async () => {
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
-        //const answerCount = answerSet.size
-        let n = 1
+        const readings = []
         for (const answer of answerSet){
             const newRead = convertPronunciation(eventData?.pronunciations||null, answer)
-            await registerVoice(organization, event, answer, newRead, eventData?.voice??"", "")
+            const hashString = md5(newRead)
+            const voiceId = eventData?.voice + "-" + hashString            
+            const data = {
+                answer: answer,
+                read: newRead,
+                voiceId: voiceId
+            }
+            readings.push(data)
+        }
+        return readings
+    }
+
+    const voiceRegistration = async (readings:Read[]) => {
+        setStatus("音声合成を準備しています")
+        const answerCount = readings.length
+        let n = 1
+        for (const item of readings){
+            //const newRead = await convertPronunciation(eventData?.pronunciations||null, answer)
+            await registerVoice(organization, event, item.answer, item.read, eventData?.voice??"", item.voiceId, "")
             n += 1
-            const ratio = Math.floor(n*100/jsonData.length)
+            const ratio = Math.floor(n*100/answerCount)
             setStatus(`音声合成：${ratio}%完了`)
         }
     }
 
-
     //EmbeddingをEventのサブコレクションQADBに登録
-    const registerQADB = async (foreinAnswers:ForeignAnswers) => {
+    const registerQADB = async (foreinAnswers:ForeignAnswers, readings:Read[]) => {
         let count = 0
         for (const item of jsonData){
             if (item.id=="" || item.question=="" || item.answer==""){
@@ -118,22 +137,12 @@ export default function RegisterCSV() {
             } else {
             try {
                 const embedding = await createEmbedding(item.question, eventData!.embedding)
-                /*
-                const response = await fetch("/api/embedding", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    //body: JSON.stringify({ input: userInput, character: character, fewShot: fewShot, previousData: previousData, sca: scaList[character] }),
-                    body: JSON.stringify({ input: item.question, model: eventData?.embedding}),
-                  });
-                */
-                //const embedding = await response.json()
-                //読み補正したstringに対してvoiceIdを設定する。
-                const readText = convertPronunciation(eventData?.pronunciations ||null, item.answer)
+                const ans = readings.filter((read) => read.answer === item.answer)
+/*
+                const readText = await convertPronunciation(eventData?.pronunciations ||null, item.answer)
                 const hashString = md5(readText)
                 const voiceId = eventData?.voice + "-" + hashString
-                
+*/                
                 let data2 = {}
                 if (item.modal_file && modalData){
                     const modalList = modalData.filter((m) => m.name == item.modal_file )
@@ -144,8 +153,8 @@ export default function RegisterCSV() {
                         modalUrl: modalList[0].url,
                         modalPath: modalList[0].path,
                         vector: embedding,
-                        voiceId: voiceId,
-                        read: readText,
+                        voiceId: ans[0].voiceId,
+                        read: ans[0].read,
                         foreign:foreinAnswers[item.answer],
                         pronunciations:[]
                     }          
@@ -157,8 +166,8 @@ export default function RegisterCSV() {
                         modalUrl: "",
                         modalPath: "",
                         vector: embedding,
-                        voiceId: voiceId,
-                        read: readText,
+                        voiceId: ans[0].voiceId,
+                        read: ans[0].read,
                         foreign:foreinAnswers[item.answer],
                         pronunciations:[]
                     }          
@@ -217,11 +226,13 @@ export default function RegisterCSV() {
     }
 
     const registerToFirestore = async () => {
-
         if (judgeNewQA()){
+            setStatus("Q&Aデータ登録を始めます")
+            const readings = await readRegistration()
+            console.log(readings)
             const translated = await registerForeignLang()
-            await registerQADB(translated)
-            await voiceRegistration()
+            await registerQADB(translated, readings)
+            await voiceRegistration(readings)
             setStatus("データを検証しています")
             await updateEventStatus()
             const comment = await validateCreatedQA(organization, event, eventData!.voice, eventData!.embedding, eventData!.languages)
@@ -336,6 +347,7 @@ export default function RegisterCSV() {
     useEffect(() => {        //const judge = judgeNewQA()
         if (jsonData){
             console.log(jsonData.length)
+            console.log(jsonData)
             const array1 = jsonData.map(item => item.modal_file)
             const array2 = array1.filter(item => item != "")
             const array3 = [...new Set(array2)]

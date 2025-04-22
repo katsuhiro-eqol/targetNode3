@@ -10,8 +10,8 @@ const runpod_url = "https://api.runpod.ai/v2/ipv7b7lbrstx3n/runsync"
 
 const vits_param = {
     bauncer: {model_id: 0},
-    voice_m: {model_id: 1},
-    voice_w: {model_id: 2}
+    voice_m1: {model_id: 1},
+    voice_w1: {model_id: 2}
 }
 
 type VoiceType = keyof typeof vits_param;
@@ -20,16 +20,15 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
     const params = await req.json()
     const answer = params.answer
     const voice = params.voice as VoiceType
-
+    const voiceId = params.voiceId
+    console.log(answer,voice,voiceId)
     //const audioString = processedString(answer)
-    const hashString = md5(answer)
-    const voiceId = voice + "-" + hashString
-    console.log(voiceId)
+    //const hashString = md5(answer)
+    //const voiceId = voice + "-" + hashString
     const docRef = doc(db, "Voice", voiceId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const data = docSnap.data()
-      console.log()
       return NextResponse.json({ voiceId: voiceId, url: data.url, frame:data.frame, status:"0"});
     } else {
       try {
@@ -45,8 +44,10 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
               }
           }
         const response = await axios.post(runpod_url, data, {headers:headers});
+
         return NextResponse.json({ voiceId: voiceId, audioContent: response.data.output.voice, status:"1"});
         } catch (error) {
+            console.log("error", voiceId)
             return NextResponse.json({ error: error });
         }
     }
