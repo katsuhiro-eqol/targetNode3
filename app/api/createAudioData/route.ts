@@ -10,8 +10,10 @@ const runpod_url = "https://api.runpod.ai/v2/ipv7b7lbrstx3n/runsync"
 
 const vits_param = {
     bauncer: {model_id: 0},
+    voice_m: {model_id: 1},
+    voice_w: {model_id: 2},
     voice_m1: {model_id: 1},
-    voice_w1: {model_id: 2}
+    voice_w1: {model_id: 2},    
 }
 
 type VoiceType = keyof typeof vits_param;

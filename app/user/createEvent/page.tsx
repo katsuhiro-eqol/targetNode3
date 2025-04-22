@@ -31,7 +31,7 @@ export default function CreateEvent(){
     const [endTime, setEndTime] = useState<string>("制限なし")//利用終了時間
     const options = ["英語", "中国語（簡体）", "中国語（繁体）", "韓国語"];
     const otherOptions = ["その他","フランス語","ポルトガル語","スペイン語"]
-    const voiceList = ["voice_m1", "voice_w1"]
+    const voiceList = ["voice_m", "voice_w"]
 
     const loadEvents = async () => {
         try {           
