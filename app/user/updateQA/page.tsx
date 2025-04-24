@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from "@/firebase"
 import { doc, getDoc, collection, getDocs, setDoc, deleteDoc } from "firebase/firestore"
-import UploadFiles from "../../components/uploadFiles"
+import UploadFiles2 from "../../components/uploadFiles2"
 import QADataSelection from "../../components/qaDataSelection"
 import { PronunciationRegistration } from "../../components/pronunciation"
 import {registerVoice} from "../../func/updateWav"
@@ -568,7 +568,7 @@ export default function UpdaateQA(){
                     </div>
                     {modalFiles && (
                         <div className="w-2/3">
-                        <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
+                        <UploadFiles2 modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
                         </div>
                     )}
                     <div className="ml-3 mt-5">
@@ -644,7 +644,7 @@ export default function UpdaateQA(){
             </div>            
             <div className="w-2/3">
             {modalFiles && (
-            <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
+            <UploadFiles2 modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
             )}
             </div>
             <div className="flex flex-row gap-x-4">

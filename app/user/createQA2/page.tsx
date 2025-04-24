@@ -33,7 +33,7 @@ export default function RegisterCSV() {
     const [organization, setOrganization] = useState<string>("")
     const [isModal, setIsModal] = useState<boolean>(false)
     const [isReady, setIsReady] = useState<boolean>(false)
-    const [modalData, setModalData] = useState<ModalData[]|null>(null)
+    const [modalData, setModalData] = useState<ModalData[]>([])
     const [eventData, setEventData] = useState<EventData|null>(null)
     const [isSecondStep, setIsSecondStep] = useState<boolean>(false)
     const [isThirdStep, setIsThirdStep] = useState<boolean>(false)
@@ -426,6 +426,7 @@ export default function RegisterCSV() {
     
     useEffect(() => {
         //setIsThirdStep(false)
+        console.log(modalData)
     }, [modalData])
     
     useEffect(() => {

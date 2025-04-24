@@ -126,8 +126,6 @@ export interface QaData {
 
 export interface ModalData {
     name:string;
-    type:string;
-    size:number;
     path:string;
     url:string;
 }
