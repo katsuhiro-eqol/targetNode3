@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import UploadFiles from "../../components/uploadFiles"
+import UploadFiles from "../../components/uploadFiles2"
 import { db } from "@/firebase"
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 //import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";

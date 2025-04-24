@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import UploadFiles from "../../components/uploadFiles"
+import UploadFiles2 from "../../components/uploadFiles2"
 import { db } from "@/firebase"
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import {registerVoice} from "../../func/updateWav"
@@ -511,7 +511,7 @@ export default function RegisterCSV() {
             </div>
             {isThirdStep && (
                 <div className="ml-3">
-                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
+                <UploadFiles2 modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
                 <div className="text-green-500 font-semibold text-sm mb-5">{errors}</div>
                 </div>
             )}

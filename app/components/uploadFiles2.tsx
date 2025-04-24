@@ -1,7 +1,7 @@
-
 'use client';
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { FileText, Image, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { ModalData, FILE } from "@/types"
 
@@ -14,7 +14,8 @@ interface FileUploadProps {
   setErrors:(errors:string) => void;
 }
 
-export default function FileUploadPage({modal, setIsReady, setModalData, organization, event, setErrors}:FileUploadProps) {
+
+export default function FileUploadPage2({modal, setIsReady, setModalData, organization, event, setErrors}:FileUploadProps) {
   const [files, setFiles] = useState<FILE[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null); 
@@ -79,7 +80,23 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
     
     setUploading(true);
     setUploadStatus(null);
+
+    for (const file of files){
+        try {
+            const storage = getStorage()
+            const path = `modal/${organization}/${event}/${file.name}`
+            const storageRef = ref(storage, path)
+            uploadBytes(storageRef, file).then((snapshot) => {
+                console.log(`success:${file.name}`);
+              })
+        } catch {
+            setErrors("uploadに失敗しました。もう一度実施してください。")
+        } finally {
+            setUploading(false);
+        }
+    }
     
+    /*
     try {
       // FormDataの作成
       const formData = new FormData();
@@ -116,6 +133,7 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
     } finally {
       setUploading(false);
     }
+    */
   };
 
   const uploadfiles = () => {
