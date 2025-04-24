@@ -41,6 +41,7 @@ export default function RegisterCSV() {
     const [foreignProgress, setForeignProgress] = useState<number>(0)
     const [vectorProgress, setVectorProgress] = useState<number>(0)
     const [voiceProgress, setVoicerogress] = useState<number>(0)
+    const [errors, setErrors] = useState<string>("")
     
     const encodings = [
         { value: 'UTF-8', label: 'UTF-8' },
@@ -510,7 +511,8 @@ export default function RegisterCSV() {
             </div>
             {isThirdStep && (
                 <div className="ml-3">
-                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
+                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
+                <div className="text-green-500 font-semibold text-sm mb-5">{errors}</div>
                 </div>
             )}
             {isReady && (<div className="text-sm ml-3 text-green-500">ファイル登録完了</div>)}

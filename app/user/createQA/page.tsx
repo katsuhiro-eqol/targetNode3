@@ -31,6 +31,7 @@ export default function RegisterCSV() {
     const [isSecondStep, setIsSecondStep] = useState<boolean>(false)
     const [isThirdStep, setIsThirdStep] = useState<boolean>(false)
     const [status, setStatus] = useState<string>("")
+    const [errors, setErrors] = useState<string>("")
     
     const parseCsv = (csvText: string): CsvData[] => {
         try {
@@ -453,7 +454,7 @@ export default function RegisterCSV() {
             </div>
             {isThirdStep && (
                 <div className="ml-3">
-                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
+                <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
                 </div>
             )}
             {isReady && (<div className="text-sm text-green-500 ml-3">登録済ファイル: {modalFiles.toString()}</div>)}

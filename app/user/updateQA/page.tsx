@@ -37,6 +37,7 @@ export default function UpdaateQA(){
     const [isNewPronunciation, setIsNewPronunciation] = useState<boolean>(false)
     const [isReady, setIsReady] = useState<boolean>(false)
     const [status, setStatus] = useState<string>("")
+    const [errors, setErrors] = useState<string>("")
     const options = ["id", "question", "answer", "modal_file"];
 
     const loadEvents = async (org:string) => {
@@ -567,7 +568,7 @@ export default function UpdaateQA(){
                     </div>
                     {modalFiles && (
                         <div className="w-2/3">
-                        <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
+                        <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
                         </div>
                     )}
                     <div className="ml-3 mt-5">
@@ -643,7 +644,7 @@ export default function UpdaateQA(){
             </div>            
             <div className="w-2/3">
             {modalFiles && (
-            <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
+            <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
             )}
             </div>
             <div className="flex flex-row gap-x-4">

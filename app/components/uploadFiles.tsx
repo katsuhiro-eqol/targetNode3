@@ -10,10 +10,11 @@ interface FileUploadProps {
   setModalData:(modalData:ModalData[]|null) => void;
   organization:string;
   event:string;
+  setErrors:(errors:string) => void;
 }
 
 
-export default function FileUploadPage({modal, setIsReady, setModalData, organization, event}:FileUploadProps) {
+export default function FileUploadPage({modal, setIsReady, setModalData, organization, event, setErrors}:FileUploadProps) {
   const [files, setFiles] = useState<FILE[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null); 
@@ -100,8 +101,10 @@ export default function FileUploadPage({modal, setIsReady, setModalData, organiz
       
       const data = await response.json()
       if (data.errors.length > 0){
+        setErrors(data.errors.toStoring())
         console.log("file_upload_error:", data.erros)
       }else{
+        setErrors("file_upload_error: no error")
         console.log("file_upload_error:", "no error")
       }
       setModalData(data.uploads)        
