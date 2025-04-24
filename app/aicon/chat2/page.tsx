@@ -14,7 +14,8 @@ type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 
 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
-export default function Aicon() {
+//会話履歴を反映させる
+export default function AiconChat2() {
     const [windowHeight, setWindowHeight] = useState<number>(0)
     const [initialSlides, setInitialSlides] = useState<string|null>(null)
     const [userInput, setUserInput] = useState<string>("")
@@ -69,6 +70,10 @@ export default function Aicon() {
         setModalUrl(null)
         setModalFile(null)
 
+        //過去会話を反映させるinput
+        const inputWH = inputWithHistory(userInput)
+        console.log(inputWH)
+
         const userMessage: Message = {
             id: Date.now().toLocaleString(),
             text: userInput,
@@ -78,11 +83,6 @@ export default function Aicon() {
             similarity:null,
             nearestQ:null
         }
-        /*
-        if (attribute){
-            await saveMessage(userMessage, attribute)
-        }
-         */
         
         setMessages(prev => [...prev, userMessage]);
 
@@ -92,7 +92,7 @@ export default function Aicon() {
                 headers: {
                 "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ input: userInput, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
+                body: JSON.stringify({ input: inputWH, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
             });
             setUserInput("")
             const data = await response.json();
@@ -259,6 +259,16 @@ export default function Aicon() {
         imageList = imageList.concat(Array(4).fill(initialSlides))
         //imageList = imageList.concat(initialSlides)
         return imageList
+    }
+
+    const inputWithHistory = (text:string) => {
+        if (Array.isArray(messages) && messages.length>1){
+            const input = `Q:${messages.at(-2)?.text ?? ""}、A:${messages.at(-1)?.text ?? ""}、Q:${text}`
+            return input
+        } else {
+            const input = `Q:${text}`
+            return input
+        }
     }
 
     async function loadQAData(attr:string){
@@ -647,7 +657,3 @@ export default function Aicon() {
         </div>
     );
 }
-
-/*
- className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}
- */

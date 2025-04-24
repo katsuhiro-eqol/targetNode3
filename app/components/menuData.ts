@@ -17,7 +17,7 @@ export const menuItems: MenuItem[] = [
         submenu: true,
         submenuItems: [
           { title: 'イベント登録', path: '/user/createEvent' },
-          { title: 'Q&Aデータ登録', path: '/user/createQA' },
+          { title: 'Q&Aデータ登録', path: '/user/createQA2' },
         ]
       },
     {

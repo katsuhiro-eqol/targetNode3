@@ -110,7 +110,8 @@ export default function Account(){
     }
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setEvent(e.target.value);
+        setEvent(e.target.value)
+        setStatus("")
     }
 
     useEffect(() => {

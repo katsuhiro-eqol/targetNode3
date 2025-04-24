@@ -51,21 +51,17 @@ export default function CreateEvent(){
     const judgeNewEvent = () => {
         if (!newEvent){
             alert("イベント名が記入されていません")
-            console.log("イベント名が記入されていません")
             return false
         } else if (!events){
             return true
         } else if (events.includes(newEvent)){
             alert("既に同じ名前のイベントが登録されています")
-            console.log("既に同じ名前のイベントが登録されています")
             return false
         } else if (selectedOptions.length == 0){
             alert("使用する言語を選択してください")
-            console.log("使用する言語を選択してください")
             return false
         } else if (voice == ""){
             alert("AIボイスを選択してください")
-            console.log("AIボイスを選択してください")
             return false
         } else if (startTime == ""){
             alert("利用開始日時を登録してください")
@@ -90,7 +86,6 @@ export default function CreateEvent(){
     const registerEvent = async () => {
         const judge = judgeNewEvent()
         const code = randomStr(4)
-        console.log(judge)
         if (judge){
             try {
             const id = organization + "_" + newEvent
@@ -170,6 +165,7 @@ export default function CreateEvent(){
           }
     }, [])
     
+    /*
     useEffect(() => {
         loadEvents()
     },[organization])
@@ -194,6 +190,7 @@ export default function CreateEvent(){
         console.log(startTime)
         console.log(endTime)
     }, [startTime, endTime])
+    */
 
     return (
         <div>

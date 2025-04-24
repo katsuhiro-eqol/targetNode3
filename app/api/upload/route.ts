@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(files)
     const uploadResults = [];
     const errors = [];
 
@@ -67,7 +66,7 @@ export async function POST(request: NextRequest) {
           contentType: file.type,
           customMetadata: {
             originalName: file.name,
-            uploadDate: new Date().toISOString()
+            uploadDate: new Date().toLocaleString()
           }
         });
         
@@ -88,10 +87,12 @@ export async function POST(request: NextRequest) {
       }
     }
     // 結果を返す
+    console.log(errors)
     return NextResponse.json({
       success: true,
       uploads: uploadResults,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors
+      //errors: errors.length > 0 ? errors : undefined
     });
 
   } catch (error) {

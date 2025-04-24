@@ -167,6 +167,8 @@ export default function UpdaateQA(){
     }
 
     const searchQA = () => {
+        setSelectedQA(null)
+        setSelectedRowId(null)
         switch (selectedOption) {
             case "":
                 alert("検索項目を選択してください")
@@ -215,8 +217,10 @@ export default function UpdaateQA(){
             }
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
-            setStatus("Q&Aの更新が完了しました")
-            //cancelButton()
+            setStatus("Q&Aの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
+            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
+            setSelectedQA(null)
+            setSelectedRowId(null)
         } else if ((newQuestion === "" && newAnswer !== "") && selectedQA) {
             setStatus("音声合成の準備をしています・・・")
             const readText = convertPronunciation(eventData!.pronunciations, newAnswer)
@@ -235,8 +239,10 @@ export default function UpdaateQA(){
             }
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
-            setStatus("Q&Aの更新が完了しました")
-            //cancelButton()
+            setStatus("Q&Aの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
+            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
+            setSelectedQA(null)
+            setSelectedRowId(null)
         } else if ((newQuestion !== "" && newAnswer === "") && selectedQA){
             setStatus("ベクトル化を開始しました")
             const embedding = await createEmbedding(newQuestion,eventData!.embedding)
@@ -249,7 +255,10 @@ export default function UpdaateQA(){
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
             //cancelButton()
-            setStatus("Q&Aの更新が完了しました")
+            setStatus("Q&Aの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
+            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
+            setSelectedQA(null)
+            setSelectedRowId(null)
         } else {
             alert("更新するquestion and/or anwerが入力されていません")
         }
@@ -265,8 +274,10 @@ export default function UpdaateQA(){
             const eventId = organization + "_" + event
             const docRef = doc(db, "Events", eventId, "QADB",selectedQA!.id)
             await setDoc(docRef, data, {merge:true})
-            setStatus("添付書類の登録が完了しました")
-            //cancelButton()
+            setStatus("添付書類の登録が完了しました。変更内容確認は「登録情報一覧」にて。")
+            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
+            setSelectedQA(null)
+            setSelectedRowId(null)
         } else {
             alert("更新する添付書類(modal_file)が登録されていません")
         }
@@ -301,8 +312,10 @@ export default function UpdaateQA(){
             const eventId = organization + "_" + event
             const docRef = doc(db, "Events", eventId, "QADB", selectedQA?.id)
             await setDoc(docRef, data, {merge:true})
-            setStatus("読みの更新が完了しました")
-            //cancelButton()
+            setStatus("読みの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
+            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
+            setSelectedQA(null)
+            setSelectedRowId(null)
         }
     }
         
@@ -339,7 +352,7 @@ export default function UpdaateQA(){
                     await setDoc(docRef, data)
                     setStatus("音声合成を開始しました")
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
-                    setStatus("追加Q&Aの登録が完了しました")       
+                    setStatus("追加Q&Aの登録が完了しました。変更内容確認は「登録情報一覧」にて。")       
                     //cancelButton()     
                 } else if (newModal && !modalData) {
                     alert("添付書類が登録されていません")
@@ -358,7 +371,7 @@ export default function UpdaateQA(){
                     }
                     await setDoc(docRef, data)
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
-                    setStatus("追加Q&Aの登録が完了しました")  
+                    setStatus("追加Q&Aの登録が完了しました。変更内容確認は「登録情報一覧」にて。")  
                     //cancelButton()
                 }
             }
@@ -376,8 +389,10 @@ export default function UpdaateQA(){
                 const eventId = organization + "_" + event
                 const docRef = doc(db, "Events", eventId, "QADB", selectedQA.id)
                 await deleteDoc(docRef)
-                setStatus(`Q&A(id:${selectedQA.id})の削除が完了しました`) 
-                //cancelButton()
+                setStatus(`Q&A(id:${selectedQA.id})の削除が完了しました。変更内容確認は「登録情報一覧」にて。`) 
+                setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
+                setSelectedQA(null)
+                setSelectedRowId(null)
             }
         }else{
             alert("Q&Aが選択されていまさん")
@@ -386,7 +401,19 @@ export default function UpdaateQA(){
 
     useEffect(() => {
         setStatus("")
+        setSearchText("")
+        setSearchedData(null)
+        setSelectedQA(null)
+        setSelectedRowId(null)
     }, [selectedButton])
+
+    useEffect(() => {
+        setStatus("")
+        setSearchText("")
+        setSearchedData(null)
+        setSelectedQA(null)
+        setSelectedRowId(null)
+    }, [selectedOption])   
 
     useEffect(() => {
         if (newModal != ""){

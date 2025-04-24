@@ -7,6 +7,7 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import {registerVoice} from "../../func/updateWav"
 import createEmbedding from "../../func/createEmbedding"
 import validateCreatedQA from '@/app/func/verificationQA';
+import {ProgressBar} from "../../components/progressBar"
 import { ModalData, EventData, ForeignAnswers, CsvData, Pronunciation } from "@/types"
 import md5 from 'md5';
 import { Check} from 'lucide-react'
@@ -37,6 +38,9 @@ export default function RegisterCSV() {
     const [isSecondStep, setIsSecondStep] = useState<boolean>(false)
     const [isThirdStep, setIsThirdStep] = useState<boolean>(false)
     const [status, setStatus] = useState<string>("")
+    const [foreignProgress, setForeignProgress] = useState<number>(0)
+    const [vectorProgress, setVectorProgress] = useState<number>(0)
+    const [voiceProgress, setVoicerogress] = useState<number>(0)
     
     const encodings = [
         { value: 'UTF-8', label: 'UTF-8' },
@@ -46,6 +50,12 @@ export default function RegisterCSV() {
         { value: 'windows-1252', label: 'Windows-1252 (西欧)' }
     ]
 
+    const steps = [
+        { name: '外国語翻訳', progress: foreignProgress },
+        { name: 'ベクトル化', progress: vectorProgress },
+        { name: '音声合成', progress: voiceProgress },
+      ];
+
     const detectDelimiter = (text:string) => {
         const firstLine = text.split('\n')[0]
         const tabCount = (firstLine.match(/\t/g) || []).length
@@ -53,45 +63,7 @@ export default function RegisterCSV() {
         return tabCount > commaCount ? '\t' : ','
     }
 
-    const onDrop = useCallback(async (acceptedFiles:File[]) => {
-        const file = acceptedFiles[0];
-        
-        if (file) {
-          const fileExtension = file.name.split(".").pop()?.toLowerCase()||""
-          setFileType(fileExtension)
-          setFileName(file.name)
-          setError("")
-          
-          const reader = new FileReader();
-          reader.onload = () => {
-            const fileContent = reader.result as string
-            const delimiter = detectDelimiter(fileContent);
-            
-            Papa.parse<CsvData>(fileContent, {
-              header: true,
-              delimiter: delimiter, // 自動検出した区切り文字を使用
-              skipEmptyLines: true,
-              complete: (results: Papa.ParseResult<CsvData>) => {
-                setJsonData(results.data);
-                if (results.data.length > 0) {
-                  setColumns(Object.keys(results.data[0]));
-                }
-              }
-            });
-          };
-          
-          reader.readAsText(file);
-        }
-      }, []);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-        onDrop,
-        accept: {
-          'text/csv': ['.csv'],
-          'text/tab-separated-values': ['.tsv', '.txt']
-        }
-    })
-/*    
     const onDrop = useCallback(async (acceptedFiles:File[]) => {
         const file = acceptedFiles[0];
         
@@ -107,8 +79,9 @@ export default function RegisterCSV() {
             setFileBuffer(buffer);
             
             // 文字コードを検出
-            const result = jschardet.detect(new Uint8Array(buffer));
+            const result = jschardet.detect(Buffer.from(new Uint8Array(buffer)));
             const encoding = result.encoding;
+            console.log(encoding)
             setDetectedEncoding(encoding);
             setSelectedEncoding(encoding); // デフォルトで検出されたエンコーディングを選択
     
@@ -120,17 +93,13 @@ export default function RegisterCSV() {
         }
       }, []);
 
-    const parseFileWithEncoding = (buffer, encoding) => {
+    const parseFileWithEncoding = (buffer: ArrayBuffer, encoding:string) => {
         try {
-          // ArrayBufferからエンコーディングを指定してテキストに変換
           const decoder = new TextDecoder(encoding, { fatal: true });
           const text = decoder.decode(new Uint8Array(buffer));
-          
-          // 区切り文字を自動検出
           const delimiter = detectDelimiter(text);
-          
-          // PapaParseでパース
-          Papa.parse(text, {
+
+          Papa.parse<CsvData>(text, {
             header: true,
             delimiter: delimiter,
             skipEmptyLines: true,
@@ -147,76 +116,22 @@ export default function RegisterCSV() {
               }
               setError('');
             },
-            error: (error) => {
-              console.error('Parsing error:', error);
-              setError(`パース中にエラーが発生しました: ${error.message}`);
-              setJsonData([]);
-              setColumns([]);
-            }
           });
-        } catch (e) {
-          console.error('Decoding error:', e);
-          setError(`文字コードの変換中にエラーが発生しました: ${e.message}`);
+        } catch (error) {
+          setError(`文字コードの変換中にエラーが発生しました`);
           setJsonData([]);
           setColumns([]);
         }
-      };
-
-/*
-
-/*
-
-
-    const parseCsv = (csvText: string): CsvData[] => {
-        try {
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        const result: CsvData[] = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            
-            const values = lines[i].split(',').map(value => value.trim());
-            const entry: CsvData = {};
-            
-            headers.forEach((header, index) => {
-            entry[header] = values[index] || '';
-            });
-            
-            result.push(entry);
-        }
-
-        return result;
-        } catch (error) {
-            console.log(error)
-            throw new Error('CSVの解析に失敗しました');
-        }
-    };
-
-    const onDrop = useCallback(async (acceptedFiles: File[]) => {
-        try {
-        setError('');
-        const file = acceptedFiles[0];
-        
-        if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-            throw new Error('CSVファイルのみ対応しています');
-        }
-
-        const text = await file.text();
-        const data = parseCsv(text);
-        setJsonData(data);
-        } catch (err) {
-        setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました');
-        setJsonData([]);
-        }
-    }, [])
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    }
+    
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
         onDrop,
         accept: {
-        'text/csv': ['.csv']
+          'text/csv': ['.csv'],
+          'text/tab-separated-values': ['.tsv', '.txt']
         }
-    });
-*/
+    })
+
     const convertPronunciation = (pronunciations: Pronunciation[]|null, text:string) => {
         if (pronunciations){
             let newRead = text.trim()
@@ -252,18 +167,22 @@ export default function RegisterCSV() {
     const voiceRegistration = async (readings:Read[]) => {
         setStatus("音声合成を準備しています")
         const answerCount = readings.length
-        let n = 1
+        let n = 0
         for (const item of readings){
             //const newRead = await convertPronunciation(eventData?.pronunciations||null, answer)
             await registerVoice(organization, event, item.answer, item.read, eventData?.voice??"", item.voiceId, "")
             n += 1
+            if (n>0){
+                setStatus("音声合成を行っています")
+            }
             const ratio = Math.floor(n*100/answerCount)
-            setStatus(`音声合成：${ratio}%完了`)
+            setVoicerogress(ratio)
         }
     }
 
     //EmbeddingをEventのサブコレクションQADBに登録
     const registerQADB = async (foreinAnswers:ForeignAnswers, readings:Read[]) => {
+        setStatus("ベクトル化を行っています")
         let count = 0
         for (const item of jsonData){
             if (item.id=="" || item.question=="" || item.answer==""){
@@ -272,11 +191,6 @@ export default function RegisterCSV() {
             try {
                 const embedding = await createEmbedding(item.question, eventData!.embedding)
                 const ans = readings.filter((read) => read.answer === item.answer)
-/*
-                const readText = await convertPronunciation(eventData?.pronunciations ||null, item.answer)
-                const hashString = md5(readText)
-                const voiceId = eventData?.voice + "-" + hashString
-*/                
                 let data2 = {}
                 if (item.modal_file && modalData){
                     const modalList = modalData.filter((m) => m.name == item.modal_file )
@@ -311,7 +225,8 @@ export default function RegisterCSV() {
                 await setDoc(docRef,data2)
                 count += 1
                 const ratio = Math.floor(count*100/jsonData.length)
-                setStatus(`ベクトル化：${ratio}%完了`)
+                setVectorProgress(ratio)
+                //setStatus(`ベクトル化：${ratio}%完了`)
             } catch (error) {
               console.log(error);
             }
@@ -320,7 +235,7 @@ export default function RegisterCSV() {
     }
 
     const registerForeignLang = async () => {
-        setStatus("外国語に翻訳しています: 0%")
+        setStatus("外国語に翻訳しています")
         const answerList = jsonData.map((item) => item.answer)
         const answerSet = new Set(answerList)
         const languages = eventData?.languages ?? ["日本語"]
@@ -345,7 +260,8 @@ export default function RegisterCSV() {
             }
             count += 1
             const ratio = Math.floor(count*100/answerSet.size)
-            setStatus(`外国語翻訳：${ratio}%完了`)
+            //setStatus(`外国語翻訳：${ratio}%完了`)
+            setForeignProgress(ratio)
         }
         return translated
     }
@@ -363,7 +279,6 @@ export default function RegisterCSV() {
         if (judgeNewQA()){
             setStatus("Q&Aデータ登録を始めます")
             const readings = await readRegistration()
-            console.log(readings)
             const translated = await registerForeignLang()
             await registerQADB(translated, readings)
             await voiceRegistration(readings)
@@ -480,8 +395,6 @@ export default function RegisterCSV() {
 
     useEffect(() => {        //const judge = judgeNewQA()
         if (jsonData){
-            console.log(jsonData.length)
-            console.log(jsonData)
             const array1 = jsonData.map(item => item.modal_file)
             const array2 = array1.filter(item => item != "")
             const array3 = [...new Set(array2)]
@@ -490,15 +403,25 @@ export default function RegisterCSV() {
                 setIsModal(true)
                 setIsThirdStep(true)
             } else if (array3.length == 0 && jsonData.length > 0) {
-                setIsReady(true)
+                setIsReady(true)               
             }
         } else {
             setJsonData([])
             alert("CSVファイルを修正して再登録してください")
-            console.log("csvエラー")
         }
     }, [jsonData])
 
+    useEffect(() => {
+        if (isReady){
+            setStatus("以下のステップでデータベース登録します")
+        }
+    }, [isReady])
+
+    useEffect(() => {
+        if (fileBuffer && selectedEncoding) {
+          parseFileWithEncoding(fileBuffer, selectedEncoding);
+        }
+      }, [selectedEncoding]);
     
     useEffect(() => {
         //setIsThirdStep(false)
@@ -590,7 +513,7 @@ export default function RegisterCSV() {
                 <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
                 </div>
             )}
-            {isReady && (<div className="text-sm text-green-500 ml-3">登録済ファイル: {modalFiles.toString()}</div>)}
+            {isReady && (<div className="text-sm ml-3 text-green-500">ファイル登録完了</div>)}
 
             <div className="text-base font-bold mt-10">・ステップ４：データベース新規登録</div>
             {isReady && (
@@ -599,7 +522,8 @@ export default function RegisterCSV() {
             <button className="h-10 my-5 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
             <button className="h-10 my-5 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" onClick={() => registerToFirestore()}>データベースに登録</button>
             </div>
-            <div className="text-green-500 font-semibold">{status}</div>
+            <div className="text-green-500 font-semibold text-sm mb-5">{status}</div>
+            <ProgressBar steps={steps} />
             </div>
             )}
         </div>
