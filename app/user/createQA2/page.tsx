@@ -55,7 +55,7 @@ export default function RegisterCSV() {
         { name: '外国語翻訳', progress: foreignProgress },
         { name: 'ベクトル化', progress: vectorProgress },
         { name: '音声合成', progress: voiceProgress },
-      ];
+    ];
 
     const detectDelimiter = (text:string) => {
         const firstLine = text.split('\n')[0]

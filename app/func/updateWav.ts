@@ -15,7 +15,6 @@ export const registerVoice = async (organization:string, event:string, answer:st
             body: JSON.stringify({ answer: read, voice: voice, voiceId: voiceId}),
         });
         const audio = await response.json();
-        console.log(audio.voiceId)
         
         if (audio.status == "0"){
             await updateVoiceDataToQADB(audio.voiceId, audio.frame, audio.url, read, organization, event, qaId)
@@ -34,8 +33,11 @@ export const registerVoice = async (organization:string, event:string, answer:st
             console.log(`${voiceId}のエラーはmaxRetry${maxRetries}を超えました`)
             throw error;
         }
+        await registerVoice(organization, event, answer, read, voice, voiceId, qaId)
+        /*
         const delay = 1000 * Math.pow(2, retries - 1);
         await new Promise(resolve => setTimeout(resolve, delay));
+        */
     }
 }
 
@@ -46,7 +48,7 @@ const saveVoiceData = async(voiceId:string, text:string, read:string, audioConte
     const blob = base64toBlob(audioContent)
     const frame = frameCount(audioContent)
     if (!blob) {
-        return;
+        return
     }
 
     const fileName = voiceId + ".wav"
@@ -59,7 +61,7 @@ const saveVoiceData = async(voiceId:string, text:string, read:string, audioConte
         registrationVoiceData(voiceId, frame, url, text, read, organization, event, qaId)
     })
     .catch((error) => {
-      // Handle any errors
+      console.log(error)
     });
 }
 
@@ -99,7 +101,6 @@ const updateVoiceDataToQADB = async (voiceId:string, frame:number, url:string, r
             const docRef = doc(db, "Events",eventId,"QADB", document.id);
             await setDoc(docRef, data2, {merge:true});
           }
-        
     }
 
 }

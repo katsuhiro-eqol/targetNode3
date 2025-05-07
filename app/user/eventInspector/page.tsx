@@ -2,13 +2,17 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { db } from "@/firebase"
-import { doc, getDoc, collection, query, getDocs, setDoc } from "firebase/firestore"
+import { doc, getDoc, collection, query, getDocs, orderBy, limit, deleteDoc, setDoc, where } from "firebase/firestore"
+import { ConvData } from "@/types"
 
 export default function EventInspector(){
     const [events, setEvents] = useState<string[]>([""]) //firestoreから読み込む
     const [event, setEvent] = useState<string>("")
     const [organization, setOrganization] = useState<string>("")
-    const [convs, setConvs] = useState<string[]>([])
+    const [convData, setConvData] = useState<ConvData[]>([])
+    const [emptyCount, setEmptyCount] = useState<number>(0)
+    
+
 
 
     const loadEvents = async (org:string) => {
@@ -30,36 +34,43 @@ export default function EventInspector(){
             console.log(error)
         }
     }
-    
-    const loadConversationId = async (event:string) => {
+
+    const loadConvData = async (event:string) => {
+        const conv = []
+        let empty = 0
         try {
             const eventId = organization + "_" + event
             const convRef = collection(db,"Events",eventId, "Conversation")
-            const q = query(convRef)
+            const q = query(convRef, limit(50))
             const querySnapshot = await getDocs(q)
-
-            querySnapshot.forEach((doc) => {
-                const data = doc.data()
-                if (data.conversations.length > 0){
-                    console.log(data.conversations)
-                    setConvs((prev) => {return [...prev, doc.id]})
+            for (const document of querySnapshot.docs) {
+                const data = document.data()
+                if (data.conversations.length === 0){
+                    console.log("no conv", document.id)
+                    const docRef = doc(db, "Events",eventId,"Conversation", document.id);
+                    await deleteDoc(docRef);
+                    empty ++
+                } else {
+                    conv.push(data.conversations)
                 }
-            })
+            }
+            setEmptyCount(empty)
+            if (conv.length > 0){
+                setConvData(conv)
+            } else {
+                alert("このイベントには会話履歴情報がありません")
+            }
         } catch {
-
+            alert("データのロード時にエラーが発生しました")
         }
     }
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEvent(e.target.value);
         if (e.target.value !== ""){
-            loadConversationId(e.target.value)
+            loadConvData(e.target.value)
         }
     }
-
-    useEffect(() => {
-        console.log(convs)
-    }, [convs])
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
@@ -80,6 +91,9 @@ export default function EventInspector(){
             return <option key={name} value={name}>{name}</option>;
             })}
             </select>
+            <div>会話スレッド数：{String(convData.length)}</div>
+            <div>無会話スレッド数：{String(emptyCount)}</div>
+            <div></div>
             <div>分類できなかった質問のリスト</div>
             <div>QA総数・日別等</div>
             <div>質問ランキング</div>

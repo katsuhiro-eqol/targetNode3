@@ -134,14 +134,16 @@ export interface Pronunciation {
     read: string;
 }
 
-/*
-export interface EventList {
-    event:string[];
-}
-*/
-
 export interface StartText {
     text:string;
     url:string;
     voice:string;
+}
+
+export interface ConvData {
+    id:string;
+    user:string;
+    aicon:string;
+    similarity:number;
+    nearestQ:string;
 }

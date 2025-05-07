@@ -38,6 +38,7 @@ export const menuItems: MenuItem[] = [
       submenu: true,
       submenuItems: [
         { title: '登録情報一覧', path: '/user/eventList' },
+        { title: 'イベント複製', path: '/user/copyEvent' },
         { title: 'QRコード発行', path: '/user/qrCodeGenerator' },
         { title: '進捗確認・分析', path: '/user/eventInspector' }
       ]

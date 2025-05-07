@@ -1,14 +1,15 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { db } from "@/firebase"
-import { doc, getDoc, collection, getDocs, setDoc, deleteDoc } from "firebase/firestore"
+import { doc, getDoc, collection, getDocs, setDoc, deleteDoc, onSnapshot } from "firebase/firestore"
 import UploadFiles2 from "../../components/uploadFiles2"
 import QADataSelection from "../../components/qaDataSelection"
+import QADataSelection2 from "../../components/qaDataSelection2"
+import QADataList from "../../components/qADataList"
 import { PronunciationRegistration } from "../../components/pronunciation"
 import {registerVoice} from "../../func/updateWav"
 import createForeign from "../../func/createForeign"
 import createEmbedding from "../../func/createEmbedding"
-import getHiragana from "../../func/getHiragana"
 import { Circle, CircleDot, ArrowBigRight } from 'lucide-react'
 import { EventData, QaData, ModalData, Pronunciation } from "@/types"
 import md5 from 'md5';
@@ -32,12 +33,17 @@ export default function UpdaateQA(){
     const [newModal, setNewModal] = useState<string>("")
     const [modalFiles, setModalFiles] = useState<string[]|null>(null)
     const [modalData, setModalData] = useState<ModalData[]|null>(null)
-    const [newRead, setNewRead] = useState<Pronunciation[]|null>(null)
+    //const [newRead, setNewRead] = useState<Pronunciation[]|null>(null)
     const [pronunciations, setPronunciations] = useState<Pronunciation[]|null>([])
+
     const [isNewPronunciation, setIsNewPronunciation] = useState<boolean>(false)
     const [isReady, setIsReady] = useState<boolean>(false)
-    const [status, setStatus] = useState<string>("")
+    const [status2, setStatus2] = useState<string>("")
     const [errors, setErrors] = useState<string>("")
+    const [updatedQA, setUpdatedQA] = useState<QaData[]|null>(null)
+    const [deleteIds, setDeleteIds] = useState<string[]>([])
+    const [createdId, setCreatedId] = useState<string|null>(null)
+    const [isUpdateFinished, setIsUpdateFinished] = useState<boolean>(false)
     const options = ["id", "question", "answer", "modal_file"];
 
     const loadEvents = async (org:string) => {
@@ -159,8 +165,12 @@ export default function UpdaateQA(){
         setModalData([])
         setModalFiles(null)
         setNewModal("")
+        setModalData(null)
         setPronunciations([])
         setIsNewPronunciation(false)
+        setUpdatedQA(null)
+        setIsUpdateFinished(false)
+        setStatus2("")
     }
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -198,8 +208,8 @@ export default function UpdaateQA(){
 
     const updateQA = async () => {
         if ((newAnswer !== ""&& newQuestion !== "") && selectedQA){
-            setStatus("音声合成の準備をしています・・・")
-            const readText = await convertPronunciation(eventData!.pronunciations, newAnswer)
+            setStatus2("更新を開始しました（音声合成に時間がかかる場合があります）")
+            const readText = convertPronunciation(eventData!.pronunciations, newAnswer)
             const foreign = await createForeign(newAnswer, eventData!.languages)
             const foreignAns = foreign[newAnswer]
             const hashString = md5(readText)
@@ -218,12 +228,10 @@ export default function UpdaateQA(){
             }
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
-            setStatus("Q&Aの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
-            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
-            setSelectedQA(null)
-            setSelectedRowId(null)
+            setStatus2("Q&Aの更新が完了しました")
+            setIsUpdateFinished(true)
         } else if ((newQuestion === "" && newAnswer !== "") && selectedQA) {
-            setStatus("音声合成の準備をしています・・・")
+            setStatus2("更新を開始しました（音声合成に時間がかかる場合があります）")
             const readText = convertPronunciation(eventData!.pronunciations, newAnswer)
             const foreign = await createForeign(newAnswer, eventData!.languages)
             const foreignAns = foreign[newAnswer]
@@ -240,12 +248,10 @@ export default function UpdaateQA(){
             }
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
-            setStatus("Q&Aの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
-            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
-            setSelectedQA(null)
-            setSelectedRowId(null)
+            setStatus2("Q&Aの更新が完了しました")
+            setIsUpdateFinished(true)
         } else if ((newQuestion !== "" && newAnswer === "") && selectedQA){
-            setStatus("ベクトル化を開始しました")
+            setStatus2("更新を開始しました")
             const embedding = await createEmbedding(newQuestion,eventData!.embedding)
             const eventId = organization + "_" + event
             const qaId = selectedQA.id
@@ -255,33 +261,42 @@ export default function UpdaateQA(){
             }
             const docRef = doc(db, "Events", eventId, "QADB",qaId)
             await setDoc(docRef, data, {merge:true})
-            //cancelButton()
-            setStatus("Q&Aの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
-            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
-            setSelectedQA(null)
-            setSelectedRowId(null)
+            setStatus2("Q&Aの更新が完了しました")
+            setIsUpdateFinished(true)
         } else {
             alert("更新するquestion and/or anwerが入力されていません")
         }
     }
 
     const updateModal = async() => {
-        if (modalData && selectedQA){
+        if (newModal === ""){
             const data = {
-                modalFile:modalData[0].name,
-                modalPath:modalData[0].path,
-                modalUrl:modalData[0].url
+                modalFile:"",
+                modalPath:"",
+                modalUrl:""
             }
             const eventId = organization + "_" + event
             const docRef = doc(db, "Events", eventId, "QADB",selectedQA!.id)
             await setDoc(docRef, data, {merge:true})
-            setStatus("添付書類の登録が完了しました。変更内容確認は「登録情報一覧」にて。")
-            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
-            setSelectedQA(null)
-            setSelectedRowId(null)
+            setStatus2("Q&Aの更新が完了しました")
+            setIsUpdateFinished(true)            
         } else {
-            alert("更新する添付書類(modal_file)が登録されていません")
+            if (modalData && selectedQA){
+                const data = {
+                    modalFile:modalData[0].name,
+                    modalPath:modalData[0].path,
+                    modalUrl:modalData[0].url
+                }
+                const eventId = organization + "_" + event
+                const docRef = doc(db, "Events", eventId, "QADB",selectedQA!.id)
+                await setDoc(docRef, data, {merge:true})
+                setStatus2("Q&Aの更新が完了しました")
+                setIsUpdateFinished(true)
+            } else {
+                alert("更新する添付書類(modal_file)が登録されていません")
+            }
         }
+
     }
 
     const convertPronunciation = (pronunciations: Pronunciation[]|null, text:string) => {
@@ -298,12 +313,11 @@ export default function UpdaateQA(){
         }        
     }
 
-
     const updateVoice = async() => {
         const readText = convertPronunciation(pronunciations, selectedQA!.read)
         const hashString = md5(readText)
         const voiceId = eventData!.voice + "-" + hashString
-        setStatus("音声合成を開始しました")
+        setStatus2("音声合成の準備をしています")
         if (eventData && selectedQA){
             await registerVoice(organization, event, selectedQA.answer, readText, eventData.voice, voiceId, selectedQA.id)
             const data = {
@@ -313,30 +327,28 @@ export default function UpdaateQA(){
             const eventId = organization + "_" + event
             const docRef = doc(db, "Events", eventId, "QADB", selectedQA?.id)
             await setDoc(docRef, data, {merge:true})
-            setStatus("読みの更新が完了しました。変更内容確認は「登録情報一覧」にて。")
-            setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
-            setSelectedQA(null)
-            setSelectedRowId(null)
+            setStatus2("Q&Aの更新が完了しました")
+            setIsUpdateFinished(true)
         }
     }
         
     const addQA = async() => {
         if (newQuestion && newAnswer){
-            setStatus("Q&A登録を開始しました")
-            //読み補正したstringに対してvoiceIdを設定する。
+            setStatus2("Q&A登録を開始しました")
             const readText = convertPronunciation(eventData!.pronunciations ||null, newAnswer)
             const hashString = md5(readText)
             const voiceId = eventData!.voice + "-" + hashString
             const foreign = await createForeign(newAnswer, eventData!.languages)
-            setStatus("外国語対抗が完了しました")
+            //setStatus2("外国語翻訳が完了しました")
             const foreignAns = foreign[newAnswer]
             const embedding = await createEmbedding(newQuestion,eventData!.embedding)
-            setStatus("ベクトル化が完了しました")
+            //setStatus2("ベクトル化が完了しました")
             const lastId = qaData.at(-1)
             if (lastId){
                 const newId = String(parseInt(lastId?.id)+1)
                 const eventId = organization + "_" + event
                 const docRef = doc(db, "Events", eventId, "QADB",newId)
+                
                 if (modalData){
                     const data = {
                         question:newQuestion,
@@ -351,10 +363,11 @@ export default function UpdaateQA(){
                         voiceId:voiceId
                     }
                     await setDoc(docRef, data)
-                    setStatus("音声合成を開始しました")
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
-                    setStatus("追加Q&Aの登録が完了しました。変更内容確認は「登録情報一覧」にて。")       
-                    //cancelButton()     
+                    //loadQADB()
+                    setStatus2("Q&Aの追加が完了しました")
+                    setCreatedId(newId)
+                    setIsUpdateFinished(true)
                 } else if (newModal && !modalData) {
                     alert("添付書類が登録されていません")
                 } else {
@@ -372,28 +385,28 @@ export default function UpdaateQA(){
                     }
                     await setDoc(docRef, data)
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
-                    setStatus("追加Q&Aの登録が完了しました。変更内容確認は「登録情報一覧」にて。")  
-                    //cancelButton()
+                    //loadQADB()
+                    setStatus2("Q&Aの追加が完了しました")
+                    setCreatedId(newId)
+                    setIsUpdateFinished(true)
                 }
             }
-            
         } else {
             alert("入力不備があります")
-        }
-        
+        }        
     }
 
     const deleteQA = async() => {
-        if (eventData && selectedQA){
-            const dQA = confirm(`本当にこのQ&A(id:${selectedQA.id})を削除しますか？`)
+        if (eventData && Array.isArray(deleteIds)){
+            const dQA = confirm(`本当にこのQ&A(id:${deleteIds.join(",")})を削除しますか？`)
             if (dQA){
                 const eventId = organization + "_" + event
-                const docRef = doc(db, "Events", eventId, "QADB", selectedQA.id)
-                await deleteDoc(docRef)
-                setStatus(`Q&A(id:${selectedQA.id})の削除が完了しました。変更内容確認は「登録情報一覧」にて。`) 
-                setSearchedData(prev => prev?.filter(qa => qa.id !== selectedRowId)||null)
-                setSelectedQA(null)
-                setSelectedRowId(null)
+                for (const id of deleteIds){
+                    const docRef = doc(db, "Events", eventId, "QADB", id)
+                    await deleteDoc(docRef)
+                }
+
+                setStatus2(`Q&A(id:${deleteIds.join(",")})の削除が完了しました。`) 
             }
         }else{
             alert("Q&Aが選択されていまさん")
@@ -401,19 +414,47 @@ export default function UpdaateQA(){
     }
 
     useEffect(() => {
-        setStatus("")
+        if (selectedButton !== "add"){
+            if (selectedRowId){
+                const data:QaData[] = qaData.filter((item) => item.id == selectedRowId)
+                console.log(data)
+                if (data[0]){
+                    if (data[0].question !== selectedQA?.question || data[0].answer !== selectedQA?.answer || data[0].read !== selectedQA?.read || data[0].modalFile !== selectedQA?.modalFile){
+                        setUpdatedQA(data)
+                        setStatus2("Q&Aデータが更新されました")
+                    }                
+                }            
+            }
+        } else {
+            if (createdId){
+                const data:QaData[] = qaData.filter((item) => item.id == createdId)
+                console.log(data)
+                if (data[0]){
+                    setUpdatedQA(data)
+                    setStatus2("Q&Aデータが追加されました")            
+                }                     
+            }
+        }
+    }, [qaData])
+
+    useEffect(() => {
+        setStatus2("")
         setSearchText("")
         setSearchedData(null)
         setSelectedQA(null)
         setSelectedRowId(null)
+        setUpdatedQA(null)
+        setIsUpdateFinished(false)
     }, [selectedButton])
 
     useEffect(() => {
-        setStatus("")
+        setStatus2("")
         setSearchText("")
         setSearchedData(null)
         setSelectedQA(null)
         setSelectedRowId(null)
+        setUpdatedQA(null)
+        setIsUpdateFinished(false)
     }, [selectedOption])   
 
     useEffect(() => {
@@ -428,7 +469,7 @@ export default function UpdaateQA(){
         if (selectedQA){
             setPronunciations(selectedQA.pronunciations)
         }
-        setStatus("")
+        setStatus2("")
     }, [selectedQA])
 
     useEffect(() => {
@@ -439,7 +480,7 @@ export default function UpdaateQA(){
     }, [selectedRowId])
 
     useEffect(() => {
-        setStatus("")
+        setStatus2("")
     }, [searchedData])
 
     useEffect(() => {
@@ -509,10 +550,10 @@ export default function UpdaateQA(){
                 placeholder="検索ワード"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                />
+            />
             <button className="bg-cyan-500 hover:bg-cyan-700 text-white ml-3 mt-3 px-2 py-1 my-2 rounded text-xs" onClick={searchQA}>検索</button>
             </div>
-            {searchedData && (
+            {(searchedData && selectedButton !== "delete") && (
             <div>
                 <div className="text-sm mt-2">検索結果（修正するQ&Aを選択してください）</div>
                 <QADataSelection qaData={searchedData} selectedRowId={selectedRowId} setSelectedRowId={setSelectedRowId}/>
@@ -520,10 +561,10 @@ export default function UpdaateQA(){
                     <div>
                     <div className="flex flex-row gap-x-4">
                     <div className="w-16 ml-3 mt-2 text-sm font-semibold">question:</div>
-                    <div className=" w-64 ml-2 mt-2 text-sm">{selectedQA.question}</div>
+                    <div className=" w-64 ml-2 mt-2 text-xs">{selectedQA.question}</div>
                     <ArrowBigRight className="mt-1"/>
                     <input
-                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-sm"
+                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-xs"
                         name="question"
                         placeholder="変更しない場合は未入力"
                         value={newQuestion}
@@ -532,10 +573,10 @@ export default function UpdaateQA(){
                     </div>
                     <div className="flex flex-row gap-x-4">
                     <div className="w-16 ml-3 mt-2 text-sm font-semibold">answer:</div>
-                    <div className="w-64 ml-2 mt-2 text-sm">{selectedQA.answer}</div>
+                    <div className="w-64 ml-2 mt-2 text-xs">{selectedQA.answer}</div>
                     <ArrowBigRight className="mt-2" />
                     <input
-                        className="w-96 rounded px-2 py-1 mt-1 bg-inherit border-2 text-sm"
+                        className="w-96 rounded px-2 py-1 mt-1 bg-inherit border-2 text-xs"
                         name="answer"
                         placeholder="変更しない場合は未入力"
                         value={newAnswer}
@@ -553,7 +594,7 @@ export default function UpdaateQA(){
 
                     {selectedQA && selectedButton === "modal" && (
                     <div className="ml-3">
-                    <div className="text-xs text-red-500">既存のQ&Aに添付ファイル追加、あるいは追加します</div>
+                    <div className="text-xs text-red-500">既存の添付ファイルを更新、あるいは追加します。削除する場合はファイル名を未入力で更新。</div>
                     <div className="flex flex-row gap-x-4 mb-5">
                     <div className="w-16 ml-3 mt-2 text-sm font-semibold">modal_file:</div>
                     <div className=" w-32 ml-2 mt-2 text-sm">{selectedQA.modalFile}</div>
@@ -596,17 +637,17 @@ export default function UpdaateQA(){
                     </div>
                     </div>
                     )}
-
                     </div>)}
-
-
-                    {(selectedQA && selectedButton === "delete") && (
-                    <div>
-                        <div>このデータを削除しますか？</div>
-                        <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
-                        <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => deleteQA()}>データ削除</button>
-                    </div>)}
+         
                 </div>)}
+                {(searchedData && selectedButton === "delete") && (
+                <div>
+                    <QADataSelection2 qaData={searchedData} setDeleteIds={setDeleteIds}/>
+                    <div className="text-sm">選択したデータを一括削除します</div>
+                    <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
+                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => deleteQA()}>データ削除</button>
+                </div>
+            )}                           
             </div>)}
 
             {(selectedButton === "add") && (            
@@ -647,14 +688,22 @@ export default function UpdaateQA(){
             <UploadFiles2 modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} setErrors={setErrors} />
             )}
             </div>
+
             <div className="flex flex-row gap-x-4">
             <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
             <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => addQA()}>Q&Aを追加登録</button>
             </div>
             </div>)}   
-            <div className="text-green-500 font-semibold">{status}</div>
+            <div className="text-green-500 font-semibold">{status2}</div>
         </div>     
         ))}
+        {isUpdateFinished && (<button className="text-sm mt-10 text-blue-500 hover:text-blue-700" onClick={loadQADB}>更新されたデータを表示</button>)}
+        
+        {updatedQA && (
+            <div>
+            <QADataList qaData={updatedQA} />
+            </div>
+        )}
         </div>
     );
 };

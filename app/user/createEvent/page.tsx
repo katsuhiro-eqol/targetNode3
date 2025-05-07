@@ -164,33 +164,6 @@ export default function CreateEvent(){
             }
           }
     }, [])
-    
-    /*
-    useEffect(() => {
-        loadEvents()
-    },[organization])
-
-    useEffect(() => {
-        console.log(events)
-    },[events])
-
-    useEffect(() => {
-        console.log(newEvent)
-    },[newEvent])
-
-    useEffect(() => {
-        console.log(comment)
-    },[comment])
-
-    useEffect(() => {
-        console.log(image)
-    },[image])
-
-    useEffect(() => {
-        console.log(startTime)
-        console.log(endTime)
-    }, [startTime, endTime])
-    */
 
     return (
         <div>
@@ -264,9 +237,6 @@ export default function CreateEvent(){
                 <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
             )}
             </div>
-            
-
-                       
             <div className="flex flex-row gap-x-4">
             <button className="h-10 mt-10 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
             <button className="h-10 mt-10 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" onClick={() => registerEvent()} >新規イベント登録</button>
@@ -275,3 +245,16 @@ export default function CreateEvent(){
         </div>
     )
 }
+
+/*
+    <div className="flex flex-row gap-x-4">
+    <div className="text-base mt-10 font-semibold text-gray-700">・ステップ３: イベントオプション設定  </div>
+    {!isEventOption && (
+        <button className="text-sm mt-9 px-2 border-2 bg-gray-100 hover:bg-gray-200 rounded" onClick={toggleState} >オプション入力</button>
+    )}
+    </div>
+    <div className="mt-2 text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
+    {isEventOption && (
+        <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
+    )}
+*/

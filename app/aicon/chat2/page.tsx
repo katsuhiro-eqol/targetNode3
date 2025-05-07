@@ -73,9 +73,9 @@ export default function AiconChat2() {
         //過去会話を反映させるinput
         const inputWH = inputWithHistory(userInput)
         console.log(inputWH)
-
+        const now = new Date().toLocaleString("ja-JP")
         const userMessage: Message = {
-            id: Date.now().toLocaleString(),
+            id: now,
             text: userInput,
             sender: 'user',
             modalUrl:null,
@@ -107,7 +107,7 @@ export default function AiconChat2() {
                 const answer = setAnswer(embeddingsData[similarityList.index], language)
                 if (embeddingsData[similarityList.index].modalUrl){
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:embeddingsData[similarityList.index].modalUrl,
@@ -121,7 +121,7 @@ export default function AiconChat2() {
                     }
                 } else {
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:null,
@@ -144,7 +144,7 @@ export default function AiconChat2() {
                 const answer = setAnswer(badQuestion[n], language)
                 if (badQuestion[n].modalUrl){
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:badQuestion[n].modalUrl,
@@ -158,7 +158,7 @@ export default function AiconChat2() {
                     }
                 } else {
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:null,
@@ -328,7 +328,7 @@ export default function AiconChat2() {
 
     const saveMessage = async (userMessage:Message, message:Message, attr:string) => {
         const data = {
-            id:message.id,
+            id:userMessage.id,
             user:userMessage.text,
             aicon:message.text,
             nearestQ:message.nearestQ,

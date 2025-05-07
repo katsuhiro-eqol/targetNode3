@@ -6,7 +6,7 @@ import { doc, getDoc, deleteDoc, setDoc, getDocs, collection, writeBatch } from 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
-export default function Account(){
+export default function DeleteEvent(){
     const [events, setEvents] = useState<string[]>([]) //firestoreから読み込む
     const [eventList, setEventList] = useState<string[]>([""])
     const [event, setEvent] = useState<string>("")
@@ -135,15 +135,15 @@ export default function Account(){
         </select>
         )}
 
+        
+        <div className="flex flex-row gap-x-4 mt-16">
+        <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
+        <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => deleteEvent()}>イベント削除</button>
+        </div>               
         {event && (
-        <div>
-            <div className="text-red-500 font-bold mt-16 text-sm">このイベントを削除しますか？復元はできません。</div>
-            <div className="flex flex-row gap-x-4">
-            <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>キャンセル</button>
-            <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => deleteEvent()}>イベント削除</button>
-            </div>               
-        </div>
+            <div className="text-red-500 font-bold text-sm">このイベントを削除しますか？復元はできません。</div>
         )}
+
         <div className="text-green-500 font-semibold mt-20">{status}</div>
         </div>
     )

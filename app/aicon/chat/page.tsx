@@ -69,8 +69,14 @@ export default function Aicon() {
         setModalUrl(null)
         setModalFile(null)
 
+        const date = new Date()
+        const offset = date.getTimezoneOffset() * 60000
+        const localDate = new Date(date.getTime() - offset)
+        const now = localDate.toISOString()
+
+        console.log(now)
         const userMessage: Message = {
-            id: Date.now().toLocaleString(),
+            id: now,
             text: userInput,
             sender: 'user',
             modalUrl:null,
@@ -107,7 +113,7 @@ export default function Aicon() {
                 const answer = setAnswer(embeddingsData[similarityList.index], language)
                 if (embeddingsData[similarityList.index].modalUrl){
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:embeddingsData[similarityList.index].modalUrl,
@@ -121,7 +127,7 @@ export default function Aicon() {
                     }
                 } else {
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:null,
@@ -144,7 +150,7 @@ export default function Aicon() {
                 const answer = setAnswer(badQuestion[n], language)
                 if (badQuestion[n].modalUrl){
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:badQuestion[n].modalUrl,
@@ -158,7 +164,7 @@ export default function Aicon() {
                     }
                 } else {
                     const aiMessage: Message = {
-                        id: Date.now().toLocaleString(),
+                        id: `A${now}`,
                         text: answer,
                         sender: 'AIcon',
                         modalUrl:null,
@@ -318,7 +324,7 @@ export default function Aicon() {
 
     const saveMessage = async (userMessage:Message, message:Message, attr:string) => {
         const data = {
-            id:message.id,
+            id:userMessage.id,
             user:userMessage.text,
             aicon:message.text,
             nearestQ:message.nearestQ,
@@ -328,8 +334,17 @@ export default function Aicon() {
     }
 
 
-    const createConvField = async (id:string, attr:string) => {
-        await setDoc(doc(db,"Events",attr,"Conversation",id), {conversations:[], langage:language})
+    const createConvField = async (attr:string) => {
+        const date = new Date()
+        const offset = date.getTimezoneOffset() * 60000
+        const localDate = new Date(date.getTime() - offset)
+        const isoString = localDate.toISOString().split('T')[0]
+        const random = randomStr(6)
+        const now = localDate.toISOString()
+
+        const convId = `${isoString}_${random}`
+        setConvId(convId)
+        await setDoc(doc(db,"Events",attr,"Conversation",convId), {conversations:[], langage:language, date:now})
     }
 
     const getLanguageList = () => {
@@ -453,16 +468,7 @@ export default function Aicon() {
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
-            const now = new Date().toJSON()
-            const today = now.split("T")[0]
-            const random = randomStr(6)
-            
-            const convId = `${today}_${random}`
-            if (convId){
-                setConvId(convId)
-                createConvField(convId, attribute)
-            }
-                
+            createConvField(attribute)
         }        
     }, [attribute, code])
 

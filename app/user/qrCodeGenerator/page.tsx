@@ -15,7 +15,7 @@ export default function DownloadableQRCode(){
     const [url, setUrl] = useState<string|null>(null)
     const [status, setStatus] = useState<string>("")
     const qrCodeRef = useRef(null);
-    const size:number = 256
+    const size:number = 144
 
     const loadEvents = async (org:string) => {
         try {
@@ -120,7 +120,7 @@ export default function DownloadableQRCode(){
 
   
     return (
-        <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2">
+        <div className="flex-1 flex flex-col justify-center gap-2">
         <div className="font-bold text-xl">QRコード生成</div>
         <div className="text-base mt-5">イベントを選択</div>
             <select className="mb-8 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
@@ -131,23 +131,29 @@ export default function DownloadableQRCode(){
         <div className="">
         {url && (
             <div>
-            <div className="mb-10 w-full"><a className="text-indigo-700" href={url}  target="_blank" rel="noreferrer">{url}</a></div>
+            <div className="mb-10 w-1/2"><a className="text-indigo-700" href={url}  target="_blank" rel="noreferrer">{url}</a></div>
             <div 
             ref={qrCodeRef} 
-            className="ml-3 bg-white"
-            style={{ display: 'inline-block' }}
+            className="w-60 py-5 px-12 bg-white"
         >
 
             <QRCodeCanvas value={url} size={size} level="H"/>
+
+            </div>
+            </div>
+        )}
+
             <div className="flex flex-row gap-x-4">
             <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
             <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>
             </div>
-            <div className="text-lime-500 mt-5 ml-3">{status}</div>  
-            </div>
-            </div>
-        )}
+            <div className="text-green-500 font-semibold mt-5">{status}</div>
         </div>
         </div>
     );
 };
+
+/*
+<div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2">
+            style={{ display: 'inline-block' }}
+*/
