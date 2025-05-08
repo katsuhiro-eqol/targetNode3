@@ -1,5 +1,4 @@
 import axios from 'axios';
-import md5 from 'md5';
 import { db } from "@/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,11 +8,11 @@ const runpod_key = process.env.RUNPOD_API_KEY
 const runpod_url = "https://api.runpod.ai/v2/ipv7b7lbrstx3n/runsync"
 
 const vits_param = {
-    bauncer: {model_id: 0},
-    voice_m: {model_id: 1},
-    voice_w: {model_id: 2},
-    voice_m1: {model_id: 1},
-    voice_w1: {model_id: 2},    
+    voice_m: {model_id: 0},
+    voice_w2: {model_id: 1},
+    voice_m1: {model_id: 0},
+    voice_w1: {model_id: 1},
+    voice_w: {model_id: 1}  
 }
 
 type VoiceType = keyof typeof vits_param;
@@ -23,10 +22,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
     const answer = params.answer
     const voice = params.voice as VoiceType
     const voiceId = params.voiceId
-    console.log(answer,voice,voiceId)
-    //const audioString = processedString(answer)
-    //const hashString = md5(answer)
-    //const voiceId = voice + "-" + hashString
+
     const docRef = doc(db, "Voice", voiceId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
