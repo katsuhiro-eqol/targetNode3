@@ -33,7 +33,6 @@ export default function UpdaateQA(){
     const [newModal, setNewModal] = useState<string>("")
     const [modalFiles, setModalFiles] = useState<string[]|null>(null)
     const [modalData, setModalData] = useState<ModalData[]|null>(null)
-    //const [newRead, setNewRead] = useState<Pronunciation[]|null>(null)
     const [pronunciations, setPronunciations] = useState<Pronunciation[]|null>([])
 
     const [isNewPronunciation, setIsNewPronunciation] = useState<boolean>(false)
@@ -407,6 +406,7 @@ export default function UpdaateQA(){
                 }
 
                 setStatus2(`Q&A(id:${deleteIds.join(",")})の削除が完了しました。`) 
+                setIsUpdateFinished(true)
             }
         }else{
             alert("Q&Aが選択されていまさん")
@@ -586,7 +586,7 @@ export default function UpdaateQA(){
                     <div className="ml-3 mt-5">
                     <div className="flex flex-row gap-x-4">
                     <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
-                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => updateQA()}>Q&A更新</button>
+                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => updateQA()}>Q&A更新</button>
                     </div>
                     
                     </div>
@@ -615,7 +615,7 @@ export default function UpdaateQA(){
                     <div className="ml-3 mt-5">
                     <div className="flex flex-row gap-x-4">
                     <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
-                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => updateModal()}>添付書類更新</button>
+                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => updateModal()}>添付書類更新</button>
                     </div>
                     </div>                    
                     
@@ -633,7 +633,7 @@ export default function UpdaateQA(){
                     <div className="text-xs text-red-500">注意：現在の読みに対して追加で読み辞書を適用します。</div>
                     <div className="flex flex-row gap-x-4">
                     <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
-                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => updateVoice()}>読みを修正</button>
+                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => updateVoice()}>読みを修正</button>
                     </div>
                     </div>
                     )}
@@ -645,7 +645,7 @@ export default function UpdaateQA(){
                     <QADataSelection2 qaData={searchedData} setDeleteIds={setDeleteIds}/>
                     <div className="text-sm">選択したデータを一括削除します</div>
                     <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
-                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => deleteQA()}>データ削除</button>
+                    <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => deleteQA()}>データ削除</button>
                 </div>
             )}                           
             </div>)}
@@ -691,7 +691,7 @@ export default function UpdaateQA(){
 
             <div className="flex flex-row gap-x-4">
             <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
-            <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300"  onClick={() => addQA()}>Q&Aを追加登録</button>
+            <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => addQA()}>Q&Aを追加登録</button>
             </div>
             </div>)}   
             <div className="text-green-500 font-semibold">{status2}</div>
