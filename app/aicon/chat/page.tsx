@@ -1,7 +1,6 @@
 "use client"
 import "regenerator-runtime";
 import React from "react";
-//import Head from "next/head";
 import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
@@ -24,13 +23,12 @@ export default function Aicon() {
     const [dLang, setDLang] = useState<string>("日本語")//表示用言語
     const [language, setLanguage] = useState<string>("日本語")
     const [embeddingsData, setEmbeddingsData] = useState<EmbeddingsData[]>([])
-    //const [attribute, setAttribute] = useState<string|null>(null)
-    //wavUrl：cloud storageのダウンロードurl。初期値は無音ファイル。これを入れることによって次からセッティングされるwavUrlで音がなるようになる。
     const [wavUrl, setWavUrl] = useState<string>(no_sound);
     const [slides, setSlides] = useState<string[]|null>(null)
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [wavReady, setWavReady] = useState<boolean>(false)
     const [record,setRecord] = useState<boolean>(false)
+    const [isListening, setIsListening] = useState<boolean>(false)   
     const [canSend, setCanSend] = useState<boolean>(false)
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string|null>(null)
@@ -43,13 +41,13 @@ export default function Aicon() {
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
     
     const foreignLanguages: Record<string, LanguageCode> = {"日本語": "ja-JP","英語": "en-US","中国語（簡体）": "zh-CN","中国語（繁体）": "zh-TW","韓国語": "ko-KR","フランス語": "fr-FR","ポルトガル語": "pt-BR","スペイン語": "es-ES"}
-
-    //const [endLimit, setEndLimit] = useState<number>(1767193199000) //2025-12-31
     const audioRef = useRef<HTMLAudioElement>(null)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const {
         transcript,
-        resetTranscript
+        resetTranscript,
+        listening,
+        browserSupportsSpeechRecognition
     } = useSpeechRecognition();
 
     const useSearchParams = ()  => {
@@ -61,9 +59,8 @@ export default function Aicon() {
     const code = searchParams.get("code")
 
     async function getAnswer() {        
-        sttStop()
+        await sttStop()
         setWavUrl(no_sound)
-        setRecord(false)
         setCanSend(false)//同じInputで繰り返し送れないようにする
         setSlides(Array(1).fill(initialSlides))
         setModalUrl(null)
@@ -74,7 +71,6 @@ export default function Aicon() {
         const localDate = new Date(date.getTime() - offset)
         const now = localDate.toISOString()
 
-        console.log(now)
         const userMessage: Message = {
             id: now,
             text: userInput,
@@ -84,11 +80,6 @@ export default function Aicon() {
             similarity:null,
             nearestQ:null
         }
-        /*
-        if (attribute){
-            await saveMessage(userMessage, attribute)
-        }
-         */
         
         setMessages(prev => [...prev, userMessage]);
 
@@ -366,11 +357,15 @@ export default function Aicon() {
     const talkStart = async () => {
         audioPlay()
         setWavReady(true)
+        const date = new Date()
+        const offset = date.getTimezoneOffset() * 60000
+        const localDate = new Date(date.getTime() - offset)
+        const now = localDate.toISOString()
         setTimeout(() => {
             if (startText){
                 if (language=="日本語"){
                     const aiMessage: Message = {
-                        id: Date.now().toString(),
+                        id: now,
                         text: startText.answer,
                         sender: 'AIcon',
                         modalUrl:null,
@@ -385,7 +380,7 @@ export default function Aicon() {
                     if (Array.isArray(foreign)){
                         const foreignText = foreign.find(item => language in item)
                         const aiMessage: Message = {
-                            id: Date.now().toString(),
+                            id: now,
                             text: foreignText[language],
                             sender: 'AIcon',
                             modalUrl:null,
@@ -413,26 +408,65 @@ export default function Aicon() {
     
     }
 
-    const inputClear = () => {
-        sttStop()
-        resetTranscript()
-        setUserInput("")
-    }
-
-    const sttStart = () => {
-        setUserInput("")
-        setRecord(true)
-        if (audioRef.current) {
-            audioRef.current.pause();
+    const inputClear = async () => {
+        try {
+            if (listening){
+            await SpeechRecognition.stopListening()
+            setRecord(false)
+            resetTranscript()
+            }
+        } catch(error){
+            console.error('音声認識の停止に失敗:', error)
+            alert(`音声認識停止不良:${error}`)
         }
-        const langCode = foreignLanguages[language] || "ja-JP"
-        SpeechRecognition.startListening({language:langCode})
+        setUserInput("")
     }
 
-    const sttStop = () => {
-        setRecord(false)
-        SpeechRecognition.stopListening()
-        resetTranscript()
+    const sttStart = async() => {
+        if (!browserSupportsSpeechRecognition) {
+            alert('このブラウザは音声認識をサポートしていません')
+            return
+        }
+        try {
+            if (listening) {
+                await SpeechRecognition.stopListening()
+                resetTranscript()
+            }
+            setUserInput("")
+            setRecord(true)
+            
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            
+            const langCode = foreignLanguages[language] || "ja-JP";
+            await SpeechRecognition.startListening({ 
+                language: langCode, 
+                continuous: true
+            });
+            setIsListening(true)
+            
+        } catch(error) {
+            console.error('音声認識の開始に失敗:', error)
+            setRecord(false)
+            setIsListening(false)
+        }
+    }
+
+    const sttStop = async () => {
+        try {
+            if (listening) {
+                await SpeechRecognition.stopListening()
+                resetTranscript()
+                setRecord(false)
+                setIsListening(false)
+            }
+        } catch(error) {
+            console.error('音声認識の停止に失敗:', error)
+            setRecord(false)
+            setIsListening(false)
+        }
     }
 
     const selectLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -460,10 +494,17 @@ export default function Aicon() {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
             }
+            SpeechRecognition.stopListening()
             resetTranscript()
+            setRecord(false)
         };
     },[])
 
+    useEffect(() => {
+        if (listening !== isListening) {
+            setIsListening(listening);
+        }
+    }, [listening]);
 
     useEffect(() => {
         if (attribute && code){
@@ -491,32 +532,6 @@ export default function Aicon() {
         }
     }, [embeddingsData])
 
-    //20240228ヴァージョンはアニメーション省略なのでwavUrlが更新されたらaudioPlayする
-    /*
-    useEffect(() => {
-        if (wavUrl != no_sound ){
-            console.log("check1")
-        audioPlay()
-        setCurrentIndex(0)
-        if (Array.isArray(slides) && slides.length !== 1){
-            if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
-                console.log("check2")
-                return;
-            }
-            console.log("check3")
-            intervalRef.current = setInterval(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
-            }, 250)
-
-        } else {
-            console.log("isArray",Array.isArray(slides))
-            console.log("slides",slides)
-            console.log("check4")
-        }   
-    }
-    }, [wavUrl])
-    */
-
     useEffect(() => {
         if (Array.isArray(slides) && slides.length>1 && wavUrl!= no_sound){
             audioPlay()
@@ -527,7 +542,6 @@ export default function Aicon() {
             intervalRef.current = setInterval(() => {
                 setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
             }, 250)
-
         }
     }, [slides])
 
@@ -563,6 +577,10 @@ export default function Aicon() {
             setCanSend(false)
         }
     }, [userInput])
+
+    useEffect(() => {
+        console.log("record", record)
+    }, [record])
 
     return (
         <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
@@ -615,7 +633,7 @@ export default function Aicon() {
                 クリア(clear)
                 </button>)}
             {canSend ? (
-                <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-xs rounded" onClick={() => getAnswer()}>
+                <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-xs rounded" onClick={() => {getAnswer()}}>
                 <Send size={16} />
                 送信(send)
                 </button>):(
@@ -653,7 +671,3 @@ export default function Aicon() {
         </div>
     );
 }
-
-/*
- className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}
- */

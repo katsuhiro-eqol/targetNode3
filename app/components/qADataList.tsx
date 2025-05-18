@@ -5,6 +5,7 @@ import ForeignModal from "./foreignModal"
 import ModalModal from "./modalModal"
 import ListenVoice from "./listenVoice"
 import { QaData, Foreign } from "@/types"
+import { Speech, Paperclip, Languages } from 'lucide-react';
 
 interface QADataProps {
     qaData:QaData[];
@@ -65,19 +66,6 @@ export default function QADataList({qaData}: QADataProps){
         setAnswer(selectedData[0].answer)
     }
 
-/*
-    useEffect(() => {
-        console.log(isForeign)
-    }, [isForeign])
-
-    useEffect(() => {
-        console.log(foreignData)
-    }, [foreignData])
-
-    useEffect(() => {
-        console.log(voiceUrl)
-    }, [voiceUrl])
-*/
     return (
         <div>
             <div className="container mx-auto p-4">
@@ -109,7 +97,7 @@ export default function QADataList({qaData}: QADataProps){
                                     onClick={() => showForeign(row.id)}
                                     className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs"
                                   >
-                                    外国語回答を表示
+                                    <Languages size={18} />
                                   </button>
                                   </div>
                                   </td>
@@ -124,9 +112,9 @@ export default function QADataList({qaData}: QADataProps){
                                 <div className="flex space-x-2">
                                   <button
                                     onClick={() => showModal(row.id)}
-                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs"
+                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded"
                                   >
-                                    添付書類を表示
+                                    <Paperclip size={18} />
                                   </button>
                                   </div>
                                   </td>
@@ -141,9 +129,9 @@ export default function QADataList({qaData}: QADataProps){
                                 <div className="flex space-x-2">
                                   <button
                                     onClick={() => listenVoice(row.id)}
-                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs"
+                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded"
                                   >
-                                    AIボイスを聞く
+                                    <Speech size={18} />
                                   </button>
                                   </div>
                                   </td>

@@ -4,7 +4,7 @@ import {useState, useEffect} from "react"
 import ForeignModal from "./foreignModal"
 import ModalModal from "./modalModal"
 import ListenVoice from "./listenVoice"
-import { Circle, CircleDot } from 'lucide-react';
+import { Circle, CircleDot, Speech, Paperclip, Languages } from 'lucide-react';
 import { QaData, Foreign } from "@/types"
 
 interface QADataSelectionProps {
@@ -122,9 +122,9 @@ export default function QADataSelection({qaData, selectedRowId, setSelectedRowId
                                 <div className="flex space-x-2">
                                   <button
                                     onClick={() => showForeign(row.id)}
-                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs"
+                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded"
                                   >
-                                    外国語回答を表示
+                                    <Languages size={18} />
                                   </button>
                                   </div>
                                   </td>
@@ -139,9 +139,9 @@ export default function QADataSelection({qaData, selectedRowId, setSelectedRowId
                                 <div className="flex space-x-2">
                                   <button
                                     onClick={() => showModal(row.id)}
-                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs"
+                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded"
                                   >
-                                    添付書類を表示
+                                    <Paperclip size={18} />
                                   </button>
                                   </div>
                                   </td>
@@ -156,9 +156,9 @@ export default function QADataSelection({qaData, selectedRowId, setSelectedRowId
                                 <div className="flex space-x-2">
                                   <button
                                     onClick={() => listenVoice(row.id)}
-                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs"
+                                    className="bg-slate-400 hover:bg-slate-600 text-white px-2 py-1 rounded"
                                   >
-                                    AIボイスを聞く
+                                    <Speech size={18} />
                                   </button>
                                   </div>
                                   </td>

@@ -27,8 +27,7 @@ export const menuItems: MenuItem[] = [
       submenu: true,
       submenuItems: [
         { title: 'イベント設定更新', path: '/user/updateEvent' },
-        { title: 'Q&Aデータ更新', path: '/user/updateQA' },
-        { title: 'イベント削除', path: '/user/deleteEvent' }
+        { title: 'Q&Aデータ更新', path: '/user/updateQA' }
       ]
     },
     {
@@ -39,6 +38,7 @@ export const menuItems: MenuItem[] = [
       submenuItems: [
         { title: '登録情報一覧', path: '/user/eventList' },
         { title: 'イベント複製', path: '/user/copyEvent' },
+        { title: 'イベント削除', path: '/user/deleteEvent' },
         { title: 'QRコード発行', path: '/user/qrCodeGenerator' },
         { title: '進捗確認・分析', path: '/user/eventInspector' }
       ]

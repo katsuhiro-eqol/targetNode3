@@ -40,9 +40,10 @@ export default function RegisterCSV() {
     const [status, setStatus] = useState<string>("")
     const [foreignProgress, setForeignProgress] = useState<number>(0)
     const [vectorProgress, setVectorProgress] = useState<number>(0)
-    const [voiceProgress, setVoicerogress] = useState<number>(0)
+    const [voiceProgress, setVoiceProgress] = useState<number>(0)
     const [errors, setErrors] = useState<string>("")
     
+    /*
     const encodings = [
         { value: 'UTF-8', label: 'UTF-8' },
         { value: 'Shift_JIS', label: 'Shift-JIS (日本語)' },
@@ -50,6 +51,7 @@ export default function RegisterCSV() {
         { value: 'ISO-8859-1', label: 'ISO-8859-1 (西欧)' },
         { value: 'windows-1252', label: 'Windows-1252 (西欧)' }
     ]
+    */
 
     const steps = [
         { name: '外国語翻訳', progress: foreignProgress },
@@ -177,7 +179,7 @@ export default function RegisterCSV() {
                 setStatus("音声合成を行っています")
             }
             const ratio = Math.floor(n*100/answerCount)
-            setVoicerogress(ratio)
+            setVoiceProgress(ratio)
         }
     }
 

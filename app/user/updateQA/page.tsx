@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { db } from "@/firebase"
-import { doc, getDoc, collection, getDocs, setDoc, deleteDoc, onSnapshot } from "firebase/firestore"
+import { doc, getDoc, collection, getDocs, setDoc, deleteDoc } from "firebase/firestore"
 import UploadFiles2 from "../../components/uploadFiles2"
 import QADataSelection from "../../components/qaDataSelection"
 import QADataSelection2 from "../../components/qaDataSelection2"
@@ -13,8 +13,7 @@ import createEmbedding from "../../func/createEmbedding"
 import { Circle, CircleDot, ArrowBigRight } from 'lucide-react'
 import { EventData, QaData, ModalData, Pronunciation } from "@/types"
 import md5 from 'md5';
-
-const hostUrl = process.env.NEXT_PUBLIC_HOST_URL;
+import AddCSV from "../../components/addCSV"
 
 export default function UpdaateQA(){
     const [events, setEvents] = useState<string[]>([""]) //firestoreから読み込む
@@ -150,6 +149,7 @@ export default function UpdaateQA(){
         { key: 'modal', label: '添付書類更新'},
         { key: 'read', label: '読み修正'},
         { key: 'add', label: 'Q&A追加'},
+        { key: 'add2', label: 'Q&A追加(CSV)'},
         { key: 'delete', label: 'Q&A削除'}
     ]
 
@@ -413,7 +413,7 @@ export default function UpdaateQA(){
         }
     }
 
-    useEffect(() => {
+    const chooseUpdatedData = () => {
         if (selectedButton !== "add"){
             if (selectedRowId){
                 const data:QaData[] = qaData.filter((item) => item.id == selectedRowId)
@@ -435,7 +435,14 @@ export default function UpdaateQA(){
                 }                     
             }
         }
-    }, [qaData])
+    }
+
+    useEffect(() => {
+        if (isUpdateFinished){
+            loadQADB()
+            setIsUpdateFinished(false)
+        }
+    },[isUpdateFinished])
 
     useEffect(() => {
         setStatus2("")
@@ -528,7 +535,7 @@ export default function UpdaateQA(){
         
         {(event && (
         <div>
-            {(selectedButton !== "add" && selectedButton !== "" ) && (
+            {(selectedButton !== "add" && selectedButton !== "add2" && selectedButton !== "" ) && (
             <div>
                 <div className="mt-5 text-sm">対象のQ&Aデータを下記項目で検索</div>
                 <div className="flex flex-row gap-x-4">
@@ -694,10 +701,18 @@ export default function UpdaateQA(){
             <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => addQA()}>Q&Aを追加登録</button>
             </div>
             </div>)}   
+
+            {(selectedButton === "add2") && (
+                <div>
+                <div className="text-red-500 mt-5 text-sm">整備中です。</div>
+                {Array.isArray(qaData) && (<AddCSV qaData={qaData} eventData={eventData!} organization={organization} event={event}/>)}
+                </div>
+            )}
+
             <div className="text-green-500 font-semibold">{status2}</div>
         </div>     
         ))}
-        {isUpdateFinished && (<button className="text-sm mt-10 text-blue-500 hover:text-blue-700" onClick={loadQADB}>更新されたデータを表示</button>)}
+        {isUpdateFinished && (<button className="text-sm mt-10 text-blue-500 hover:text-blue-700" onClick={chooseUpdatedData}>更新されたデータを表示</button>)}
         
         {updatedQA && (
             <div>
