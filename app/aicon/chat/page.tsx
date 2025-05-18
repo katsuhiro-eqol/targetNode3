@@ -582,6 +582,16 @@ export default function Aicon() {
         console.log("record", record)
     }, [record])
 
+    useEffect(() => {
+        console.log('音声認識の状態:', {
+            listening,
+            isListening,
+            record,
+            transcript,
+            userInput
+        });
+    }, [listening, isListening, record, transcript, userInput]);
+
     return (
         <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
         {wavReady ? (
