@@ -400,8 +400,8 @@ export default function Aicon() {
 
     const audioPlay = () => {
         if (audioRef.current) {
-            // 音量を0.7に設定（70%）
-            audioRef.current.volume = 0.7;
+            // デバイスのボリュームに追随するため、volumeは1.0に設定
+            audioRef.current.volume = 1.0;
             
             // 再生開始
             audioRef.current.play().catch((error) => {
@@ -444,8 +444,8 @@ export default function Aicon() {
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
-                // 音声認識開始時は音量を下げる
-                audioRef.current.volume = 0.3;
+                // 音声認識中もデバイスのボリュームに追随
+                audioRef.current.volume = 1.0;
             }
             
             const langCode = foreignLanguages[language] || "ja-JP";
@@ -606,9 +606,9 @@ export default function Aicon() {
     useEffect(() => {
         if (listening === false && userInput === "") {
             setRecord(false);
-            // 音声認識停止時に音量を元に戻す
             if (audioRef.current) {
-                audioRef.current.volume = 0.7;
+                // デバイスのボリュームに追随
+                audioRef.current.volume = 1.0;
             }
         }
     }, [listening]);
@@ -617,7 +617,8 @@ export default function Aicon() {
     useEffect(() => {
         const handleCanPlay = () => {
             if (audioRef.current) {
-                audioRef.current.volume = 0.7;
+                // デバイスのボリュームに追随
+                audioRef.current.volume = 1.0;
             }
         };
 
