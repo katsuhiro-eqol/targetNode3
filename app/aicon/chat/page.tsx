@@ -399,20 +399,23 @@ export default function Aicon() {
     }
 
     const audioPlay = () => {
-        if (audioRef){
-        audioRef.current?.play().catch((error) => {
-            console.log(error)
-        })
+        if (audioRef.current) {
+            // 音量を0.7に設定（70%）
+            audioRef.current.volume = 0.7;
+            
+            // 再生開始
+            audioRef.current.play().catch((error) => {
+                console.error('音声再生エラー:', error);
+            });
         }
-        setCurrentIndex(0)
-    
+        setCurrentIndex(0);
     }
 
     const inputClear = async () => {
+        setRecord(false)
         try {
             if (listening){
             await SpeechRecognition.stopListening()
-            setRecord(false)
             resetTranscript()
             }
         } catch(error){
@@ -427,23 +430,28 @@ export default function Aicon() {
             alert('このブラウザは音声認識をサポートしていません')
             return
         }
+
         try {
             if (listening) {
                 await SpeechRecognition.stopListening()
                 resetTranscript()
             }
+            
             setUserInput("")
             setRecord(true)
             
+            // 音声の停止を確実に待つ
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
+                // 音声認識開始時は音量を下げる
+                audioRef.current.volume = 0.3;
             }
             
             const langCode = foreignLanguages[language] || "ja-JP";
             await SpeechRecognition.startListening({ 
                 language: langCode, 
-                continuous: true
+                continuous: false
             });
             setIsListening(true)
             
@@ -455,11 +463,11 @@ export default function Aicon() {
     }
 
     const sttStop = async () => {
+        setRecord(false)
         try {
             if (listening) {
                 await SpeechRecognition.stopListening()
                 resetTranscript()
-                setRecord(false)
                 setIsListening(false)
             }
         } catch(error) {
@@ -502,9 +510,13 @@ export default function Aicon() {
 
     useEffect(() => {
         if (listening !== isListening) {
-            setIsListening(listening);
+            setIsListening(listening)
+        }
+        if (listening === false && userInput === "") {
+            setRecord(false)
         }
     }, [listening]);
+
 
     useEffect(() => {
         if (attribute && code){
@@ -586,11 +598,40 @@ export default function Aicon() {
         console.log('音声認識の状態:', {
             listening,
             isListening,
-            record,
-            transcript,
-            userInput
+            record
         });
     }, [listening, isListening, record, transcript, userInput]);
+
+    // 音声認識が停止した時の処理
+    useEffect(() => {
+        if (listening === false && userInput === "") {
+            setRecord(false);
+            // 音声認識停止時に音量を元に戻す
+            if (audioRef.current) {
+                audioRef.current.volume = 0.7;
+            }
+        }
+    }, [listening]);
+
+    // 音声ファイルの読み込み完了時の処理
+    useEffect(() => {
+        const handleCanPlay = () => {
+            if (audioRef.current) {
+                audioRef.current.volume = 0.7;
+            }
+        };
+
+        const audioElement = audioRef.current;
+        if (audioElement) {
+            audioElement.addEventListener('canplay', handleCanPlay);
+        }
+
+        return () => {
+            if (audioElement) {
+                audioElement.removeEventListener('canplay', handleCanPlay);
+            }
+        };
+    }, []);
 
     return (
         <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
@@ -614,7 +655,7 @@ export default function Aicon() {
                     >
                     <div className="flex flex-row gap-x-4 justify-center">
                     <p>{message.text}</p>
-                    {message.modalUrl && <Paperclip size={20} className="text-green-500" onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
+                    {message.modalUrl && <Paperclip size={24} className="text-green-500" onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
                     </div>
                     {isModal && (<Modal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile} />)}
                     </div>
