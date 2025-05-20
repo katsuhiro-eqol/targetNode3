@@ -401,7 +401,7 @@ export default function Aicon() {
     const audioPlay = () => {
         if (audioRef.current) {
             // デバイスのボリュームに追随するため、volumeは1.0に設定
-            audioRef.current.volume = 1.0;
+            //audioRef.current.volume = 1.0;
             
             // 再生開始
             audioRef.current.play().catch((error) => {
@@ -444,8 +444,7 @@ export default function Aicon() {
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
-                // 音声認識中もデバイスのボリュームに追随
-                audioRef.current.volume = 1.0;
+                //
             }
             
             const langCode = foreignLanguages[language] || "ja-JP";
