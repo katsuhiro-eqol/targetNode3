@@ -1,7 +1,6 @@
 "use client"
 import "regenerator-runtime";
 import React from "react";
-//import Head from "next/head";
 import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
@@ -14,8 +13,7 @@ type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 
 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
-//会話履歴を反映させる
-export default function AiconChat2() {
+export default function Aicon() {
     const [windowHeight, setWindowHeight] = useState<number>(0)
     const [initialSlides, setInitialSlides] = useState<string|null>(null)
     const [userInput, setUserInput] = useState<string>("")
@@ -25,13 +23,12 @@ export default function AiconChat2() {
     const [dLang, setDLang] = useState<string>("日本語")//表示用言語
     const [language, setLanguage] = useState<string>("日本語")
     const [embeddingsData, setEmbeddingsData] = useState<EmbeddingsData[]>([])
-    //const [attribute, setAttribute] = useState<string|null>(null)
-    //wavUrl：cloud storageのダウンロードurl。初期値は無音ファイル。これを入れることによって次からセッティングされるwavUrlで音がなるようになる。
     const [wavUrl, setWavUrl] = useState<string>(no_sound);
     const [slides, setSlides] = useState<string[]|null>(null)
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [wavReady, setWavReady] = useState<boolean>(false)
     const [record,setRecord] = useState<boolean>(false)
+    const [isListening, setIsListening] = useState<boolean>(false)   
     const [canSend, setCanSend] = useState<boolean>(false)
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string|null>(null)
@@ -44,13 +41,13 @@ export default function AiconChat2() {
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
     
     const foreignLanguages: Record<string, LanguageCode> = {"日本語": "ja-JP","英語": "en-US","中国語（簡体）": "zh-CN","中国語（繁体）": "zh-TW","韓国語": "ko-KR","フランス語": "fr-FR","ポルトガル語": "pt-BR","スペイン語": "es-ES"}
-
-    //const [endLimit, setEndLimit] = useState<number>(1767193199000) //2025-12-31
     const audioRef = useRef<HTMLAudioElement>(null)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const {
         transcript,
-        resetTranscript
+        resetTranscript,
+        listening,
+        browserSupportsSpeechRecognition
     } = useSpeechRecognition();
 
     const useSearchParams = ()  => {
@@ -62,18 +59,18 @@ export default function AiconChat2() {
     const code = searchParams.get("code")
 
     async function getAnswer() {        
-        sttStop()
+        await sttStop()
         setWavUrl(no_sound)
-        setRecord(false)
         setCanSend(false)//同じInputで繰り返し送れないようにする
         setSlides(Array(1).fill(initialSlides))
         setModalUrl(null)
         setModalFile(null)
 
-        //過去会話を反映させるinput
-        const inputWH = inputWithHistory(userInput)
-        console.log(inputWH)
-        const now = new Date().toLocaleString("ja-JP")
+        const date = new Date()
+        const offset = date.getTimezoneOffset() * 60000
+        const localDate = new Date(date.getTime() - offset)
+        const now = localDate.toISOString()
+
         const userMessage: Message = {
             id: now,
             text: userInput,
@@ -92,7 +89,7 @@ export default function AiconChat2() {
                 headers: {
                 "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ input: inputWH, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
+                body: JSON.stringify({ input: userInput, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
             });
             setUserInput("")
             const data = await response.json();
@@ -261,16 +258,6 @@ export default function AiconChat2() {
         return imageList
     }
 
-    const inputWithHistory = (text:string) => {
-        if (Array.isArray(messages) && messages.length>1){
-            const input = `Q:${messages.at(-2)?.text ?? ""}、A:${messages.at(-1)?.text ?? ""}、Q:${text}`
-            return input
-        } else {
-            const input = `Q:${text}`
-            return input
-        }
-    }
-
     async function loadQAData(attr:string){
         try {
             const querySnapshot = await getDocs(collection(db, "Events",attr, "QADB"));
@@ -338,8 +325,17 @@ export default function AiconChat2() {
     }
 
 
-    const createConvField = async (id:string, attr:string) => {
-        await setDoc(doc(db,"Events",attr,"Conversation",id), {conversations:[], langage:language})
+    const createConvField = async (attr:string) => {
+        const date = new Date()
+        const offset = date.getTimezoneOffset() * 60000
+        const localDate = new Date(date.getTime() - offset)
+        const isoString = localDate.toISOString().split('T')[0]
+        const random = randomStr(6)
+        const now = localDate.toISOString()
+
+        const convId = `${isoString}_${random}`
+        setConvId(convId)
+        await setDoc(doc(db,"Events",attr,"Conversation",convId), {conversations:[], langage:language, date:now})
     }
 
     const getLanguageList = () => {
@@ -361,11 +357,15 @@ export default function AiconChat2() {
     const talkStart = async () => {
         audioPlay()
         setWavReady(true)
+        const date = new Date()
+        const offset = date.getTimezoneOffset() * 60000
+        const localDate = new Date(date.getTime() - offset)
+        const now = localDate.toISOString()
         setTimeout(() => {
             if (startText){
                 if (language=="日本語"){
                     const aiMessage: Message = {
-                        id: Date.now().toString(),
+                        id: now,
                         text: startText.answer,
                         sender: 'AIcon',
                         modalUrl:null,
@@ -380,7 +380,7 @@ export default function AiconChat2() {
                     if (Array.isArray(foreign)){
                         const foreignText = foreign.find(item => language in item)
                         const aiMessage: Message = {
-                            id: Date.now().toString(),
+                            id: now,
                             text: foreignText[language],
                             sender: 'AIcon',
                             modalUrl:null,
@@ -399,35 +399,81 @@ export default function AiconChat2() {
     }
 
     const audioPlay = () => {
-        if (audioRef){
-        audioRef.current?.play().catch((error) => {
-            console.log(error)
-        })
-        }
-        setCurrentIndex(0)
-    
-    }
-
-    const inputClear = () => {
-        sttStop()
-        resetTranscript()
-        setUserInput("")
-    }
-
-    const sttStart = () => {
-        setUserInput("")
-        setRecord(true)
         if (audioRef.current) {
-            audioRef.current.pause();
+            // デバイスのボリュームに追随するため、volumeは1.0に設定
+            //audioRef.current.volume = 1.0;
+            
+            // 再生開始
+            audioRef.current.play().catch((error) => {
+                console.error('音声再生エラー:', error);
+            });
         }
-        const langCode = foreignLanguages[language] || "ja-JP"
-        SpeechRecognition.startListening({language:langCode})
+        setCurrentIndex(0);
     }
 
-    const sttStop = () => {
+    const inputClear = async () => {
         setRecord(false)
-        SpeechRecognition.stopListening()
-        resetTranscript()
+        try {
+            if (listening){
+            await SpeechRecognition.stopListening()
+            resetTranscript()
+            }
+        } catch(error){
+            console.error('音声認識の停止に失敗:', error)
+            alert(`音声認識停止不良:${error}`)
+        }
+        setUserInput("")
+    }
+
+    const sttStart = async() => {
+        if (!browserSupportsSpeechRecognition) {
+            alert('このブラウザは音声認識をサポートしていません')
+            return
+        }
+
+        try {
+            if (listening) {
+                await SpeechRecognition.stopListening()
+                resetTranscript()
+            }
+            
+            setUserInput("")
+            setRecord(true)
+            
+            // 音声の停止を確実に待つ
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                //
+            }
+            
+            const langCode = foreignLanguages[language] || "ja-JP";
+            await SpeechRecognition.startListening({ 
+                language: langCode, 
+                continuous: false
+            });
+            setIsListening(true)
+            
+        } catch(error) {
+            console.error('音声認識の開始に失敗:', error)
+            setRecord(false)
+            setIsListening(false)
+        }
+    }
+
+    const sttStop = async () => {
+        setRecord(false)
+        try {
+            if (listening) {
+                await SpeechRecognition.stopListening()
+                resetTranscript()
+                setIsListening(false)
+            }
+        } catch(error) {
+            console.error('音声認識の停止に失敗:', error)
+            setRecord(false)
+            setIsListening(false)
+        }
     }
 
     const selectLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -455,24 +501,26 @@ export default function AiconChat2() {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
             }
+            SpeechRecognition.stopListening()
             resetTranscript()
+            setRecord(false)
         };
     },[])
+
+    useEffect(() => {
+        if (listening !== isListening) {
+            setIsListening(listening)
+        }
+        if (listening === false && userInput === "") {
+            setRecord(false)
+        }
+    }, [listening]);
 
 
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
-            const now = new Date().toJSON()
-            const today = now.split("T")[0]
-            const random = randomStr(6)
-            
-            const convId = `${today}_${random}`
-            if (convId){
-                setConvId(convId)
-                createConvField(convId, attribute)
-            }
-                
+            createConvField(attribute)
         }        
     }, [attribute, code])
 
@@ -495,32 +543,6 @@ export default function AiconChat2() {
         }
     }, [embeddingsData])
 
-    //20240228ヴァージョンはアニメーション省略なのでwavUrlが更新されたらaudioPlayする
-    /*
-    useEffect(() => {
-        if (wavUrl != no_sound ){
-            console.log("check1")
-        audioPlay()
-        setCurrentIndex(0)
-        if (Array.isArray(slides) && slides.length !== 1){
-            if (intervalRef.current !== null) {//タイマーが進んでいる時はstart押せないように//2
-                console.log("check2")
-                return;
-            }
-            console.log("check3")
-            intervalRef.current = setInterval(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
-            }, 250)
-
-        } else {
-            console.log("isArray",Array.isArray(slides))
-            console.log("slides",slides)
-            console.log("check4")
-        }   
-    }
-    }, [wavUrl])
-    */
-
     useEffect(() => {
         if (Array.isArray(slides) && slides.length>1 && wavUrl!= no_sound){
             audioPlay()
@@ -531,7 +553,6 @@ export default function AiconChat2() {
             intervalRef.current = setInterval(() => {
                 setCurrentIndex((prevIndex) => (prevIndex + 1) % (slides.length))
             }, 250)
-
         }
     }, [slides])
 
@@ -568,6 +589,50 @@ export default function AiconChat2() {
         }
     }, [userInput])
 
+    useEffect(() => {
+        console.log("record", record)
+    }, [record])
+
+    useEffect(() => {
+        console.log('音声認識の状態:', {
+            listening,
+            isListening,
+            record
+        });
+    }, [listening, isListening, record, transcript, userInput]);
+
+    // 音声認識が停止した時の処理
+    useEffect(() => {
+        if (listening === false && userInput === "") {
+            setRecord(false);
+            if (audioRef.current) {
+                // デバイスのボリュームに追随
+                audioRef.current.volume = 1.0;
+            }
+        }
+    }, [listening]);
+
+    // 音声ファイルの読み込み完了時の処理
+    useEffect(() => {
+        const handleCanPlay = () => {
+            if (audioRef.current) {
+                // デバイスのボリュームに追随
+                audioRef.current.volume = 1.0;
+            }
+        };
+
+        const audioElement = audioRef.current;
+        if (audioElement) {
+            audioElement.addEventListener('canplay', handleCanPlay);
+        }
+
+        return () => {
+            if (audioElement) {
+                audioElement.removeEventListener('canplay', handleCanPlay);
+            }
+        };
+    }, []);
+
     return (
         <div className="flex flex-col w-full overflow-hidden" style={{ height: windowHeight || "100dvh" }}>
         {wavReady ? (
@@ -590,7 +655,7 @@ export default function AiconChat2() {
                     >
                     <div className="flex flex-row gap-x-4 justify-center">
                     <p>{message.text}</p>
-                    {message.modalUrl && <Paperclip size={20} className="text-green-500" onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
+                    {message.modalUrl && <Paperclip size={24} className="text-green-500" onClick={() => {setIsModal(true); setModalUrl(message.modalUrl); setModalFile(message.modalFile)}} />}
                     </div>
                     {isModal && (<Modal setIsModal={setIsModal} modalUrl={modalUrl} modalFile={modalFile} />)}
                     </div>
@@ -619,7 +684,7 @@ export default function AiconChat2() {
                 クリア(clear)
                 </button>)}
             {canSend ? (
-                <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-xs rounded" onClick={() => getAnswer()}>
+                <button className="flex items-center ml-5 mx-auto border-2 bg-sky-600 text-white p-2 text-xs rounded" onClick={() => {getAnswer()}}>
                 <Send size={16} />
                 送信(send)
                 </button>):(
