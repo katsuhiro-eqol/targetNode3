@@ -444,7 +444,6 @@ export default function Aicon() {
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
-                //
             }
             
             const langCode = foreignLanguages[language] || "ja-JP";
@@ -483,7 +482,8 @@ export default function Aicon() {
         setLanguage(jLang);
     }
 
-    const closeApp = () => {
+    const closeApp = async () => {
+        await sttStop()
         window.location.reload()
     }
 

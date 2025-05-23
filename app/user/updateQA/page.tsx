@@ -704,7 +704,6 @@ export default function UpdaateQA(){
 
             {(selectedButton === "add2") && (
                 <div>
-                <div className="text-red-500 mt-5 text-sm">整備中です。</div>
                 {Array.isArray(qaData) && (<AddCSV qaData={qaData} eventData={eventData!} organization={organization} event={event}/>)}
                 </div>
             )}
