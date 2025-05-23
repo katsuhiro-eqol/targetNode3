@@ -108,6 +108,7 @@ export default function DownloadableQRCode(){
 
 
     useEffect(() => {
+        /*
         if (code!=="" && selectedOption === "音声認識（標準）"){
             const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
@@ -115,8 +116,14 @@ export default function DownloadableQRCode(){
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
+        */
+        if (code!=="") {
+            const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        }
     }, [code])
 
+    /*
     useEffect(() => {
         if (code!=="" && selectedOption === "音声認識（標準）"){
             const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
@@ -126,6 +133,7 @@ export default function DownloadableQRCode(){
             setUrl(eventUrl)
         }
     }, [selectedOption])
+    */
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
@@ -145,19 +153,8 @@ export default function DownloadableQRCode(){
             return <option key={name} value={name}>{name}</option>;
             })}
             </select>
-        <div>
-        <div className="flex flex-row gap-x-4 mb-8">
-                {options.map((option) => (
-                    <div
-                    key={option}
-                    className="flex items-center mb-2 cursor-pointer hover:bg-gray-200 p-2 rounded"
-                    onClick={() => setSelectedOption(option)}
-                    >
-                    {(selectedOption === option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
-                    <span className="ml-2 text-gray-700 text-sm">{option}</span>
-                </div>
-                ))}
-        </div>
+
+
         {url && (
             <div>
             <div className="mb-10 w-1/2"><a className="text-indigo-700" href={url}  target="_blank" rel="noreferrer">{url}</a></div>
@@ -177,7 +174,7 @@ export default function DownloadableQRCode(){
             <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>
             </div>
             <div className="text-green-500 font-semibold mt-5">{status}</div>
-        </div>
+        
         </div>
     );
 };

@@ -42,6 +42,7 @@ export default function UpdaateQA(){
     const [deleteIds, setDeleteIds] = useState<string[]>([])
     const [createdId, setCreatedId] = useState<string|null>(null)
     const [isUpdateFinished, setIsUpdateFinished] = useState<boolean>(false)
+
     const options = ["id", "question", "answer", "modal_file"];
 
     const loadEvents = async (org:string) => {
@@ -417,11 +418,12 @@ export default function UpdaateQA(){
         if (selectedButton !== "add"){
             if (selectedRowId){
                 const data:QaData[] = qaData.filter((item) => item.id == selectedRowId)
-                console.log(data)
+                console.log("updated", data, "previous" ,selectedQA?.read)
                 if (data[0]){
                     if (data[0].question !== selectedQA?.question || data[0].answer !== selectedQA?.answer || data[0].read !== selectedQA?.read || data[0].modalFile !== selectedQA?.modalFile){
                         setUpdatedQA(data)
                         setStatus2("Q&Aデータが更新されました")
+
                     }                
                 }            
             }
@@ -440,7 +442,6 @@ export default function UpdaateQA(){
     useEffect(() => {
         if (isUpdateFinished){
             loadQADB()
-            setIsUpdateFinished(false)
         }
     },[isUpdateFinished])
 
@@ -500,6 +501,12 @@ export default function UpdaateQA(){
             loadEventData(event)
         }
     }, [event])
+
+    useEffect(() => {
+        if (isNewPronunciation){
+            setStatus2("")
+        }
+    }, [isNewPronunciation])
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
