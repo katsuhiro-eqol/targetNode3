@@ -306,6 +306,7 @@ export default function UpdaateQA(){
                newRead = newRead?.replaceAll(pronunciation.text,pronunciation.read)
             })
             //const readByOpenAI = await getHiragana(newRead)
+            console.log(newRead)
             return newRead
         }else{
             //const readByOpenAI = await getHiragana(text)
@@ -315,6 +316,8 @@ export default function UpdaateQA(){
 
     const updateVoice = async() => {
         const readText = convertPronunciation(pronunciations, selectedQA!.read)
+        console.log(readText)
+
         const hashString = md5(readText)
         const voiceId = eventData!.voice + "-" + hashString
         setStatus2("音声合成の準備をしています")
@@ -507,6 +510,10 @@ export default function UpdaateQA(){
             setStatus2("")
         }
     }, [isNewPronunciation])
+
+    useEffect(() => {
+        console.log(pronunciations)
+    }, [pronunciations])
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
