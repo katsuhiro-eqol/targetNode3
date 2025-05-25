@@ -4,8 +4,8 @@ const next = require('next')
 const { Server } = require('socket.io')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = '0.0.0.0'
-const port = 3000
+const hostname = process.env.HOSTNAME || '0.0.0.0'
+const port = parseInt(process.env.PORT, 10) || 3000
 
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
@@ -18,7 +18,9 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+      origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.NEXT_PUBLIC_VERCEL_URL, process.env.NEXT_PUBLIC_HOST_URL, process.env.NEXT_PUBLIC_FEATURE_URL]
+        : ["http://localhost:3000", "http://127.0.0.1:3000"],
       methods: ["GET", "POST"],
       credentials: true
     }
