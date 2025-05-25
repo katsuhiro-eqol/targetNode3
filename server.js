@@ -16,6 +16,7 @@ app.prepare().then(() => {
     await handle(req, res, parsedUrl)
   })
 
+  console.log(process.env.NEXT_PUBLIC_VERCEL_URL, process.env.NEXT_PUBLIC_HOST_URL, process.env.NEXT_PUBLIC_FEATURE_URL)
   const io = new Server(httpServer, {
     cors: {
       origin: process.env.NODE_ENV === 'production' 
