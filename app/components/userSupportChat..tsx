@@ -27,7 +27,19 @@ export default function UserSupportChat({ userId, username }: UserSupportChatPro
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:3000')
+
+    const socketUrl = process.env.NODE_ENV === 'production'
+  ? process.env.NEXT_PUBLIC_FEATURE_URL
+  : 'http://localhost:3000'
+
+    const socketInstance = io(socketUrl, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      withCredentials: true
+    })
+
     setSocket(socketInstance)
 
     socketInstance.on('connect', () => {

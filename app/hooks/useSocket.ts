@@ -30,7 +30,7 @@ export function useSocket(username: string) {
     if (!username) return
 
     const socketUrl = process.env.NODE_ENV === 'production'
-  ? process.env.NEXT_PUBLIC_WEBSOCKET_URL
+  ? process.env.NEXT_PUBLIC_FEATURE_URL
   : 'http://localhost:3000'
 
     const socketInstance = io(socketUrl, {

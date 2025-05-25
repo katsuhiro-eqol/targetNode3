@@ -36,9 +36,16 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
   const [inputText, setInputText] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  console.log('Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
+    FEATURE_URL: process.env.NEXT_PUBLIC_FEATURE_URL,
+    HOST_URL: process.env.NEXT_PUBLIC_HOST_URL
+  })
+
   useEffect(() => {
     const socketUrl = process.env.NODE_ENV === 'production'
-  ? process.env.NEXT_PUBLIC_WEBSOCKET_URL
+  ? process.env.NEXT_PUBLIC_FEATURE_URL
   : 'http://localhost:3000'
 
     const socketInstance = io(socketUrl)
