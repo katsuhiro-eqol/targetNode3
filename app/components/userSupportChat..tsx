@@ -32,6 +32,7 @@ export default function UserSupportChat({ userId, username }: UserSupportChatPro
 
     socketInstance.on('connect', () => {
       socketInstance.emit('register', { userId, username, isAdmin: false })
+      console.log(userId)
     })
 
     socketInstance.on('chatRoomCreated', (data) => {

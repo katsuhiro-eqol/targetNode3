@@ -27,7 +27,7 @@ app.prepare().then(() => {
   // データ管理
   const connectedUsers = new Map() // socketId -> userInfo
   const chatRooms = new Map()      // roomId -> roomInfo
-  const adminUsers = new Set(['admin1', 'admin2']) // 管理者ID
+  const adminUsers = new Set(['Global', 'TargetEntertainment']) // 管理者ID
 
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id)

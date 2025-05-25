@@ -41,6 +41,7 @@ export function useSocket(username: string) {
     socketInstance.on('connect', () => {
       setIsConnected(true)
       socketInstance.emit('register', { username })
+      //console.log(username)
     })
 
     socketInstance.on('disconnect', () => {
@@ -56,6 +57,7 @@ export function useSocket(username: string) {
     })
 
     socketInstance.on('userList', (userList: User[]) => {
+        //console.log("userList", userList)
       setUsers(userList)
     })
 

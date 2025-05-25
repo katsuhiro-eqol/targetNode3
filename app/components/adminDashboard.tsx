@@ -42,6 +42,7 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
 
     socketInstance.on('connect', () => {
       socketInstance.emit('register', { userId: adminId, username: adminName, isAdmin: true })
+      console.log(adminName)
     })
 
     socketInstance.on('waitingChatRooms', (rooms: ChatRoom[]) => {
