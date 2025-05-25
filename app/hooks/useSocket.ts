@@ -29,7 +29,11 @@ export function useSocket(username: string) {
   useEffect(() => {
     if (!username) return
 
-    const socketInstance = io('http://localhost:3000', {
+    const socketUrl = process.env.NODE_ENV === 'production'
+  ? process.env.NEXT_PUBLIC_WEBSOCKET_URL
+  : 'http://localhost:3000'
+
+    const socketInstance = io(socketUrl, {
         transports: ["websocket"],
         reconnection: true,
         reconnectionAttempts: 5,

@@ -37,7 +37,11 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:3000')
+    const socketUrl = process.env.NODE_ENV === 'production'
+  ? process.env.NEXT_PUBLIC_WEBSOCKET_URL
+  : 'http://localhost:3000'
+
+    const socketInstance = io(socketUrl)
     setSocket(socketInstance)
 
     socketInstance.on('connect', () => {
