@@ -9,7 +9,7 @@ const port = parseInt(process.env.PORT, 10) || 3000
 
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
-
+console.log(process.env.NODE_ENV)
 app.prepare().then(() => {
   const httpServer = createServer(async (req, res) => {
     const parsedUrl = parse(req.url, true)
