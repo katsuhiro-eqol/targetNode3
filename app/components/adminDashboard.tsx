@@ -44,9 +44,7 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
   })
 
   useEffect(() => {
-    const socketUrl = process.env.NODE_ENV === 'production'
-  ? process.env.NEXT_PUBLIC_FEATURE_URL
-  : 'http://localhost:3000'
+    const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER
 
     const socketInstance = io(socketUrl)
     setSocket(socketInstance)

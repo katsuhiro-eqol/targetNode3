@@ -29,9 +29,8 @@ export function useSocket(username: string) {
   useEffect(() => {
     if (!username) return
 
-    const socketUrl = process.env.NODE_ENV === 'production'
-  ? process.env.NEXT_PUBLIC_FEATURE_URL
-  : 'http://localhost:3000'
+    const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER
+    console.log(socketUrl)
 
     const socketInstance = io(socketUrl, {
         transports: ["websocket"],

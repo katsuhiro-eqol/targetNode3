@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development nodemon server.js",
+    "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "node server.js",
-    "type-check": "tsc --noEmit"
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@google-cloud/speech": "^7.1.0",
