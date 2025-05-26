@@ -47,7 +47,13 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
   useEffect(() => {
     const socketUrl = process.env. NEXT_PUBLIC_WEBSOCKET_SERVER
     console.log(process.env. NEXT_PUBLIC_WEBSOCKET_SERVER)
-    const socketInstance = io(socketUrl)
+    const socketInstance = io(socketUrl, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      withCredentials: true
+    })
     setSocket(socketInstance)
 
     socketInstance.on('connect', () => {
