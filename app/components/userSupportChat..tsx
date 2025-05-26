@@ -29,6 +29,7 @@ export default function UserSupportChat({ userId, username }: UserSupportChatPro
   useEffect(() => {
 
     const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_SERVER
+    console.log(process.env.NEXT_PUBLIC_WEBSOCKET_SERVER)
 
     const socketInstance = io(socketUrl, {
       transports: ["websocket"],
