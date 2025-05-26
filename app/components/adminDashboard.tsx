@@ -40,7 +40,8 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
     NODE_ENV: process.env.NODE_ENV,
     VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
     FEATURE_URL: process.env.NEXT_PUBLIC_FEATURE_URL,
-    HOST_URL: process.env.NEXT_PUBLIC_HOST_URL
+    HOST_URL: process.env.NEXT_PUBLIC_HOST_URL,
+    NEXT_PUBLIC_WEBSOCKET_SERVER: process.env. NEXT_PUBLIC_WEBSOCKET_SERVER
   })
 
   useEffect(() => {
