@@ -26,23 +26,16 @@ interface ChatRoom {
 interface AdminDashboardProps {
   adminId: string
   adminName: string
+  event: string
 }
 
-export default function AdminDashboard({ adminId, adminName }: AdminDashboardProps) {
+export default function AdminDashboard({ adminId, adminName, event }: AdminDashboardProps) {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [waitingRooms, setWaitingRooms] = useState<ChatRoom[]>([])
   const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  console.log('Environment:', {
-    NODE_ENV: process.env.NODE_ENV,
-    VERCEL_URL: process.env.NEXT_PUBLIC_VERCEL_URL,
-    FEATURE_URL: process.env.NEXT_PUBLIC_FEATURE_URL,
-    HOST_URL: process.env.NEXT_PUBLIC_HOST_URL,
-    NEXT_PUBLIC_WEBSOCKET_SERVER: process.env. NEXT_PUBLIC_WEBSOCKET_SERVER
-  })
 
   useEffect(() => {
     const socketUrl = process.env. NEXT_PUBLIC_WEBSOCKET_SERVER
@@ -62,6 +55,7 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
     })
 
     socketInstance.on('waitingChatRooms', (rooms: ChatRoom[]) => {
+      console.log("rooms", rooms)
       setWaitingRooms(rooms)
     })
 
@@ -128,32 +122,33 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">管理者ダッシュボード</h1>
-      
+      <h1 className="text-2xl font-bold mb-6">メッセージダッシュボード:　{event}</h1>
+      <p className="mt-5 mb-2">スタッフ: {adminName}</p>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 待機中のチャット一覧 */}
-        <div className="border rounded-lg p-4">
-          <h2 className="text-lg font-semibold mb-4">待機中のサポート要求 ({waitingRooms.length})</h2>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div>
+          <h2 className="font-semibold mb-4">待機中のサポート要請 ({waitingRooms.length})</h2>
+          <div className="space-y-1 max-h-96 overflow-y-auto">
             {waitingRooms.map((room) => (
-              <div key={room.id} className="border rounded p-3 hover:bg-gray-50">
-                <div className="flex justify-between items-start mb-2">
+              <div key={room.id} className="border rounded p-1 bg-gray-50 hover:bg-gray-100">
+                <div className="flex justify-between items-start mb-2" >
                   <strong>{room.username}</strong>
                   <span className="text-xs text-gray-500">
                     {new Date(room.createdAt).toLocaleTimeString()}
                   </span>
-                </div>
-                <div className="text-sm text-gray-600 mb-2">
-                  {room.messages[0]?.text || 'メッセージなし'}
-                </div>
-                <button
+                  <button
                   onClick={() => joinChat(room)}
-                  className="w-full px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
                 >
                   対応開始
                 </button>
+                </div>      
+                <div className="text-sm text-gray-600 mb-2">
+                  {room.messages[0]?.text || 'メッセージなし'}
+                </div>          
               </div>
             ))}
+
             {waitingRooms.length === 0 && (
               <p className="text-gray-500 text-center py-4">待機中のサポート要求はありません</p>
             )}
@@ -183,8 +178,8 @@ export default function AdminDashboard({ adminId, adminName }: AdminDashboardPro
                   }`}>
                     <div className={`inline-block max-w-xs p-2 rounded-lg ${
                       message.type === 'admin' 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-gray-200'
+                        ? 'bg-gray-200' 
+                        : 'bg-green-500 text-white'
                     }`}>
                       <div className="text-xs opacity-70 mb-1">
                         {message.senderName} - {new Date(message.timestamp).toLocaleTimeString()}

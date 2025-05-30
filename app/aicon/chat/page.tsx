@@ -5,7 +5,7 @@ import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk"
 //import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
+import { Mic, Send, Eraser, Paperclip, X, MessageSquareShare } from 'lucide-react';
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import Modal from "../../components/modalModal"
@@ -29,7 +29,7 @@ export default function Aicon() {
     const [currentIndex, setCurrentIndex] = useState<number>(0)
     const [wavReady, setWavReady] = useState<boolean>(false)
     const [record,setRecord] = useState<boolean>(false)
-    const [isListening, setIsListening] = useState<boolean>(false)   
+    //const [isListening, setIsListening] = useState<boolean>(false)   
     const [canSend, setCanSend] = useState<boolean>(false)
     const [isModal, setIsModal] = useState<boolean>(false)
     const [modalUrl, setModalUrl] = useState<string|null>(null)
@@ -728,10 +728,12 @@ export default function Aicon() {
             </div>            
             )}
             {wavReady && (
-            <div className="flex flex-row w-20 h-6 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
-            <X size={16} />
-            <div className="text-xs">終了する</div>
+
+            <div className="flex flex-row w-20 h-5 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
+            <X size={14} />
+            <div className="ml-2 text-xxs">終了する</div>
             </div>
+
             )}
             <audio src={wavUrl} ref={audioRef} preload="auto"/>
             <div className="hidden">{wavUrl}</div>

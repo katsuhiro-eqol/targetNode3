@@ -19,8 +19,6 @@ export default function DownloadableQRCode(){
     const qrCodeRef = useRef(null);
     const size:number = 144
 
-    const options = ["音声認識（標準）", "音声認識（AZURE）"];
-
     const loadEvents = async (org:string) => {
         try {
             const docRef = doc(db, "Users", org)

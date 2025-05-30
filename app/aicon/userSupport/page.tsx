@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { io, Socket } from 'socket.io-client'
 
 interface Message {
@@ -12,13 +13,7 @@ interface Message {
   type: 'user' | 'admin'
 }
 
-interface UserSupportChatProps {
-  eventId: string
-  username: string
-  startMessage: string
-}
-
-export default function UserSupportChat({ eventId, username, startMessage }: UserSupportChatProps) {
+export default function UserSupportChat() {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
@@ -26,6 +21,19 @@ export default function UserSupportChat({ eventId, username, startMessage }: Use
   const [chatStatus, setChatStatus] = useState<'none' | 'waiting' | 'active' | 'closed'>('none')
   const [adminName, setAdminName] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const useSearchParams = ()  => {
+      const searchParams = useSearchParamsOriginal();
+      return searchParams;
+  }
+  const searchParams = useSearchParams()
+  const eventId = searchParams.get("eventId")
+  const userName = searchParams.get("userName")
+  const startMessage = searchParams.get("startMessage")
+
+  useEffect(() => {
+      console.log(eventId, userName, startMessage)
+  },[])
 
   useEffect(() => {
 
@@ -43,11 +51,11 @@ export default function UserSupportChat({ eventId, username, startMessage }: Use
     setSocket(socketInstance)
 
     socketInstance.on('connect', () => {
-      socketInstance.emit('register', { eventId, username, isAdmin: false })
-      console.log(eventId)
+      socketInstance.emit('register', { userId:eventId, username:userName, isAdmin: false })
     })
 
     socketInstance.on('chatRoomCreated', (data) => {
+        console.log("chatRoomCreated",data)
       setRoomId(data.roomId)
       setChatStatus('waiting')
     })
@@ -97,7 +105,7 @@ export default function UserSupportChat({ eventId, username, startMessage }: Use
     return () => {
       socketInstance.disconnect()
     }
-  }, [eventId, username])
+  }, [eventId, userName])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -106,7 +114,7 @@ export default function UserSupportChat({ eventId, username, startMessage }: Use
   const startSupportChat = () => {
     if (socket) {
       socket.emit('startSupportChat', {
-        initialMessage: 'こんにちは、サポートをお願いします。'
+        initialMessage: startMessage
       })
     }
   }
@@ -141,7 +149,7 @@ export default function UserSupportChat({ eventId, username, startMessage }: Use
   return (
     <div className="max-w-2xl mx-auto p-4 border rounded-lg">
       <div className="mb-4">
-        <h2 className="text-xl font-bold mb-2">サポートチャット</h2>
+        <h2 className="font-bold mb-2">スタッフサポート</h2>
         <div className="flex items-center gap-2 mb-2">
           <div className={`w-3 h-3 rounded-full ${
             chatStatus === 'active' ? 'bg-green-500' : 
@@ -158,10 +166,11 @@ export default function UserSupportChat({ eventId, username, startMessage }: Use
             onClick={startSupportChat}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            サポートチャットを開始
+            サポート開始
           </button>
         </div>
       )}
+
 
       {chatStatus !== 'none' && (
         <>

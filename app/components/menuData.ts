@@ -64,6 +64,25 @@ export const menuItems: MenuItem[] = [
     }
   ];
 
+  export const staffItems:MenuItem[] = [
+    {
+      title: 'ホーム',
+      icon: Home,
+      path: '/staff',
+      submenu: false,
+      submenuItems: null
+    },
+    {
+      title: 'メッセージ対応',
+      icon: Home,
+      path: '/staff/messageManager',
+      submenu: false,
+      submenuItems: null
+    },
+  ];
+
+
+
   export const adminItems:MenuItem[] = [
     {
       title: 'ホーム',

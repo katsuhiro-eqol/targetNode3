@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Target App",
+  title: "AIcon",
   description: "created by Target/Global",
+  icons: {
+    icon: '/icons8-ai-48.png', 
+  },
 };
 
 export default function RootLayout({
