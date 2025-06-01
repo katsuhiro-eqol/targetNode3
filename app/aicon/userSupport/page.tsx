@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
+import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client'
 
 interface Message {
@@ -15,6 +16,7 @@ interface Message {
 
 export default function UserSupportChat() {
   const [socket, setSocket] = useState<Socket | null>(null)
+  const [registered, setRegistered] = useState<boolean>(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [roomId, setRoomId] = useState<string | null>(null)
@@ -30,6 +32,10 @@ export default function UserSupportChat() {
   const eventId = searchParams.get("eventId")
   const userName = searchParams.get("userName")
   const startMessage = searchParams.get("startMessage")
+  //外国語対応
+  //const language = searchParams.get("language")
+
+  const router = useRouter()
 
   useEffect(() => {
       console.log(eventId, userName, startMessage)
@@ -53,6 +59,13 @@ export default function UserSupportChat() {
     socketInstance.on('connect', () => {
       socketInstance.emit('register', { userId:eventId, username:userName, isAdmin: false })
     })
+
+    
+    socketInstance.on("registerd", () => {
+        console.log("registerd")
+        setRegistered(true)
+    })
+    
 
     socketInstance.on('chatRoomCreated', (data) => {
         console.log("chatRoomCreated",data)
@@ -112,10 +125,28 @@ export default function UserSupportChat() {
   }, [messages])
 
   const startSupportChat = () => {
-    if (socket) {
-      socket.emit('startSupportChat', {
-        initialMessage: startMessage
-      })
+    console.log("startChat")
+    if (socket && registered) {
+        console.log(socket)
+        if (eventId && userName && startMessage){
+            console.log("start2")
+            const firstMessage:Message[] = [{
+                id: Date.now().toString(),
+                text: startMessage,
+                senderId: eventId,
+                senderName: userName,
+                timestamp: Date.now(),
+                type: 'user'
+            }]
+            setMessages( firstMessage)
+            socket.emit('startSupportChat', {
+                initialMessage: startMessage
+            })
+        } else {
+        alert("スタッフとのチャットに必要な情報が不足しています。最初からやり直してください。")
+        }
+    } else {
+        console.log("socketがありません")
     }
   }
 
@@ -146,35 +177,46 @@ export default function UserSupportChat() {
     }
   }
 
+  const backToAicon = () => {
+    const abort = confirm(`AIコンに戻ります。このページには戻れません。`)
+    if (abort){
+        router.back()
+    } else {
+        return
+    }
+  }
+
+
+
   return (
-    <div className="max-w-2xl mx-auto p-4 border rounded-lg">
+    <div className="max-w-2xl mx-auto p-4">
       <div className="mb-4">
-        <h2 className="font-bold mb-2">スタッフサポート</h2>
+        <div className="flex flex-row justify-between gap-x-4">
+        <h2 className="font-bold text-lg mb-2">スタッフサポート</h2>
+        <button className="mb-2 px-2 bg-gray-600 text-white text-xs rounded" onClick={backToAicon}>AIconに戻る</button>
+        </div>
         <div className="flex items-center gap-2 mb-2">
           <div className={`w-3 h-3 rounded-full ${
             chatStatus === 'active' ? 'bg-green-500' : 
             chatStatus === 'waiting' ? 'bg-yellow-500' : 'bg-gray-500'
           }`}></div>
           <span className="text-sm text-gray-600">{getStatusText()}</span>
-        </div>
-      </div>
-
-      {chatStatus === 'none' && (
+          {chatStatus === 'none' && (
         <div className="text-center py-8">
-          <p className="mb-4">サポートが必要ですか？</p>
           <button
             onClick={startSupportChat}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="ml-6 px-1 py-1 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
-            サポート開始
+            サポートを要請する
           </button>
         </div>
       )}
-
+        </div>
+      </div>
 
       {chatStatus !== 'none' && (
         <>
-          <div className="h-64 overflow-y-auto border rounded p-4 mb-4 bg-gray-50">
+          <div className="h-104 overflow-y-auto border rounded p-4 mb-4 bg-gray-50">
             {messages.map((message) => (
               <div key={message.id} className={`mb-3 ${
                 message.type === 'user' ? 'text-right' : 'text-left'
@@ -183,7 +225,7 @@ export default function UserSupportChat() {
                   message.type === 'user' 
                     ? 'bg-blue-500 text-white' 
                     : message.senderId === 'system'
-                    ? 'bg-gray-300 text-gray-700'
+                    ? 'bg-gray-200 text-black'
                     : 'bg-white border'
                 }`}>
                   <div className="text-xs opacity-70 mb-1">
@@ -203,13 +245,13 @@ export default function UserSupportChat() {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="メッセージを入力..."
-                className="flex-1 p-2 border rounded"
+                className="flex-1 p-1 border rounde text-sm"
                 disabled={chatStatus !== 'active'}
               />
               <button
                 type="submit"
                 disabled={chatStatus !== 'active' || !inputText.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                className="px-4 py-1 text-sm bg-blue-500 text-white rounded disabled:bg-gray-300"
               >
                 送信
               </button>
@@ -218,7 +260,7 @@ export default function UserSupportChat() {
             {(chatStatus === 'active' || chatStatus === 'waiting') && (
               <button
                 onClick={closeChat}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="px-4 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
               >
                 終了
               </button>
@@ -226,6 +268,22 @@ export default function UserSupportChat() {
           </div>
         </>
       )}
+      
     </div>
   )
 }
+
+/*
+
+      {chatStatus === 'none' && (
+        <div className="text-center py-8">
+          <p className="mb-4">サポートが必要ですか？</p>
+          <button
+            onClick={startSupportChat}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            サポート開始
+          </button>
+        </div>
+      )}
+*/

@@ -15,10 +15,11 @@ export default function DownloadableQRCode(){
     const [code, setCode] = useState<string>("")
     const [url, setUrl] = useState<string|null>(null)
     const [status, setStatus] = useState<string>("")
-    const [selectedOption, setSelectedOption] = useState<string>("音声認識（標準）")
+    const [selectedOption, setSelectedOption] = useState<string>("AIcon")
     const qrCodeRef = useRef(null);
     const size:number = 144
 
+    const options = ["AIcon", "AIcon + HumanStaff"]
     const loadEvents = async (org:string) => {
         try {
             const docRef = doc(db, "Users", org)
@@ -104,34 +105,33 @@ export default function DownloadableQRCode(){
         }
     }
 
-
     useEffect(() => {
-        /*
-        if (code!=="" && selectedOption === "音声認識（標準）"){
-            const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        } else if (code!=="" && selectedOption === "音声認識（AZURE）") {
+        if (code!=="" && selectedOption === "AIcon"){
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
+        } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
+            const eventUrl = `${hostUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
         }
-        */
+        /*
         if (code!=="") {
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
+            */
     }, [code])
 
-    /*
+
     useEffect(() => {
-        if (code!=="" && selectedOption === "音声認識（標準）"){
-            const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        } else if (code!=="" && selectedOption === "音声認識（AZURE）") {
+        if (code!=="" && selectedOption === "AIcon"){
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
+            const eventUrl = `${hostUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
     }, [selectedOption])
-    */
+
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
@@ -152,6 +152,18 @@ export default function DownloadableQRCode(){
             })}
             </select>
 
+            <div className="flex flex-row gap-x-4">
+                {options.map((option) => (
+                    <div
+                    key={option}
+                    className="flex items-center mb-2 cursor-pointer hover:bg-gray-200 p-2 rounded"
+                    onClick={() => setSelectedOption(option)}
+                    >
+                    {(selectedOption === option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
+                    <span className="ml-2 text-gray-700 text-sm">{option}</span>
+                </div>
+                ))}
+            </div>     
 
         {url && (
             <div>

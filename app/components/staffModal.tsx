@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 interface StaffModalProps {
     setStaffModal: (isModal: boolean ) => void;
     attribute: string | null;
+    language: string;
 }
 
-export default function StaffModal({setStaffModal, attribute}: StaffModalProps){
+export default function StaffModal({setStaffModal, attribute, language}: StaffModalProps){
     const [startMessage, setStartMessage] = useState<string>("")   
     const [username, setUsername] = useState<string>("")
     const [eventId, setEventId] = useState("")
@@ -20,7 +21,7 @@ export default function StaffModal({setStaffModal, attribute}: StaffModalProps){
 
     const beginStaffChat = () => {
         if (startMessage && username && eventId){
-            router.push(`/aicon/userSupport?eventId=${eventId}&userName=${username}&startMessage=${startMessage}`)
+            router.push(`/aicon/userSupport?eventId=${eventId}&userName=${username}&startMessage=${startMessage}&language=${language}`)
         } else {
             alert("入力が不足しています")
         }

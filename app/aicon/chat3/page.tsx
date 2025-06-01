@@ -520,11 +520,6 @@ export default function Aicon3() {
         stopRecognition()
         window.location.reload()
     }
-
-    const humanStaffHelp = () => {
-        const path = `/aicon/userSupport?attr=${attribute}&code=${code}`
-        router.push(path)
-    }
         
     useEffect(() => {
         return () => {
@@ -748,7 +743,7 @@ export default function Aicon3() {
                 <div className="ml-2 text-xxs">人間スタッフ</div>
                 </div>
                 {staffModal && (
-                  <StaffModal setStaffModal={setStaffModal} attribute={attribute}/>
+                  <StaffModal setStaffModal={setStaffModal} attribute={attribute} language={language}/>
                 )}
             </div>
             )}
