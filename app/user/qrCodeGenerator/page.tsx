@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore"
 import { toJpeg } from 'html-to-image';
 import { Circle, CircleDot } from 'lucide-react'
 
-const hostUrl = process.env.NEXT_PUBLIC_HOST_URL;
+const hostUrl = process.env.NEXT_PUBLIC_FEATURE_URL;//feature branch用
 
 export default function DownloadableQRCode(){
     const [events, setEvents] = useState<string[]>([""]) //firestoreから読み込む
