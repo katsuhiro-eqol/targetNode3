@@ -60,6 +60,8 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     })
 
     socketInstance.on('newSupportRequest', (room: ChatRoom) => {
+      console.log(room)
+      console.log(waitingRooms)
       setWaitingRooms(prev => [...prev, room])
     })
 
@@ -82,6 +84,7 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     })
 
     socketInstance.on('userDisconnected', () => {
+      console.log("userDisconnected")
       setActiveRoom(null)
       setMessages([])
       socketInstance.emit('getWaitingChats')
