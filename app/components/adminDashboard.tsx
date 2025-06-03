@@ -8,6 +8,7 @@ interface Message {
   text: string
   senderId: string
   senderName: string
+  language: string
   timestamp: number
   type: 'user' | 'admin'
 }
@@ -51,18 +52,16 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
 
     socketInstance.on('connect', () => {
       socketInstance.emit('register', { userId: adminId, username: adminName, isAdmin: true })
-      console.log(adminName)
     })
 
     socketInstance.on('waitingChatRooms', (rooms: ChatRoom[]) => {
-      console.log("rooms", rooms)
       setWaitingRooms(rooms)
     })
 
     socketInstance.on('newSupportRequest', (room: ChatRoom) => {
-      console.log(room)
-      console.log(waitingRooms)
-      setWaitingRooms(prev => [...prev, room])
+      setTimeout(() => {
+        setWaitingRooms(prev => [...prev, room])
+      }, 1000)
     })
 
     socketInstance.on('supportTaken', (data) => {
@@ -95,11 +94,17 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     }
   }, [adminId, adminName])
 
+
+  useEffect(() => {
+    console.log(waitingRooms)
+  }, [waitingRooms])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   const joinChat = (room: ChatRoom) => {
+    console.log(room.messages[0].language)
     if (socket) {
       socket.emit('joinSupportChat', { roomId: room.id })
       setActiveRoom(room)
@@ -111,7 +116,8 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     if (socket && inputText.trim() && activeRoom) {
       socket.emit('sendChatMessage', {
         roomId: activeRoom.id,
-        text: inputText
+        text: inputText,
+        senderName:adminName
       })
       setInputText('')
     }
@@ -130,21 +136,29 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 待機中のチャット一覧 */}
         <div>
-          <h2 className="font-semibold mb-4">待機中のサポート要請 ({waitingRooms.length})</h2>
+          <h2 className="font-semibold mb-4">サポート要請リスト ({waitingRooms.length})</h2>
           <div className="space-y-1 max-h-96 overflow-y-auto">
             {waitingRooms.map((room) => (
               <div key={room.id} className="border rounded p-1 bg-gray-50 hover:bg-gray-100">
                 <div className="flex justify-between items-start mb-2" >
-                  <strong>{room.username}</strong>
+                  <strong>{room.messages[0].senderName}</strong>
                   <span className="text-xs text-gray-500">
                     {new Date(room.createdAt).toLocaleTimeString()}
                   </span>
-                  <button
-                  onClick={() => joinChat(room)}
-                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
-                >
-                  対応開始
-                </button>
+                  <span className="text-xs text-gray-500">
+                  {room.messages[0].language}
+                  </span>
+                  {(room.id === activeRoom?.id) ? (
+                    <button className="px-3 py-1 text-xs rounded bg-gray-700 text-white" onClick={closeChat}>チャット終了</button>
+                  ):(
+                    <button
+                    onClick={() => joinChat(room)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                  >
+                    対応開始
+                  </button>
+                  )}
+
                 </div>      
                 <div className="text-sm text-gray-600 mb-2">
                   {room.messages[0]?.text || 'メッセージなし'}
@@ -162,17 +176,6 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
         <div className="lg:col-span-2 border rounded-lg flex flex-col">
           {activeRoom ? (
             <>
-              <div className="p-4 border-b">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">{activeRoom.username}とのチャット</h2>
-                  <button
-                    onClick={closeChat}
-                    className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                  >
-                    チャット終了
-                  </button>
-                </div>
-              </div>
               
               <div className="flex-1 overflow-y-auto p-4 h-96">
                 {messages.map((message) => (
@@ -223,3 +226,17 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     </div>
   )
 }
+
+/*
+              <div className="p-4 border-b">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">{activeRoom.messages[0].senderName}とのチャット</h2>
+                  <button
+                    onClick={closeChat}
+                    className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                  >
+                    チャット終了
+                  </button>
+                </div>
+              </div>
+*/

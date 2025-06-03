@@ -10,6 +10,7 @@ import { Mic, Send, Eraser, Paperclip, X, MessageSquareShare } from 'lucide-reac
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import Modal from "../../components/modalModal"
+import UserSupportChat from "../../components/userSupportChat"
 import StaffModal from "../../components/staffModal"
 import {Message, EmbeddingsData, EventData, Foreign} from "@/types"
 type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
@@ -549,8 +550,8 @@ export default function Aicon3() {
         return () => {
             window.removeEventListener("resize", updateHeight);
             if (intervalRef.current !== null){
-                clearInterval(intervalRef.current);
-                intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
+                clearInterval(intervalRef.current)
+                intervalRef.current = null
             }
             stopRecognition()
         };
@@ -743,7 +744,7 @@ export default function Aicon3() {
                 <div className="ml-2 text-xxs">人間スタッフ</div>
                 </div>
                 {staffModal && (
-                  <StaffModal setStaffModal={setStaffModal} attribute={attribute} language={language}/>
+                  <UserSupportChat eventId={attribute!} setStaffModal={setStaffModal} language={language}/>
                 )}
             </div>
             )}
