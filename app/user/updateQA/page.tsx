@@ -10,6 +10,7 @@ import { PronunciationRegistration } from "../../components/pronunciation"
 import {registerVoice} from "../../func/updateWav"
 import createForeign from "../../func/createForeign"
 import createEmbedding from "../../func/createEmbedding"
+import validateCreatedQA from '@/app/func/verificationQA';
 import { Circle, CircleDot, ArrowBigRight } from 'lucide-react'
 import { EventData, QaData, ModalData, Pronunciation } from "@/types"
 import md5 from 'md5';
@@ -367,10 +368,14 @@ export default function UpdaateQA(){
                     }
                     await setDoc(docRef, data)
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
-                    //loadQADB()
-                    setStatus2("Q&Aの追加が完了しました")
-                    setCreatedId(newId)
-                    setIsUpdateFinished(true)
+                    const comment = await validateCreatedQA(organization, event, eventData!.voice, eventData!.embedding, eventData!.languages)
+                    console.log("comment",comment)
+                    setTimeout(() => {
+                        setStatus2(comment)
+                        setCreatedId(newId)
+                        setIsUpdateFinished(true)
+                    }, 3000)
+
                 } else if (newModal && !modalData) {
                     alert("添付書類が登録されていません")
                 } else {
@@ -417,7 +422,7 @@ export default function UpdaateQA(){
         }
     }
 
-    const chooseUpdatedData = () => {
+    const chooseUpdatedData = async () => {
         if (selectedButton !== "add"){
             if (selectedRowId){
                 const data:QaData[] = qaData.filter((item) => item.id == selectedRowId)
@@ -432,6 +437,34 @@ export default function UpdaateQA(){
             }
         } else {
             if (createdId){
+                const id = organization + "_" + event
+                const newRef = await getDoc(doc(db, "Events", id, "QADB",createdId));
+                
+                if (newRef.exists()){
+                    const data = newRef.data()
+                    const vector = data.vector.substr(0,10) + "..."
+                    const newQa: QaData = {
+                        id: newRef.id,
+                        code:data.code,
+                        question:data.question,
+                        answer:data.answer,
+                        modalFile:data.modalFile,
+                        modalUrl:data.modalUrl,
+                        voiceId:data.voiceId,
+                        voiceUrl:data.voiceUrl,
+                        foreignStr:"",
+                        foreign:data.foreign,
+                        vector:vector,
+                        read:data.read,
+                        pronunciations:data.pronunciations
+                    }
+
+                    setUpdatedQA(Array(1).fill(newQa))
+                    setStatus2("Q&Aデータが追加されました")    
+                }
+                
+                const qa:QaData[] = []
+
                 const data:QaData[] = qaData.filter((item) => item.id == createdId)
                 console.log(data)
                 if (data[0]){
@@ -443,7 +476,7 @@ export default function UpdaateQA(){
     }
 
     useEffect(() => {
-        if (isUpdateFinished){
+        if (isUpdateFinished && (selectedButton !== "add")){
             loadQADB()
         }
     },[isUpdateFinished])
@@ -735,158 +768,3 @@ export default function UpdaateQA(){
         </div>
     );
 };
-
-
-/*
-    return (
-        <div className="flex">
-        <div>
-            <Sidebar menuItems={menuItems} />
-        </div>
-        <div className="ml-64 p-8 w-full">
-
-        <div className="mb-5 font-bold text-xl">Q&Aデータの更新</div>
-        <div className="text-base">・イベントを選択</div>
-            <select className="mb-5 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
-            {events.map((name) => {
-            return <option key={name} value={name}>{name}</option>;
-            })}
-            </select>
-        <div>・アクションを選択</div>
-        <div className="flex flex-row gap-x-4">
-            {buttons.map((button) => (
-                <div key={button.key} onClick={() => setSelectedButton(button.key)}>
-                    {(selectedButton === button.key) ? (
-                        <button className="w-36 h-8 mt-2 px-2 border-2 text-sm bg-gray-500 hover:bg-gray-600 text-white">{button.label}</button>
-                    ):(
-                        <button className="w-36 h-8 mt-2 px-2 border-2 text-sm bg-white hover:bg-gray-100 text-black">{button.label}</button>
-                    )}
-                </div>
-            ))}
-        </div>
-        {(event && (
-        <div>
-            {(selectedButton === "modify") && (
-                <div className="mt-5">
-                    <div className="flex flex-row gap-x-4">
-                    {options.map((option) => (
-                        <div
-                        key={option}
-                        className="flex items-center mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded"
-                        onClick={() => setSelectedOption(option)}
-                        >
-                        {(selectedOption === option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
-                        <span className="ml-2 text-gray-700 text-sm">{option}</span>
-                    </div>
-                    ))}
-                    </div>
-                    <div className="flex flex-row gap-x-4">
-                        <input
-                            className="w-96 rounded px-2 py-1 bg-inherit border text-sm"
-                            name="search"
-                            placeholder="検索ワード"
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            />
-                        <button className="bg-cyan-500 hover:bg-cyan-700 text-white ml-3 mt-3 px-2 py-1 my-2 rounded text-xs" onClick={searchQA}>検索</button>
-                    </div>
-                {searchedData && (
-                <div>
-                <div className="text-sm">検索結果（修正するQ&Aを選択してください）</div>
-                <QADataSelection qaData={searchedData} selectedRowId={selectedRowId} setSelectedRowId={setSelectedRowId}/>
-                {(selectedQA) && (
-                    <div>
-                    <div className="flex flex-row gap-x-4">
-                    <div className="w-16 ml-2 mt-1 text-xs">question:</div>
-                    <div className=" w-56 ml-2 mt-1 text-xs">{selectedQA.question}</div>
-                    <ArrowBigRight />
-                    <input
-                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-xs"
-                        name="question"
-                        placeholder="変更しない場合は未入力"
-                        value={newQuestion}
-                        onChange={(e) => setNewQuestion(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex flex-row gap-x-4">
-                    <div className="w-16 ml-2 mt-1 text-xs">answer:</div>
-                    <div className="w-56 ml-2 mt-1 text-xs">{selectedQA.answer}</div>
-                    <ArrowBigRight />
-                    <input
-                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-xs"
-                        name="answer"
-                        placeholder="変更しない場合は未入力"
-                        value={newAnswer}
-                        onChange={(e) => setNewAnswer(e.target.value)}
-                        />
-                    </div>
-                    </div>)}
-                    </div>)}
-                </div>
-                )} 
-            {(selectedButton === "add") && (<div>Q&A追加</div>)}   
-            {(selectedButton === "modal") && (
-                <div>
-                <div>添付ファイル修正</div>
-                </div>)}
-            {(selectedButton === "read") && (<div>読み修正</div>)}
-            {(selectedButton === "delete") && (<div>読み修正</div>)}
-            <div className="mt-6">
-            {searchedData && (
-                <div>
-                <div className="text-sm">検索結果（修正するQ&Aを選択してください）</div>
-                <QADataSelection qaData={searchedData} selectedRowId={selectedRowId} setSelectedRowId={setSelectedRowId}/>
-                {(selectedQA) && (
-                    <div>
-                    <div className="flex flex-row gap-x-4">
-                    <div className="w-16 ml-2 mt-1 text-xs">question:</div>
-                    <div className=" w-56 ml-2 mt-1 text-xs">{selectedQA.question}</div>
-                    <ArrowBigRight />
-                    <input
-                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-xs"
-                        name="question"
-                        placeholder="変更しない場合は未入力"
-                        value={newQuestion}
-                        onChange={(e) => setNewQuestion(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex flex-row gap-x-4">
-                    <div className="w-16 ml-2 mt-1 text-xs">answer:</div>
-                    <div className="w-56 ml-2 mt-1 text-xs">{selectedQA.answer}</div>
-                    <ArrowBigRight />
-                    <input
-                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-xs"
-                        name="answer"
-                        placeholder="変更しない場合は未入力"
-                        value={newAnswer}
-                        onChange={(e) => setNewAnswer(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex flex-row gap-x-4">
-                    <div className="w-16 ml-2 mt-1 text-xs">modal_file:</div>
-                    <div className="w-56 ml-2 mt-1 text-xs">{selectedQA.modalFile}</div>
-                    <ArrowBigRight />
-                    <input
-                        className="w-96 rounded px-2 py-1 bg-inherit border-2 text-xs"
-                        name="modal_file"
-                        placeholder="変更しない場合は未入力（ファイル名）"
-                        value={newModal}
-                        onChange={(e) => setNewModal(e.target.value)}
-                        />                   
-                    </div>
-                    {modalFiles && (
-                        <div className="w-2/3">
-                        <UploadFiles modal={modalFiles} setIsReady={setIsReady} setModalData={setModalData} organization={organization} event={event} />
-                        </div>
-                    )}
-                    
-                    </div>
-                )}
-            </div>)}
-            </div>
-        </div>     
-        ))}
-        </div>
-        </div>
-    );
-*/

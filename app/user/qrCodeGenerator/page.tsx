@@ -15,11 +15,11 @@ export default function DownloadableQRCode(){
     const [code, setCode] = useState<string>("")
     const [url, setUrl] = useState<string|null>(null)
     const [status, setStatus] = useState<string>("")
-    const [selectedOption, setSelectedOption] = useState<string>("音声認識（標準）")
+    //const [selectedOption, setSelectedOption] = useState<string>("音声認識（標準）")
     const qrCodeRef = useRef(null);
     const size:number = 144
 
-    const options = ["音声認識（標準）", "音声認識（AZURE）"];
+    //const options = ["音声認識（標準）", "音声認識（AZURE）"];
 
     const loadEvents = async (org:string) => {
         try {
@@ -108,32 +108,11 @@ export default function DownloadableQRCode(){
 
 
     useEffect(() => {
-        /*
-        if (code!=="" && selectedOption === "音声認識（標準）"){
-            const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        } else if (code!=="" && selectedOption === "音声認識（AZURE）") {
-            const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        }
-        */
         if (code!=="") {
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
     }, [code])
-
-    /*
-    useEffect(() => {
-        if (code!=="" && selectedOption === "音声認識（標準）"){
-            const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        } else if (code!=="" && selectedOption === "音声認識（AZURE）") {
-            const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        }
-    }, [selectedOption])
-    */
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
@@ -143,7 +122,6 @@ export default function DownloadableQRCode(){
         }
     },[])
 
-  
     return (
         <div className="flex-1 flex flex-col justify-center gap-2">
         <div className="font-bold text-xl">QRコード生成</div>
