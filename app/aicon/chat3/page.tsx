@@ -687,7 +687,7 @@ export default function Aicon3() {
             </div>
             <div className="flex-none h-[18%] w-full max-w-96 overflow-auto">
             <div className="mt-2">
-            <textarea className="block w-5/6 max-w-96 mx-auto mb-2 px-2 py-2 text-xs"
+            <textarea className="block w-5/6 max-w-96 mx-auto mb-2 px-2 py-2 text-sm"
                 name="message"
                 placeholder="質問内容(question)"
                 rows={2}

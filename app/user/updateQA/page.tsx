@@ -10,6 +10,7 @@ import { PronunciationRegistration } from "../../components/pronunciation"
 import {registerVoice} from "../../func/updateWav"
 import createForeign from "../../func/createForeign"
 import createEmbedding from "../../func/createEmbedding"
+import validateCreatedQA from '@/app/func/verificationQA';
 import { Circle, CircleDot, ArrowBigRight } from 'lucide-react'
 import { EventData, QaData, ModalData, Pronunciation } from "@/types"
 import md5 from 'md5';
@@ -367,10 +368,14 @@ export default function UpdaateQA(){
                     }
                     await setDoc(docRef, data)
                     await registerVoice(organization, event, newAnswer, readText, eventData!.voice, voiceId, "") 
-                    //loadQADB()
-                    setStatus2("Q&Aの追加が完了しました")
-                    setCreatedId(newId)
-                    setIsUpdateFinished(true)
+                    const comment = await validateCreatedQA(organization, event, eventData!.voice, eventData!.embedding, eventData!.languages)
+                    console.log("comment",comment)
+                    setTimeout(() => {
+                        setStatus2(comment)
+                        setCreatedId(newId)
+                        setIsUpdateFinished(true)
+                    }, 3000)
+
                 } else if (newModal && !modalData) {
                     alert("添付書類が登録されていません")
                 } else {
@@ -417,7 +422,7 @@ export default function UpdaateQA(){
         }
     }
 
-    const chooseUpdatedData = () => {
+    const chooseUpdatedData = async () => {
         if (selectedButton !== "add"){
             if (selectedRowId){
                 const data:QaData[] = qaData.filter((item) => item.id == selectedRowId)
@@ -432,6 +437,34 @@ export default function UpdaateQA(){
             }
         } else {
             if (createdId){
+                const id = organization + "_" + event
+                const newRef = await getDoc(doc(db, "Events", id, "QADB",createdId));
+                
+                if (newRef.exists()){
+                    const data = newRef.data()
+                    const vector = data.vector.substr(0,10) + "..."
+                    const newQa: QaData = {
+                        id: newRef.id,
+                        code:data.code,
+                        question:data.question,
+                        answer:data.answer,
+                        modalFile:data.modalFile,
+                        modalUrl:data.modalUrl,
+                        voiceId:data.voiceId,
+                        voiceUrl:data.voiceUrl,
+                        foreignStr:"",
+                        foreign:data.foreign,
+                        vector:vector,
+                        read:data.read,
+                        pronunciations:data.pronunciations
+                    }
+
+                    setUpdatedQA(Array(1).fill(newQa))
+                    setStatus2("Q&Aデータが追加されました")    
+                }
+                
+                const qa:QaData[] = []
+
                 const data:QaData[] = qaData.filter((item) => item.id == createdId)
                 console.log(data)
                 if (data[0]){
@@ -443,7 +476,7 @@ export default function UpdaateQA(){
     }
 
     useEffect(() => {
-        if (isUpdateFinished){
+        if (isUpdateFinished && (selectedButton !== "add")){
             loadQADB()
         }
     },[isUpdateFinished])
