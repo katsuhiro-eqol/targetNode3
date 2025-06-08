@@ -13,6 +13,7 @@ interface Message {
   senderName: string
   language: string
   timestamp: number
+  translated: string |null
   type: 'user' | 'admin'
 }
 
@@ -78,11 +79,13 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
             senderName: 'システム',
             language:"日本語",
             timestamp: Date.now(),
+            translated: data.message,
             type: 'admin'
         }])
     })
 
     socketInstance.on('newChatMessage', (message: Message) => {
+        console.log(message)
         setMessages(prev => [...prev, message])
     })
 
@@ -95,6 +98,7 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
             senderName: 'システム',
             language:"日本語",
             timestamp: Date.now(),
+            translated: data.message,
             type: 'admin'
         }])
     })
@@ -109,6 +113,7 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
             senderName: 'システム',
             language:"日本語",
             timestamp: Date.now(),
+            translated: data.message,
             type: 'admin'
         }])
     })
@@ -122,9 +127,10 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
 
-    const startSupportChat = () => {
+    const startSupportChat = async() => {
         if (socket && registered) {
             if (eventId && inputText.trim()){
+                const translated = await translateText(inputText, language)
                 if (senderName !== ""){
                     const firstMessage:Message[] = [{
                         id: Date.now().toString(),
@@ -133,13 +139,15 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
                         senderName: senderName,
                         language: language,
                         timestamp: Date.now(),
+                        translated: translated,
                         type: 'user'
                     }]
                     setMessages( firstMessage)
                     socket.emit('startSupportChat', {
                         initialMessage: inputText,
                         senderName:senderName,
-                        language: language
+                        language: language,
+                        translated: translated
                     })
                     setInputText('')
                 } else {
@@ -150,6 +158,7 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
                         senderName: userName,
                         language: language,
                         timestamp: Date.now(),
+                        translated: translated,
                         type: 'user'
                     }]
                     setSenderName(userName)
@@ -157,7 +166,8 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
                     socket.emit('startSupportChat', {
                         initialMessage: inputText,
                         senderName:"AIcon-User",
-                        language:language
+                        language:language,
+                        translated: translated
                     })
                     setInputText('')                    
                 }
@@ -167,18 +177,39 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
         }
     }
 
-    const sendMessage = (e: React.FormEvent) => {
+    const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault()
+
         if ((chatStatus === "none") && inputText.trim()){
             startSupportChat()
         } else if ((socket && inputText.trim() && roomId) ) {
+            const translated = await translateText(inputText, language)
             socket.emit('sendChatMessage', {
                 roomId,
                 text: inputText,
                 senderName: senderName,
-                language: language
-            })
+                language: language,
+                translated: translated
+            })            
             setInputText('')
+        }
+    }
+
+    const translateText = async (text:string, lang:string) => {
+        if (lang !== "日本語"){
+            const response = await fetch("/api/translateToJP", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                //body: JSON.stringify({ input: userInput, character: character, fewShot: fewShot, previousData: previousData, sca: scaList[character] }),
+                body: JSON.stringify({ answer: text, language:lang}),
+              });
+          
+              const translated = await response.json()
+              return translated.japanese
+        } else {
+            return null
         }
     }
 
@@ -269,7 +300,13 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
                     <div className="text-xs opacity-70 mb-1">
                         {message.senderName} - {new Date(message.timestamp).toLocaleTimeString()}
                     </div>
-                    <div className="text-xs">{message.text}</div>
+                    {message.type !== "admin" ? (
+                        <div className="text-xs">{message.text}</div>
+                    ):(
+                        <div className="text-xs">{message.translated}</div>
+                    )}
+                    
+                    
                     </div>
                 </div>
                 ))}
@@ -302,3 +339,31 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
         </div>
     )
 }
+
+/*
+                {messages.map((message) => (
+                <div key={message.id} className={`m-2 ${
+                    message.type === 'user' ? 'text-right' : 'text-left'
+                }`}>
+                    <div className={`inline-block max-w-xs p-2 rounded-lg ${
+                    message.type === 'user' 
+                        ? 'bg-blue-500 text-white' 
+                        : message.senderId === 'system'
+                        ? 'bg-gray-200 text-black'
+                        : 'bg-white border'
+                    }`}>
+                    <div className="text-xs opacity-70 mb-1">
+                        {message.senderName} - {new Date(message.timestamp).toLocaleTimeString()}
+                    </div>
+                    {message.type === "user" ? (
+                        <div className="text-xs">{message.text}</div>
+                    ): message.senderId ? (
+                        <div className="text-xs">{message.text}</div>
+                    ): message.type === "admin" ? (
+                        <div className="text-xs">{message.translated}</div>
+                    ) :(<div>no message</div>)}
+                    
+                    </div>
+                </div>
+                ))}
+                */

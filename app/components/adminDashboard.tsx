@@ -10,6 +10,7 @@ interface Message {
   senderName: string
   language: string
   timestamp: number
+  translated:string | null
   type: 'user' | 'admin'
 }
 
@@ -36,6 +37,7 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
   const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
+  const [language, setLanguage] = useState<string>("日本語")
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -59,9 +61,13 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     })
 
     socketInstance.on('newSupportRequest', (room: ChatRoom) => {
+
+      setWaitingRooms(prev => [...prev, room])
+      /*
       setTimeout(() => {
         setWaitingRooms(prev => [...prev, room])
       }, 1000)
+      */
     })
 
     socketInstance.on('supportTaken', (data) => {
@@ -103,25 +109,51 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    console.log(language)
+  }, [language])
+
   const joinChat = (room: ChatRoom) => {
     console.log(room.messages[0].language)
+    setLanguage(room.messages[0].language)
     if (socket) {
       socket.emit('joinSupportChat', { roomId: room.id })
       setActiveRoom(room)
     }
   }
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async(e: React.FormEvent) => {
     e.preventDefault()
     if (socket && inputText.trim() && activeRoom) {
+      const translated = await translateText(inputText)
+      console.log("admin", translated)
       socket.emit('sendChatMessage', {
         roomId: activeRoom.id,
         text: inputText,
-        senderName:adminName
+        senderName:adminName,
+        translated:translated
       })
       setInputText('')
     }
   }
+
+  const translateText = async (text:string) => {
+    if (language !== "日本語"){
+        const response = await fetch("/api/translate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            //body: JSON.stringify({ input: userInput, character: character, fewShot: fewShot, previousData: previousData, sca: scaList[character] }),
+            body: JSON.stringify({ answer: text, language:language}),
+          });
+      
+          const translated = await response.json()
+          return translated.foreign
+    } else {
+        return null
+    }
+}
 
   const closeChat = () => {
     if (socket && activeRoom) {
@@ -163,6 +195,9 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
                 <div className="text-sm text-gray-600 mb-2">
                   {room.messages[0]?.text || 'メッセージなし'}
                 </div>          
+                {room.messages[0]?.translated && (
+                  <div className="text-sm">{room.messages[0]?.translated}</div>
+                )}
               </div>
             ))}
 
@@ -191,6 +226,9 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
                         {message.senderName} - {new Date(message.timestamp).toLocaleTimeString()}
                       </div>
                       <div className="text-sm">{message.text}</div>
+                      {message.translated && (
+                        <div className="text-sm">{message.translated}</div>
+                      )}
                     </div>
                   </div>
                 ))}
