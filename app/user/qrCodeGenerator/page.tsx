@@ -127,7 +127,7 @@ export default function DownloadableQRCode(){
             const eventUrl = `${rootUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
-            const eventUrl = `${rootUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
+            const eventUrl = `${rootUrl}aicon/chat4?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
         /*
@@ -135,7 +135,7 @@ export default function DownloadableQRCode(){
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
-            */
+        */
     }, [code])
 
 
@@ -144,7 +144,7 @@ export default function DownloadableQRCode(){
             const eventUrl = `${rootUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
-            const eventUrl = `${rootUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
+            const eventUrl = `${rootUrl}aicon/chat4?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
     }, [selectedOption])
