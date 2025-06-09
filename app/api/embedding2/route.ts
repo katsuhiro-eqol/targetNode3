@@ -48,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
             const embedding = response.data[0].embedding;
             const buffer = new Float32Array(embedding);
             const vectorBase64 = Buffer.from(buffer.buffer).toString('base64');
-            return NextResponse.json({ prompt: input, embedding: vectorBase64 });
+            return NextResponse.json({ input: decoded, embedding: vectorBase64 });
         } catch (error) {
             return NextResponse.json({ embedding: error });
         }        
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest): Promise<NextResponse>  {
             const embedding = response.data[0].embedding;
             const buffer = new Float32Array(embedding);
             const vectorBase64 = Buffer.from(buffer.buffer).toString('base64');
-            return NextResponse.json({ prompt: input, embedding: vectorBase64 });
+            return NextResponse.json({ input: input, embedding: vectorBase64 });
         } catch (error) {
             return NextResponse.json({ embedding: error });
         }        

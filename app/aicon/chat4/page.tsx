@@ -102,16 +102,17 @@ export default function Aicon3() {
             });
             setUserInput("")
             const data = await response.json();
-            console.log("translated", data.input) //質問を翻訳
+            const translatedQuestion = data.input
+
             if (response.status !== 200) {
                 throw data.error || new Error(`Request failed with status ${response.status}`);
                 }
             const similarityList = findMostSimilarQuestion(data.embedding)
 
             if (similarityList.similarity > 0.45){
-                console.log("voiceUrl:",embeddingsData[similarityList.index].voiceUrl)
                 setWavUrl(embeddingsData[similarityList.index].voiceUrl)
                 const answer = setAnswer(embeddingsData[similarityList.index], language)
+                console.log(similarityList.similarity )
                 if (embeddingsData[similarityList.index].modalUrl){
                     const aiMessage: Message = {
                         id: `A${now}`,
@@ -144,45 +145,103 @@ export default function Aicon3() {
                 const sl = createSlides(embeddingsData[similarityList.index].frame)
                 setSlides(sl)
 
+            //類似質問を生成し、それとの一致度を比較するアルゴリズムを追加
             }else{
-                const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できなかった質問")
-                const n = Math.floor(Math.random() * badQuestion.length)
-                setWavUrl(badQuestion[n].voiceUrl)
-                const answer = setAnswer(badQuestion[n], language)
-                if (badQuestion[n].modalUrl){
-                    const aiMessage: Message = {
-                        id: `A${now}`,
-                        text: answer,
-                        sender: 'AIcon',
-                        modalUrl:badQuestion[n].modalUrl,
-                        modalFile:badQuestion[n].modalFile,
-                        similarity:similarityList.similarity,
-                        nearestQ:embeddingsData[similarityList.index].question
-                    };
-                    setMessages(prev => [...prev, aiMessage]);
-                    if (attribute){
-                        await saveMessage(userMessage, aiMessage, attribute)
+                try {
+                    const response = await fetch("/api/paraphrase", {
+                        method: "POST",
+                        headers: {
+                        "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ question: translatedQuestion, model: eventData?.embedding ?? "text-embedding-3-small" }),
+                    });
+                    const data = await response.json();
+                    console.log(data.paraphrases)
+                    let maxValue = 0
+                    let properAnswer = ""
+                    let index = 0
+                    for (const embedding of data.embeddings){
+                        const similarityList = findMostSimilarQuestion(embedding)
+                        if (similarityList.similarity > maxValue){
+                            maxValue = similarityList.similarity
+                            properAnswer = setAnswer(embeddingsData[similarityList.index], language)
+                            index = similarityList.index
+                        }
                     }
-                } else {
-                    const aiMessage: Message = {
-                        id: `A${now}`,
-                        text: answer,
-                        sender: 'AIcon',
-                        modalUrl:null,
-                        modalFile:null,
-                        similarity:similarityList.similarity,
-                        nearestQ:embeddingsData[similarityList.index].question
-                    };
-                    setMessages(prev => [...prev, aiMessage]);
-                    if (attribute){
-                        await saveMessage(userMessage, aiMessage, attribute)
+
+                    if (maxValue > 0.45) {
+                        if (embeddingsData[index].modalUrl){
+                            const aiMessage: Message = {
+                                id: `A${now}`,
+                                text: properAnswer,
+                                sender: 'AIcon',
+                                 modalUrl:embeddingsData[index].modalUrl,
+                                modalFile:embeddingsData[index].modalFile,
+                                similarity:maxValue,
+                                nearestQ:embeddingsData[index].question
+                            };
+                            setMessages(prev => [...prev, aiMessage]);
+                            if (attribute){
+                                await saveMessage(userMessage, aiMessage, attribute)
+                            }
+                        } else {
+                            const aiMessage: Message = {
+                                id: `A${now}`,
+                                text: properAnswer,
+                                sender: 'AIcon',
+                                modalUrl:null,
+                                modalFile:null,
+                                similarity:maxValue,
+                                nearestQ:embeddingsData[index].question
+                            };
+                            setMessages(prev => [...prev, aiMessage]);
+                            if (attribute){
+                                await saveMessage(userMessage, aiMessage, attribute)
+                            }
+                        }
+                        const sl = createSlides(embeddingsData[similarityList.index].frame)
+                        setSlides(sl)    
+                    } else {
+                        const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できなかった質問")
+                        const n = Math.floor(Math.random() * badQuestion.length)
+                        setWavUrl(badQuestion[n].voiceUrl)
+                        const answer = setAnswer(badQuestion[n], language)
+                        if (badQuestion[n].modalUrl){
+                            const aiMessage: Message = {
+                                id: `A${now}`,
+                                text: answer,
+                                sender: 'AIcon',
+                                modalUrl:badQuestion[n].modalUrl,
+                                modalFile:badQuestion[n].modalFile,
+                                similarity:similarityList.similarity,
+                                nearestQ:embeddingsData[similarityList.index].question
+                            };
+                            setMessages(prev => [...prev, aiMessage]);
+                            if (attribute){
+                                await saveMessage(userMessage, aiMessage, attribute)
+                            }
+                        } else {
+                            const aiMessage: Message = {
+                                id: `A${now}`,
+                                text: answer,
+                                sender: 'AIcon',
+                                modalUrl:null,
+                                modalFile:null,
+                                similarity:similarityList.similarity,
+                                nearestQ:embeddingsData[similarityList.index].question
+                            };
+                            setMessages(prev => [...prev, aiMessage]);
+                            if (attribute){
+                                await saveMessage(userMessage, aiMessage, attribute)
+                            }
+                        }                
+                        const sl = createSlides(badQuestion[n].frame)
+                        setSlides(sl)                             
                     }
-                }                
-                const sl = createSlides(badQuestion[n].frame)
-                setSlides(sl)           
+                } catch (error) {
+                    console.error(error);
+                }
             }
-            console.log(similarityList.similarity)
-            console.log(embeddingsData[similarityList.index])
         } catch(error) {
         console.error(error);
         }

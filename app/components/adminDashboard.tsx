@@ -151,7 +151,7 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
           const translated = await response.json()
           return translated.foreign
     } else {
-        return null
+        return text
     }
 }
 
@@ -195,7 +195,7 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
                 <div className="text-sm text-gray-600 mb-2">
                   {room.messages[0]?.text || 'メッセージなし'}
                 </div>          
-                {room.messages[0]?.translated && (
+                {room.messages[0].language !=="日本語" && (
                   <div className="text-sm">{room.messages[0]?.translated}</div>
                 )}
               </div>
@@ -226,7 +226,7 @@ export default function AdminDashboard({ adminId, adminName, event }: AdminDashb
                         {message.senderName} - {new Date(message.timestamp).toLocaleTimeString()}
                       </div>
                       <div className="text-sm">{message.text}</div>
-                      {message.translated && (
+                      {language !== "日本語" && (
                         <div className="text-sm">{message.translated}</div>
                       )}
                     </div>

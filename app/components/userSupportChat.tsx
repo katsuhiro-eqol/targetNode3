@@ -209,7 +209,7 @@ export default function UserSupportChat({eventId, setStaffModal, language}:UserS
               const translated = await response.json()
               return translated.japanese
         } else {
-            return null
+            return text
         }
     }
 
