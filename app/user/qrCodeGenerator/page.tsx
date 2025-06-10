@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore"
 import { toJpeg } from 'html-to-image';
 import { Circle, CircleDot } from 'lucide-react'
 
-const hostUrl = process.env.NEXT_PUBLIC_HOST_URL;
+const hostUrl = process.env.NEXT_PUBLIC_FEATURE_URL;//feature branch用
 
 export default function DownloadableQRCode(){
     const [events, setEvents] = useState<string[]>([""]) //firestoreから読み込む
@@ -14,12 +14,13 @@ export default function DownloadableQRCode(){
     const [organization, setOrganization] = useState<string>("")
     const [code, setCode] = useState<string>("")
     const [url, setUrl] = useState<string|null>(null)
+    const [rootUrl, setRootUrl] = useState<string>("")
     const [status, setStatus] = useState<string>("")
-    //const [selectedOption, setSelectedOption] = useState<string>("音声認識（標準）")
+    const [selectedOption, setSelectedOption] = useState<string>("音声認識（標準）")
     const qrCodeRef = useRef(null);
     const size:number = 144
 
-    //const options = ["音声認識（標準）", "音声認識（AZURE）"];
+    const options = ["音声認識（標準）", "音声認識（AZURE）"];
 
     const loadEvents = async (org:string) => {
         try {
@@ -51,6 +52,9 @@ export default function DownloadableQRCode(){
                     const data = docSnap.data()
                     if (data.qaData){
                         setCode(data.code)
+                        if (data.isStaffChat){
+                            setIsStaffChat(data.isStaffChat)
+                        }
                     }else{
                         alert("イベントにQ&Aデータが登録されていません")
                         setEvent("")
@@ -80,6 +84,8 @@ export default function DownloadableQRCode(){
     };
 
     const selectEvent = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setIsStaffChat(false)
+        setSelectedOption("AIcon")
         setEvent(e.target.value);
         loadEventData(e.target.value)
     }
@@ -106,13 +112,43 @@ export default function DownloadableQRCode(){
         }
     }
 
+    const getRootUrl = () => {
+        // クライアントサイドでのみ実行
+        if (typeof window === 'undefined'){
+            return '/'
+        } else {
+            return `${window.location.protocol}//${window.location.host}/`;
+        }
+      };
 
     useEffect(() => {
+        /*
+        if (code!=="" && selectedOption === "音声認識（標準）"){
+            const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        } else if (code!=="" && selectedOption === "音声認識（AZURE）") {
+            const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        }
+        */
         if (code!=="") {
             const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
             setUrl(eventUrl)
         }
+        */
     }, [code])
+
+    /*
+    useEffect(() => {
+        if (code!=="" && selectedOption === "音声認識（標準）"){
+            const eventUrl = `${hostUrl}aicon/chat2?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        } else if (code!=="" && selectedOption === "音声認識（AZURE）") {
+            const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        }
+    }, [selectedOption])
+    */
 
     useEffect(() => {
         const org = sessionStorage.getItem("user")
@@ -120,6 +156,8 @@ export default function DownloadableQRCode(){
             setOrganization(org)
             loadEvents(org)
         }
+        const rootURL = getRootUrl()
+        setRootUrl(rootURL)
     },[])
 
     return (
@@ -132,6 +170,20 @@ export default function DownloadableQRCode(){
             })}
             </select>
 
+            {isStaffChat && (
+            <div className="flex flex-row gap-x-4">
+                {options.map((option) => (
+                    <div
+                    key={option}
+                    className="flex items-center mb-2 cursor-pointer hover:bg-gray-200 p-2 rounded"
+                    onClick={() => setSelectedOption(option)}
+                    >
+                    {(selectedOption === option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
+                    <span className="ml-2 text-gray-700 text-sm">{option}</span>
+                </div>
+                ))}
+            </div>    
+            )} 
 
         {url && (
             <div>

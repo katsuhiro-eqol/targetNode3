@@ -3,18 +3,21 @@ import "regenerator-runtime";
 import React from "react";
 import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from 'next/navigation';
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk"
 //import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, Send, Eraser, Paperclip, X, MessageSquareShare } from 'lucide-react';
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import Modal from "../../components/modalModal"
+import UserSupportChat from "../../components/userSupportChat"
+//import StaffModal from "../../components/staffModal"
 import {Message, EmbeddingsData, EventData, Foreign} from "@/types"
 type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
 
-export default function Aicon() {
+export default function Aicon3() {
     const [windowHeight, setWindowHeight] = useState<number>(0)
     const [initialSlides, setInitialSlides] = useState<string|null>(null)
     const [userInput, setUserInput] = useState<string>("")
@@ -41,6 +44,8 @@ export default function Aicon() {
     const [interim, setInterim] = useState<string>("")
     const [finalTranscript, setFinalTranscript] = useState<string>("")
 
+    const [staffModal, setStaffModal] = useState<boolean>(false)
+
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
     const japaneseName = {"日本語":"日本語", "English":"英語","简体中文":"中国語（簡体）","繁體中文":"中国語（繁体）","한국어":"韓国語","Français":"フランス語","Español":"スペイン語","Português":"ポルトガル語"}
@@ -50,6 +55,7 @@ export default function Aicon() {
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null)
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
+    const router = useRouter()
 
     const useSearchParams = ()  => {
         const searchParams = useSearchParamsOriginal();
@@ -106,6 +112,7 @@ export default function Aicon() {
             if (similarityList.similarity > 0.5){
                 setWavUrl(embeddingsData[similarityList.index].voiceUrl)
                 const answer = setAnswer(embeddingsData[similarityList.index], language)
+                console.log(similarityList.similarity )
                 if (embeddingsData[similarityList.index].modalUrl){
                     const aiMessage: Message = {
                         id: `A${now}`,
@@ -149,7 +156,7 @@ export default function Aicon() {
                         body: JSON.stringify({ question: translatedQuestion, model: eventData?.embedding ?? "text-embedding-3-small" }),
                     });
                     const data = await response.json();
-
+                    console.log(data.paraphrases)
                     let maxValue = 0
                     let properAnswer = ""
                     let index = 0
@@ -603,8 +610,8 @@ export default function Aicon() {
         return () => {
             window.removeEventListener("resize", updateHeight);
             if (intervalRef.current !== null){
-                clearInterval(intervalRef.current);
-                intervalRef.current = null// コンポーネントがアンマウントされたらタイマーをクリア
+                clearInterval(intervalRef.current)
+                intervalRef.current = null
             }
             stopRecognition()
         };
@@ -740,7 +747,7 @@ export default function Aicon() {
             </div>
             <div className="flex-none h-[18%] w-full max-w-96 overflow-auto">
             <div className="mt-2">
-            <textarea className="block w-5/6 max-w-96 mx-auto mb-2 px-2 py-2 text-xs"
+            <textarea className="block w-5/6 max-w-96 mx-auto mb-2 px-2 py-2 text-sm"
                 name="message"
                 placeholder="質問内容(question)"
                 rows={2}
@@ -787,12 +794,19 @@ export default function Aicon() {
             </div>            
             )}
             {wavReady && (
-
-            <div className="flex flex-row w-20 h-5 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
-            <X size={14} />
-            <div className="ml-2 text-xxs">終了する</div>
+            <div>
+                <div className="flex flex-row w-20 h-5 bg-white hover:bg-gray-200 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-5 mb-auto" onClick={() => closeApp()}>
+                <X size={14} />
+                <div className="ml-2 text-xxs">終了する</div>
+                </div>
+                <div className="flex flex-row w-24 h-5 bg-lime-200 hover:bg-lime-400 p-1 rounded-lg shadow-lg relative ml-auto mr-3 mt-40 mb-auto" onClick={() => setStaffModal(true)}>
+                <MessageSquareShare size={14} />
+                <div className="ml-2 text-xxs">人間スタッフ</div>
+                </div>
+                {staffModal && (
+                  <UserSupportChat eventId={attribute!} setStaffModal={setStaffModal} language={language}/>
+                )}
             </div>
-
             )}
             <audio src={wavUrl} ref={audioRef} preload="auto"/>
             <div className="hidden">{wavUrl}</div>

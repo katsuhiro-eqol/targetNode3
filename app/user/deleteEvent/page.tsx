@@ -3,7 +3,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { db } from "@/firebase"
 import { doc, getDoc, deleteDoc, setDoc, getDocs, collection, writeBatch } from "firebase/firestore"
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+//import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
 export default function DeleteEvent(){

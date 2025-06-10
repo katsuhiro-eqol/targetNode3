@@ -6,9 +6,22 @@ import { verify } from 'jsonwebtoken';
 // ミドルウェア関数
 export async function middleware(request: NextRequest) {
   // トークンの取得
-  const token = request.cookies.get('authToken')?.value;
-  console.log("token: ", token)
-  // 保護対象のパスかチェック
+  const token = request.cookies.get('authToken')?.value
+  const staffToken = request.cookies.get('authStaffToken')?.value
+
+  const path = request.nextUrl.pathname
+
+  if (path.startsWith("/user")){
+    if (!token) {
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
+  } else if (path.startsWith("/staff")){
+    if (!staffToken) {
+      return NextResponse.redirect(new URL('/staffAuth', request.url));
+    }
+  }
+
+  /*
   const isProtectedPath = request.nextUrl.pathname.startsWith('/user');
 
   if (isProtectedPath) {
@@ -24,13 +37,13 @@ export async function middleware(request: NextRequest) {
     
     return NextResponse.next();
   }
-
+*/
   return NextResponse.next();
 }
 
 // ミドルウェアを適用するパスを指定
 export const config = {
   matcher: [
-    '/user/:path*'  // user配下のすべてのパス
+    '/user/:path*', '/staff/:path*'
   ]
 };

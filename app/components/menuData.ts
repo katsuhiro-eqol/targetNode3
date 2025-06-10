@@ -40,7 +40,8 @@ export const menuItems: MenuItem[] = [
         { title: 'イベント複製', path: '/user/copyEvent' },
         { title: 'イベント削除', path: '/user/deleteEvent' },
         { title: 'QRコード発行', path: '/user/qrCodeGenerator' },
-        { title: '進捗確認・分析', path: '/user/eventInspector' }
+        { title: '進捗確認・分析', path: '/user/eventInspector' },
+        { title: 'メッセージ管理', path: '/user/messageManager' }
       ]
     },
     {
@@ -62,6 +63,25 @@ export const menuItems: MenuItem[] = [
       submenuItems: null
     }
   ];
+
+  export const staffItems:MenuItem[] = [
+    {
+      title: 'ホーム',
+      icon: Home,
+      path: '/staff',
+      submenu: false,
+      submenuItems: null
+    },
+    {
+      title: 'メッセージ対応',
+      icon: Home,
+      path: '/staff/messageManager',
+      submenu: false,
+      submenuItems: null
+    },
+  ];
+
+
 
   export const adminItems:MenuItem[] = [
     {
