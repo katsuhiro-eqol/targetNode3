@@ -1,25 +1,27 @@
 import { OpenAI } from 'openai'
 import { NextRequest, NextResponse } from 'next/server'
+import { create } from 'domain'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
 export async function POST(req: NextRequest) {
-  const { question, model } = await req.json()
+  const { question, model, history } = await req.json()
 
-  // Step 1: パラフレーズ生成
+  console.log(history)
+  console.log(createPrompt(question, history))
   const prompt = `
-次の文章と意味が似ているが、できるだけ異なる語彙や言い回しを使った5つの文を生成してください：
-
-「${question}」
-
-戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3", "文4", "文5"]
-`
+  次の文章と意味が似ているが、できるだけ異なる語彙や言い回しを使った3つの文を生成してください：
+  
+  「${question}」
+  
+  戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
+  `
 
   const chatRes = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [{ role: 'user', content: prompt }],
+    model: 'gpt-4.1-nano',
+    messages: [{ role: 'user', content: createPrompt(question,history)}],
     temperature: 0.8
   })
 
@@ -47,4 +49,48 @@ export async function POST(req: NextRequest) {
     paraphrases,
     embeddings  // number[][]（文数 × ベクトル次元）
   })
+}
+
+const createPrompt = (question:string, history:{user:string, aicon:string}[]) => {
+    if (Array.isArray(history)){
+        if (history.length > 3){
+            let content = ""
+            for (let i = 0; i < 3; i++){
+                const s = `Q${i}:${history[history.length+i-3].user}\nA${i}:${history[history.length+i-3].aicon}`
+                content += s
+            }
+            content += `Q4:${question}`
+            const prompt = `以下のQ&Aの流れから最後Qの意図を把握し、1文の質問で表現してほしい。その際出来るだけ異なる語彙を使った3つの候補文を生成すること
+  
+            ${content}
+            
+            戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
+            `
+            return prompt
+        } else {
+            const n = history.length
+            let content = ""
+            for (let i = 0; i < n; i++){
+                const s = `Q${i}:${history[history.length+i-n].user}\nA${i}:${history[history.length+i-n].aicon}`
+                content += s
+            }
+            content += `Q${n+1}:${question}`
+            const prompt = `以下のQ&Aの流れから最後Qの意図を把握し、1文の質問で表現してほしい。その際出来るだけ異なる語彙を使った3つの候補文を生成すること
+  
+            ${content}
+            
+            戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
+            `
+            return prompt            
+        }
+    } else {
+        const prompt = `
+        次の文章と意味が似ているが、できるだけ異なる語彙や言い回しを使った3つの文を生成してください：
+        
+        「${question}」
+        
+        戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
+        `
+        return prompt        
+    }
 }

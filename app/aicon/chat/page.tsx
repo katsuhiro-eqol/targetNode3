@@ -19,6 +19,7 @@ export default function Aicon() {
     const [initialSlides, setInitialSlides] = useState<string|null>(null)
     const [userInput, setUserInput] = useState<string>("")
     const [messages, setMessages] = useState<Message[]>([])
+    const [history, setHistory] = useState<{user: string, aicon: string}[]>([])
     const [eventData, setEventData] = useState<EventData|null>(null)
     const [langList, setLangList] = useState<string[]>([])
     const [dLang, setDLang] = useState<string>("日本語")//表示用言語
@@ -106,6 +107,7 @@ export default function Aicon() {
             if (similarityList.similarity > 0.5){
                 setWavUrl(embeddingsData[similarityList.index].voiceUrl)
                 const answer = setAnswer(embeddingsData[similarityList.index], language)
+                console.log(similarityList.similarity )
                 if (embeddingsData[similarityList.index].modalUrl){
                     const aiMessage: Message = {
                         id: `A${now}`,
@@ -118,7 +120,7 @@ export default function Aicon() {
                     };
                     setMessages(prev => [...prev, aiMessage]);
                     if (attribute){
-                        await saveMessage(userMessage, aiMessage, attribute)
+                        await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, similarityList.index)
                     }
                 } else {
                     const aiMessage: Message = {
@@ -132,7 +134,7 @@ export default function Aicon() {
                     };
                     setMessages(prev => [...prev, aiMessage]);
                     if (attribute){
-                        await saveMessage(userMessage, aiMessage, attribute)
+                        await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, similarityList.index)
                     }
                 }
                 const sl = createSlides(embeddingsData[similarityList.index].frame)
@@ -146,10 +148,10 @@ export default function Aicon() {
                         headers: {
                         "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({ question: translatedQuestion, model: eventData?.embedding ?? "text-embedding-3-small" }),
+                        body: JSON.stringify({ question: translatedQuestion, model: eventData?.embedding ?? "text-embedding-3-small", history:history }),
                     });
                     const data = await response.json();
-
+                    console.log(data.paraphrases)
                     let maxValue = 0
                     let properAnswer = ""
                     let index = 0
@@ -175,7 +177,7 @@ export default function Aicon() {
                             };
                             setMessages(prev => [...prev, aiMessage]);
                             if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute)
+                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, index)
                             }
                         } else {
                             const aiMessage: Message = {
@@ -189,7 +191,7 @@ export default function Aicon() {
                             };
                             setMessages(prev => [...prev, aiMessage]);
                             if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute)
+                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, index)
                             }
                         }
                         const sl = createSlides(embeddingsData[similarityList.index].frame)
@@ -211,7 +213,7 @@ export default function Aicon() {
                             };
                             setMessages(prev => [...prev, aiMessage]);
                             if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute)
+                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, n)
                             }
                         } else {
                             const aiMessage: Message = {
@@ -225,7 +227,7 @@ export default function Aicon() {
                             };
                             setMessages(prev => [...prev, aiMessage]);
                             if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute)
+                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, n)
                             }
                         }                
                         const sl = createSlides(badQuestion[n].frame)
@@ -375,11 +377,19 @@ export default function Aicon() {
         }
     }
 
-    const saveMessage = async (userMessage:Message, message:Message, attr:string) => {
+    const saveMessage = async (userMessage:Message, message:Message, attr:string, translatedQuestion:string, index:number) => {
+        const hdata = {
+            user:translatedQuestion,
+            aicon:embeddingsData[index].answer
+        }
+        setHistory(prev => [...prev, hdata])
+
         const data = {
             id:userMessage.id,
             user:userMessage.text,
+            uJapanese:translatedQuestion,
             aicon:message.text,
+            aJapanese: embeddingsData[index].answer,
             nearestQ:message.nearestQ,
             similarity:message.similarity
         }
