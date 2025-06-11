@@ -5,11 +5,11 @@ import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk"
 //import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Mic, Send, Eraser, Paperclip, X, MessageSquareShare } from 'lucide-react';
+import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
 import { db } from "@/firebase";
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import Modal from "../../components/modalModal"
-import {Message, EmbeddingsData, EventData, Foreign} from "@/types"
+import {Message, EmbeddingsData, EventData} from "@/types"
 type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
@@ -69,12 +69,12 @@ export default function Aicon() {
         setSlides(Array(1).fill(initialSlides))
         setModalUrl(null)
         setModalFile(null)
-
+  
         const date = new Date()
         const offset = date.getTimezoneOffset() * 60000
         const localDate = new Date(date.getTime() - offset)
         const now = localDate.toISOString()
-
+  
         const userMessage: Message = {
             id: now,
             text: userInput,
@@ -84,163 +84,126 @@ export default function Aicon() {
             similarity:null,
             nearestQ:null
         }
-        
         setMessages(prev => [...prev, userMessage]);
-
+  
         try {
-            const response = await fetch("/api/embedding2", {
+          const response = await fetch("/api/embedding2", {
+              method: "POST",
+              headers: {
+              "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ input: userInput, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
+          });
+          setUserInput("")
+          const data = await response.json();
+          if (response.status !== 200) {
+            throw data.error || new Error(`Request failed with status ${response.status}`);
+          }
+          const translatedQuestion = data.input
+          const similarityList = findMostSimilarQuestion(data.embedding)
+  
+          //類似質問があったかどうかで場合わけ
+          if (similarityList.similarity > 0.5){
+              setWavUrl(embeddingsData[similarityList.index].voiceUrl)
+              const answer = setAnswer(embeddingsData[similarityList.index], language)
+              console.log(similarityList.similarity )
+              const aiMessage: Message = {
+                id: `A${now}`,
+                text: answer,
+                sender: 'AIcon',
+                modalUrl:judgeNull(embeddingsData[similarityList.index].modalUrl),
+                modalFile:judgeNull(embeddingsData[similarityList.index].modalFile),
+                similarity:similarityList.similarity,
+                nearestQ:embeddingsData[similarityList.index].question
+            };
+            setMessages(prev => [...prev, aiMessage]);
+            if (attribute){
+                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, similarityList.index)
+            }
+            const sl = createSlides(embeddingsData[similarityList.index].frame)
+            setSlides(sl)
+          //類似質問不在の場合に会話履歴も考慮して質問意図を把握し、質問文候補を複数生成の上、それとの一致度を比較するアルゴリズムを追加
+          }else{
+            console.log(history)
+            try {
+              const response = await fetch("/api/paraphrase", {
                 method: "POST",
                 headers: {
                 "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ input: userInput, model: eventData?.embedding ?? "text-embedding-3-small", language: language }),
-            });
-            setUserInput("")
-            const data = await response.json();
-            const translatedQuestion = data.input
-
-            if (response.status !== 200) {
-                throw data.error || new Error(`Request failed with status ${response.status}`);
-                }
-            const similarityList = findMostSimilarQuestion(data.embedding)
-
-            if (similarityList.similarity > 0.5){
-                setWavUrl(embeddingsData[similarityList.index].voiceUrl)
-                const answer = setAnswer(embeddingsData[similarityList.index], language)
-                console.log(similarityList.similarity )
-                if (embeddingsData[similarityList.index].modalUrl){
-                    const aiMessage: Message = {
-                        id: `A${now}`,
-                        text: answer,
-                        sender: 'AIcon',
-                        modalUrl:embeddingsData[similarityList.index].modalUrl,
-                        modalFile:embeddingsData[similarityList.index].modalFile,
-                        similarity:similarityList.similarity,
-                        nearestQ:embeddingsData[similarityList.index].question
-                    };
-                    setMessages(prev => [...prev, aiMessage]);
-                    if (attribute){
-                        await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, similarityList.index)
-                    }
-                } else {
-                    const aiMessage: Message = {
-                        id: `A${now}`,
-                        text: answer,
-                        sender: 'AIcon',
-                        modalUrl:null,
-                        modalFile:null,
-                        similarity:similarityList.similarity,
-                        nearestQ:embeddingsData[similarityList.index].question
-                    };
-                    setMessages(prev => [...prev, aiMessage]);
-                    if (attribute){
-                        await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, similarityList.index)
-                    }
-                }
-                const sl = createSlides(embeddingsData[similarityList.index].frame)
+                body: JSON.stringify({ question: translatedQuestion, model: eventData?.embedding ?? "text-embedding-3-small", history:history }),
+              });
+              const data = await response.json();
+              console.log(data.paraphrases)
+              let maxValue = 0
+              let properAnswer = ""
+              let index = 0
+              for (const embedding of data.embeddings){
+                  const similarityList2 = findMostSimilarQuestion(embedding)
+                  if (similarityList2.similarity > maxValue){
+                      maxValue = similarityList2.similarity
+                      properAnswer = setAnswer(embeddingsData[similarityList2.index], language)
+                      index = similarityList2.index
+                  }
+              }
+              if (maxValue > 0.5) {
+                console.log(maxValue)
+                setWavUrl(embeddingsData[index].voiceUrl)
+                const aiMessage: Message = {
+                  id: `A${now}`,
+                  text: properAnswer,
+                  sender: 'AIcon',
+                  modalUrl:judgeNull(embeddingsData[index].modalUrl),
+                  modalFile:judgeNull(embeddingsData[index].modalFile),
+                  similarity:maxValue,
+                  nearestQ:embeddingsData[index].question
+                };
+                console.log("frame",embeddingsData[index].frame)
+                const sl = createSlides(embeddingsData[index].frame)
                 setSlides(sl)
-
-            //類似質問を生成し、それとの一致度を比較するアルゴリズムを追加
-            }else{
-                try {
-                    const response = await fetch("/api/paraphrase", {
-                        method: "POST",
-                        headers: {
-                        "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ question: translatedQuestion, model: eventData?.embedding ?? "text-embedding-3-small", history:history }),
-                    });
-                    const data = await response.json();
-                    console.log(data.paraphrases)
-                    let maxValue = 0
-                    let properAnswer = ""
-                    let index = 0
-                    for (const embedding of data.embeddings){
-                        const similarityList = findMostSimilarQuestion(embedding)
-                        if (similarityList.similarity > maxValue){
-                            maxValue = similarityList.similarity
-                            properAnswer = setAnswer(embeddingsData[similarityList.index], language)
-                            index = similarityList.index
-                        }
-                    }
-
-                    if (maxValue > 0.5) {
-                        if (embeddingsData[index].modalUrl){
-                            const aiMessage: Message = {
-                                id: `A${now}`,
-                                text: properAnswer,
-                                sender: 'AIcon',
-                                 modalUrl:embeddingsData[index].modalUrl,
-                                modalFile:embeddingsData[index].modalFile,
-                                similarity:maxValue,
-                                nearestQ:embeddingsData[index].question
-                            };
-                            setMessages(prev => [...prev, aiMessage]);
-                            if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, index)
-                            }
-                        } else {
-                            const aiMessage: Message = {
-                                id: `A${now}`,
-                                text: properAnswer,
-                                sender: 'AIcon',
-                                modalUrl:null,
-                                modalFile:null,
-                                similarity:maxValue,
-                                nearestQ:embeddingsData[index].question
-                            };
-                            setMessages(prev => [...prev, aiMessage]);
-                            if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, index)
-                            }
-                        }
-                        const sl = createSlides(embeddingsData[similarityList.index].frame)
-                        setSlides(sl)    
-                    } else {
-                        const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できなかった質問")
-                        const n = Math.floor(Math.random() * badQuestion.length)
-                        setWavUrl(badQuestion[n].voiceUrl)
-                        const answer = setAnswer(badQuestion[n], language)
-                        if (badQuestion[n].modalUrl){
-                            const aiMessage: Message = {
-                                id: `A${now}`,
-                                text: answer,
-                                sender: 'AIcon',
-                                modalUrl:badQuestion[n].modalUrl,
-                                modalFile:badQuestion[n].modalFile,
-                                similarity:similarityList.similarity,
-                                nearestQ:embeddingsData[similarityList.index].question
-                            };
-                            setMessages(prev => [...prev, aiMessage]);
-                            if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, n)
-                            }
-                        } else {
-                            const aiMessage: Message = {
-                                id: `A${now}`,
-                                text: answer,
-                                sender: 'AIcon',
-                                modalUrl:null,
-                                modalFile:null,
-                                similarity:similarityList.similarity,
-                                nearestQ:embeddingsData[similarityList.index].question
-                            };
-                            setMessages(prev => [...prev, aiMessage]);
-                            if (attribute){
-                                await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, n)
-                            }
-                        }                
-                        const sl = createSlides(badQuestion[n].frame)
-                        setSlides(sl)                             
-                    }
-                } catch (error) {
-                    console.error(error);
+                setMessages(prev => [...prev, aiMessage]);
+                if (attribute){
+                    await saveMessage(userMessage, aiMessage, attribute, translatedQuestion, index)
                 }
+  
+              //類似質問が見つからなかった場合のアルゴリズム。分類できなかった質問の回答文が複数あることを想定
+              } else {
+                const badQuestion = embeddingsData.filter((obj) => obj.question == "分類できなかった質問")
+                const n = Math.floor(Math.random() * badQuestion.length)
+                setWavUrl(badQuestion[n].voiceUrl)
+                const answer = setAnswer(badQuestion[n], language)
+                const aiMessage: Message = {
+                  id: `A${now}`,
+                  text: answer,
+                  sender: 'AIcon',
+                  modalUrl:judgeNull(badQuestion[n].modalUrl),
+                  modalFile:judgeNull(badQuestion[n].modalFile),
+                  similarity:similarityList.similarity,
+                  nearestQ:embeddingsData[similarityList.index].question
+                };
+                setMessages(prev => [...prev, aiMessage]);
+                if (attribute){
+                    await saveMessage(userMessage, aiMessage, attribute, translatedQuestion,-1)
+                }   
+                  const sl = createSlides(badQuestion[n].frame)
+                  setSlides(sl)                             
+                }
+            } catch (error) {
+                console.error(error);
             }
+          }
         } catch(error) {
         console.error(error);
         }
-    }
+      }
+  
+      const judgeNull = (value:string) => {
+        if (value === ""){
+          return null
+        } else {
+          return value
+        }
+      }
 
     function setAnswer(selectedData:EmbeddingsData, lang:string){
         if (lang === "日本語"){
@@ -378,22 +341,41 @@ export default function Aicon() {
     }
 
     const saveMessage = async (userMessage:Message, message:Message, attr:string, translatedQuestion:string, index:number) => {
-        const hdata = {
-            user:translatedQuestion,
-            aicon:embeddingsData[index].answer
-        }
-        setHistory(prev => [...prev, hdata])
+        if (index === -1){
+            const hdata = {
+                user:translatedQuestion,
+                aicon:"回答不能です"
+            }
+            setHistory(prev => [...prev, hdata])
 
-        const data = {
-            id:userMessage.id,
-            user:userMessage.text,
-            uJapanese:translatedQuestion,
-            aicon:message.text,
-            aJapanese: embeddingsData[index].answer,
-            nearestQ:message.nearestQ,
-            similarity:message.similarity
+            const data = {
+                id:userMessage.id,
+                user:userMessage.text,
+                uJapanese:translatedQuestion,
+                aicon:message.text,
+                aJapanese: "回答不能",
+                nearestQ:message.nearestQ,
+                similarity:message.similarity
+            }
+            await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data)})
+        }else {
+            const hdata = {
+                user:translatedQuestion,
+                aicon:embeddingsData[index].answer
+            }
+            setHistory(prev => [...prev, hdata])
+
+            const data = {
+                id:userMessage.id,
+                user:userMessage.text,
+                uJapanese:translatedQuestion,
+                aicon:message.text,
+                aJapanese: embeddingsData[index].answer,
+                nearestQ:message.nearestQ,
+                similarity:message.similarity
+            }
+            await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data)})
         }
-        await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data)})
     }
 
 

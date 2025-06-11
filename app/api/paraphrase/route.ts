@@ -9,16 +9,6 @@ const openai = new OpenAI({
 export async function POST(req: NextRequest) {
   const { question, model, history } = await req.json()
 
-  console.log(history)
-  console.log(createPrompt(question, history))
-  const prompt = `
-  次の文章と意味が似ているが、できるだけ異なる語彙や言い回しを使った3つの文を生成してください：
-  
-  「${question}」
-  
-  戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
-  `
-
   const chatRes = await openai.chat.completions.create({
     model: 'gpt-4.1-nano',
     messages: [{ role: 'user', content: createPrompt(question,history)}],
@@ -52,7 +42,28 @@ export async function POST(req: NextRequest) {
 }
 
 const createPrompt = (question:string, history:{user:string, aicon:string}[]) => {
-    if (Array.isArray(history)){
+    if (Array.isArray(history) && history.length>0){
+        const content = `Q1:${history[history.length-1].user}\nA1:${history[history.length-1].aicon}\nQ2:${question}`
+        const prompt = `以下のQ&Aの流れから最後Q(Q2)の意図を解釈して1文の質問で表現してほしい。その際出来るだけ異なる語彙を使った3つの候補文を生成すること
+  
+        ${content}
+        
+        戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
+        `
+        return prompt
+    } else {
+        const prompt = `
+        次の文章と意味が似ているが、できるだけ異なる語彙や言い回しを使った3つの文を生成してください：
+        
+        「${question}」
+        
+        戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
+        `
+        return prompt        
+    }
+}
+
+/*
         if (history.length > 3){
             let content = ""
             for (let i = 0; i < 3; i++){
@@ -83,14 +94,4 @@ const createPrompt = (question:string, history:{user:string, aicon:string}[]) =>
             `
             return prompt            
         }
-    } else {
-        const prompt = `
-        次の文章と意味が似ているが、できるだけ異なる語彙や言い回しを使った3つの文を生成してください：
-        
-        「${question}」
-        
-        戻り値は次の形式の文字列で返すこと：["文1", "文2", "文3"]
-        `
-        return prompt        
-    }
-}
+*/

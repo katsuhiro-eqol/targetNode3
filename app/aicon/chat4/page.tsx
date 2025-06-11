@@ -3,7 +3,6 @@ import "regenerator-runtime";
 import React from "react";
 import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from 'next/navigation';
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk"
 //import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, Send, Eraser, Paperclip, X, MessageSquareShare } from 'lucide-react';
@@ -12,7 +11,7 @@ import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from 
 import Modal from "../../components/modalModal"
 import UserSupportChat from "../../components/userSupportChat"
 //import StaffModal from "../../components/staffModal"
-import {Message, EmbeddingsData, EventData, Foreign} from "@/types"
+import {Message, EmbeddingsData, EventData} from "@/types"
 type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
 
 const no_sound = "https://firebasestorage.googleapis.com/v0/b/targetproject-394500.appspot.com/o/aicon_audio%2Fno_sound.wav?alt=media&token=85637458-710a-44f9-8a1e-1ceb30f1367d"
@@ -57,7 +56,6 @@ export default function Aicon3() {
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null)
     const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
-    const router = useRouter()
 
     const useSearchParams = ()  => {
         const searchParams = useSearchParamsOriginal();
