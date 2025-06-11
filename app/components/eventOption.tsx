@@ -104,7 +104,22 @@ export default function EventOption({organization, setImage, setStartTime, setEn
         <div>
             <div className="font-semibold mt-3 text-sm ml-3 underline">UI画面</div>
             <UIOption uiOption={uiOption} setImage={setImage} organization={organization} setUiOption={setUiOption} />
-
+            <div className="font-semibold mt-6 text-sm ml-3 underline">人間スタッフとのチャット有無</div>
+            {!isHumanStaff ? (
+            <div className="flex flex-row gap-x-4 h-5 ml-3">
+                <CircleDot className="mt-3 w-4 h-4 text-blue-500" onClick={()=>setIsHumanStaff(false)} />
+                <div className="mt-3 text-xs">スタッフチャットなし</div>
+                <Circle className="mt-3 w-4 h-4 text-gray-400" onClick={()=>setIsHumanStaff(true)} />
+                <div className="mt-3 text-xs">スタッフチャットあり</div>
+            </div>                    
+            ):(
+            <div className="flex flex-row gap-x-4 h-5 ml-3">
+                <Circle className="mt-3 w-4 h-4 text-gray-400" onClick={()=>setIsHumanStaff(false)} />
+                <div className="mt-3 text-xs">スタッフチャットなし</div>
+                <CircleDot className="mt-3 w-4 h-4 text-blue-500" onClick={()=>setIsHumanStaff(true)}/>
+                <div className="mt-3 text-xs">スタッフチャットあり</div>
+            </div>         
+            )}
             <div className="font-semibold mt-8 text-sm ml-3 underline">利用期間（ユーザーが利用できる期間）</div>
             <div className="flex flex-row gap-x-4">
                 <div className="ml-3 mt-3 text-xs">利用開始日時: </div>

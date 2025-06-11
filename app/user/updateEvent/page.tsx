@@ -12,6 +12,7 @@ export default function UpdateEvent(){
     const [event, setEvent] = useState<string>("")
     const [organization, setOrganization] = useState<string>("")
     const [eventData, setEventData] = useState<Event|null>(null)
+    const [isHumanStaff, setIsHumanStaff] = useState<boolean>(false)
     const [startTime, setStartTime] = useState<string>("制限なし")//利用開始時間
     const [endTime, setEndTime] = useState<string>("制限なし")//利用終了時間
     const [image, setImage] = useState<Image>({name:"AI-con_man_01.png", url:"/AI-con_man_01.png"})
@@ -127,7 +128,7 @@ export default function UpdateEvent(){
                 <div className="text-sm font-semibold text-blue-600">利用期間（現在の設定）</div>
                 <div className="text-sm font-semibold text-blue-600">{eventData.period}</div>
                 </div>
-                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
+                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime} isHumanStaff={isHumanStaff} setIsHumanStaff={setIsHumanStaff}/>
                 <div className="flex flex-row gap-x-4">
                 <button className="h-10 mt-10 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
                 <button className="h-10 mt-10 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" onClick={() => updateEvent()} >イベント更新</button>
