@@ -1,3 +1,4 @@
+/*
 "use client"
 import "regenerator-runtime";
 import React from "react";
@@ -676,11 +677,6 @@ export default function Aicon3() {
                     clearInterval(intervalRef.current);
                     intervalRef.current = null
                 }
-                /*
-                if (modalUrl){
-                    setIsModal(true)
-                } 
-                */
             }
         }
     }, [currentIndex]);
@@ -821,3 +817,4 @@ export default function Aicon3() {
         </div>
     );
 }
+*/

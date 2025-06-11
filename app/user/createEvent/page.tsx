@@ -26,16 +26,16 @@ export default function CreateEvent(){
     const [isEventOption, setIsEventOption] = useState<boolean>(false)
     const [pronunciations, setPronunciations] = useState<Pronunciation[]|null>(null)
     const [isNewPronunciation, setIsNewPronunciation] = useState<boolean>(false)
-
+    const [isHumanStaff, setIsHumanStaff] = useState<boolean>(false)
     const [startTime, setStartTime] = useState<string>("制限なし")//利用開始時間
     const [endTime, setEndTime] = useState<string>("制限なし")//利用終了時間
     const options = ["英語", "中国語（簡体）", "中国語（繁体）", "韓国語"];
     const otherOptions = ["その他","フランス語","ポルトガル語","スペイン語"]
     const voiceList = ["voice_m", "voice_w2"]
 
-    const loadEvents = async () => {
+    const loadEvents = async (org:string) => {
         try {           
-            const docRef = doc(db, "Users", organization)
+            const docRef = doc(db, "Users", org)
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data()
@@ -100,7 +100,8 @@ export default function CreateEvent(){
                 image:image,
                 qaData: false,
                 pronunciation:pronunciations,
-                code: code
+                code: code,
+                isHumanStaff: isHumanStaff
             }
             
                 const eventRef = collection(db, "Events")
@@ -161,6 +162,7 @@ export default function CreateEvent(){
             const org = sessionStorage.getItem("user")
             if (org){
                 setOrganization(org)
+                loadEvents(org)
             }
           }
     }, [])
@@ -234,7 +236,7 @@ export default function CreateEvent(){
             </div>
             <div className="mt-2 text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
             {isEventOption && (
-                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
+                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime} isHumanStaff={isHumanStaff} setIsHumanStaff={setIsHumanStaff} />
             )}
             </div>
             <div className="flex flex-row gap-x-4">
