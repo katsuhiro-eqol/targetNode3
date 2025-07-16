@@ -223,6 +223,7 @@ export default function CreateEvent(){
             </div>
             ))}
             </div>
+
             <div className="flex flex-row gap-x-4">
             <div className="font-semibold mt-2 text-sm ml-3 underline">読み登録</div>
             <button className="px-2 ml-3 mt-1 text-xs border-2 bg-gray-200 hover:bg-gray-300" onClick={() => setIsNewPronunciation(true)}>+追加</button>

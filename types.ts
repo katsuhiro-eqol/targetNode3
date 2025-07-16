@@ -143,7 +143,9 @@ export interface StartText {
 export interface ConvData {
     id:string;
     user:string;
+    uJapanese:string;
     aicon:string;
+    aJapanese:string;
     similarity:number;
     nearestQ:string;
 }

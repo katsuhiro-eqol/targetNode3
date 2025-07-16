@@ -47,7 +47,7 @@ export default function CopyEvent(){
             const destId = `${organization}_${newEvent}`
             console.log(destId)
             try {
-                await copyMainDocument(sourceId, destId)
+                await copyMainDocument(sourceId, destId )
                 await copySubdocuments(sourceId, destId)
                 const usersRef = collection(db, "Users")
                 await updateDoc(doc(usersRef, organization), {events: arrayUnion(newEvent)})
@@ -69,8 +69,9 @@ export default function CopyEvent(){
         const sourceDoc = await getDoc(doc(db, "Events",sourceId))
         if (!sourceDoc.exists()) {
             throw new Error("元のドキュメントが存在しません");
-        }
-        await setDoc(doc(db,"Events",destId), sourceDoc.data())        
+        } else {
+            await setDoc(doc(db,"Events",destId), sourceDoc.data())  
+        } 
     }
 
     const copySubdocuments = async (sourceId:string, destId:string) => {

@@ -40,8 +40,7 @@ export const menuItems: MenuItem[] = [
         { title: 'イベント複製', path: '/user/copyEvent' },
         { title: 'イベント削除', path: '/user/deleteEvent' },
         { title: 'QRコード発行', path: '/user/qrCodeGenerator' },
-        { title: '進捗確認・分析', path: '/user/eventInspector' },
-        { title: 'メッセージ管理', path: '/user/messageManager' }
+        { title: '会話応答分析', path: '/user/eventInspector' }
       ]
     },
     {
