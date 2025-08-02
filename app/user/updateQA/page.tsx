@@ -315,6 +315,26 @@ export default function UpdaateQA(){
         }        
     }
 
+    const resetRead = async() => {
+        setStatus2("音声合成の準備をしています")
+        setPronunciations([])
+        if (eventData && selectedQA){
+            const data = {
+                read: selectedQA.answer,
+                pronunsiations:[]
+            }
+            const eventId = organization + "_" + event
+            const readRef = doc(db, "Events", eventId, "QADB", selectedQA?.id)
+            await setDoc(readRef,data,{merge:true})
+            const hashString = md5(selectedQA.answer)
+            const voiceId = eventData!.voice + "-" + hashString
+            await registerVoice(organization, event, selectedQA.answer, selectedQA.answer, eventData.voice, voiceId, selectedQA.id)
+            setStatus2("AIボイスの更新が完了しました")
+            setIsUpdateFinished(true)
+        }
+        
+    }
+
     const updateVoice = async() => {
         const readText = convertPronunciation(pronunciations, selectedQA!.read)
         console.log(readText)
@@ -331,7 +351,7 @@ export default function UpdaateQA(){
             const eventId = organization + "_" + event
             const docRef = doc(db, "Events", eventId, "QADB", selectedQA?.id)
             await setDoc(docRef, data, {merge:true})
-            setStatus2("Q&Aの更新が完了しました")
+            setStatus2("AIボイスの更新が完了しました")
             setIsUpdateFinished(true)
         }
     }
@@ -680,11 +700,12 @@ export default function UpdaateQA(){
                     <div className="flex flex-row gap-x-4">
                     <div className="font-semibold mt-2 text-sm ml-3">読み登録</div>
                     <button className="px-2 ml-3 mt-1 text-xs border-2 bg-gray-200 hover:bg-gray-300" onClick={() => setIsNewPronunciation(true)}>+追加</button>
+                    <button className="px-2 ml-3 mt-1 text-xs border-2 bg-red-200 hover:bg-red-300" onClick={() => resetRead()}>読み補正を初期化</button>
                     </div>
                     <PronunciationRegistration pronunciations={pronunciations} setPronunciations={setPronunciations} isNewPronunciation={isNewPronunciation} setIsNewPronunciation={setIsNewPronunciation} />
                     {pronunciations && (
                     <div className="ml-3 mt-5">
-                    <div className="text-xs text-red-500">注意：現在の読みに対して追加で読み辞書を適用します。</div>
+                    <div className="text-xs text-red-500">注意：現在の読みに対して追加で読み辞書を適用します</div>
                     <div className="flex flex-row gap-x-4">
                     <button className="h-10 my-5 px-2 border-2 rounded" onClick={cancelButton}>別の変更をする</button>
                     <button className="h-10 my-5 ml-3 px-2 border-2 bg-amber-200 rounded hover:bg-amber-300" disabled={isUpdateFinished} onClick={() => updateVoice()}>読みを修正</button>

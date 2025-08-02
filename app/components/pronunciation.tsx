@@ -23,7 +23,8 @@ export const PronunciationRegistration = ({pronunciations, setPronunciations, is
     const isHiraganaOnly = (input:string) => {
         const hiraganaRegex = /^[\u3041-\u3096\u3099-\u309C\u309Dー\s]*$/;
         return hiraganaRegex.test(input);
-      }
+    }
+
     const registrationPronunciation = () => {
         if (!newText || !read){
             alert("入力がされていません")
@@ -62,7 +63,7 @@ export const PronunciationRegistration = ({pronunciations, setPronunciations, is
         <div className="w-2/3 ml-3 my-1 p-2 bg-gray-100 rounded">
         <p className="text-sm text-gray-600">
             登録された読み: {pronunciationArray.join(', ') || 'なし'}
-            </p>
+        </p>
         </div>
         {isNewPronunciation && (
             <div>
