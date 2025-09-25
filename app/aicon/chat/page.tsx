@@ -357,7 +357,7 @@ export default function Aicon() {
                 nearestQ:message.nearestQ,
                 similarity:message.similarity
             }
-            await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data)})
+            await setDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data), language:language, date:userMessage.id}, {merge:true})
         }else {
             const hdata = {
                 user:translatedQuestion,
@@ -374,7 +374,7 @@ export default function Aicon() {
                 nearestQ:message.nearestQ,
                 similarity:message.similarity
             }
-            await updateDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data)})
+            await setDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data), language:language, date:userMessage.id}, {merge:true})
         }
     }
 
@@ -383,13 +383,8 @@ export default function Aicon() {
         const date = new Date()
         const offset = date.getTimezoneOffset() * 60000
         const localDate = new Date(date.getTime() - offset)
-        const isoString = localDate.toISOString().split('T')[0]
-        const random = randomStr(6)
         const now = localDate.toISOString()
-
-        const convId = `${isoString}_${random}`
-        setConvId(convId)
-        await setDoc(doc(db,"Events",attr,"Conversation",convId), {conversations:[], langage:language, date:now})
+        setConvId(now)
     }
 
     const getLanguageList = () => {
