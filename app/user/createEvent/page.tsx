@@ -101,7 +101,8 @@ export default function CreateEvent(){
                 qaData: false,
                 pronunciation:pronunciations,
                 code: code,
-                isStaffChat: isHumanStaff
+                isStaffChat: isHumanStaff,
+                counter:0
             }
             
                 const eventRef = collection(db, "Events")

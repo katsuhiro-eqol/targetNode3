@@ -5,10 +5,11 @@ import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk"
 //import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Mic, Send, Eraser, Paperclip, X } from 'lucide-react';
+import { Mic, Send, Eraser, Paperclip, X, LoaderCircle } from 'lucide-react';
 import { db } from "@/firebase";
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore";
 import Modal from "../../components/modalModal"
+import UsersManual from "../../components/usersManual"
 import {Message, EmbeddingsData, EventData} from "@/types"
 type LanguageCode = 'ja-JP' | 'en-US' | 'zh-CN' | 'zh-TW' | 'ko-KR' | 'fr-FR' | 'pt-BR' | 'es-ES'
 
@@ -41,6 +42,9 @@ export default function Aicon() {
     const [recognizing, setRecognizing] = useState<boolean>(false)
     const [interim, setInterim] = useState<string>("")
     const [finalTranscript, setFinalTranscript] = useState<string>("")
+    const [sttStartTime, setSttStartTime] = useState<number>(0)
+    const [sttDuration, setSttDuration] = useState<number>(0)
+    const [isManual, setIsManual] = useState<boolean>(false)
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
@@ -61,7 +65,7 @@ export default function Aicon() {
     const code = searchParams.get("code")
 
     async function getAnswer() {        
-        sttStop()
+        await sttStop()
         setFinalTranscript("")
         setInterim("")
         setWavUrl(no_sound)
@@ -69,7 +73,8 @@ export default function Aicon() {
         setSlides(Array(1).fill(initialSlides))
         setModalUrl(null)
         setModalFile(null)
-  
+        console.log("sttDuration", sttDuration)
+
         const date = new Date()
         const offset = date.getTimezoneOffset() * 60000
         const localDate = new Date(date.getTime() - offset)
@@ -192,6 +197,13 @@ export default function Aicon() {
                 console.error(error);
             }
           }
+          // 現在進行中のSTT時間も含めて計算
+          const currentSttDuration = sttStartTime !== 0 ? sttDuration + (new Date().getTime() - sttStartTime) : sttDuration;
+          await incrementCounter(attribute!, currentSttDuration)
+          
+          // getAnswer実行後にsttDurationをリセット
+          setSttDuration(0)
+
         } catch(error) {
         console.error(error);
         }
@@ -283,6 +295,11 @@ export default function Aicon() {
         imageList = imageList.concat(Array(4).fill(initialSlides))
         //imageList = imageList.concat(initialSlides)
         return imageList
+    }
+
+    const incrementCounter = async (attribute:string, duration:number) => {
+        const counterRef = doc(db, "Events", attribute)
+        await updateDoc(counterRef, { counter: increment(1), sttDuration: increment(duration) })
     }
 
     async function loadQAData(attr:string){
@@ -487,6 +504,10 @@ export default function Aicon() {
 
         const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
         const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+        //sttの積算時間を把握するためのコード
+        const now = new Date()
+        const startTime = now.getTime()
+        setSttStartTime(startTime)
 
         recognizer.recognizing = (_s, e) => {
             setInterim(e.result.text);
@@ -517,11 +538,19 @@ export default function Aicon() {
         );
     };
     
-    const stopRecognition = () => {
+    const stopRecognition = async() => {
         const recognizer = recognizerRef.current;
         clearSilenceTimer();
         if (!recognizer) return;
 
+        //sttの積算時間を取得するためのコード
+        const now = new Date()
+        const endTime = now.getTime()
+        if (sttStartTime !== 0){
+            const currentDuration = endTime - sttStartTime
+            setSttDuration((prev) => prev + currentDuration)
+            setSttStartTime(0)
+        }
         recognizer.stopContinuousRecognitionAsync(
             () => {
             recognizer.close();
@@ -562,6 +591,10 @@ export default function Aicon() {
         window.location.reload()
     }
         
+    useEffect(() => {
+        console.log("sttDuration:", sttDuration)
+    }, [sttDuration])
+
     useEffect(() => {
         return () => {
             clearSilenceTimer();
@@ -762,16 +795,36 @@ export default function Aicon() {
                 </div>
             </div>
         </div>):(
+            <div>
+            {!isManual ? (
             <div className="flex flex-col h-screen bg-stone-200">
-            <button className="bg-cyan-500 hover:bg-cyan-700 text-white mx-auto mt-24 px-4 py-2 rounded text-base font-bold" onClick={() => {talkStart()}}>AIコンを始める</button>
-            <div className="mx-auto mt-32 text-sm">使用言語(language)</div>
-            <select className="mt-3 mx-auto text-sm w-36 h-8 text-center border-2 border-lime-600" value={dLang} onChange={selectLanguage}>
-                {langList.map((lang, index) => {
-                return <option key={index} value={lang}>{lang}</option>;
-                })}
-            </select>
-            <button className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>
-            </div>            
+            <button className={`w-2/3 ${eventData ? `bg-cyan-500 hover:bg-cyan-700 text-white` : `bg-slate-300 text-white`}  mx-auto mt-24 px-4 py-2 rounded`} disabled={!eventData} onClick={() => {talkStart()}}>
+                <div className="text-2xl font-bold">AIコンシェルジュ</div>
+                <div>click to start</div>
+            </button>
+            {eventData ? (
+                <div className="flex flex-col">
+                    <div className="mx-auto mt-32 text-sm">使用言語(language)</div>
+                    <select className="mt-3 mx-auto text-sm w-36 h-8 text-center border-2 border-lime-600" value={dLang} onChange={selectLanguage}>
+                        {langList.map((lang, index) => {
+                        return <option className="text-center" key={index} value={lang}>{lang}</option>;
+                        })}
+                    </select>
+                </div>
+            ):(
+                <div className="flex flex-row gap-x-4 mx-auto mt-32">
+                <LoaderCircle size={24} className="text-slate-500 animate-spin" />
+                <p className="text-slate-500">データ読み込み中(Data Loading...)</p>
+                </div>
+            )}
+            <button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>              
+            </div>
+            ):(
+            <div>
+                <UsersManual setIsManual={setIsManual} />
+            </div>
+            )}
+            </div>             
             )}
             {wavReady && (
 
@@ -786,3 +839,16 @@ export default function Aicon() {
         </div>
     );
 }
+
+/*
+            <div className="flex flex-col h-screen bg-stone-200">
+            <button className="bg-cyan-500 hover:bg-cyan-700 text-white mx-auto mt-24 px-4 py-2 rounded text-base font-bold" onClick={() => {talkStart()}}>AIコンを始める</button>
+            <div className="mx-auto mt-32 text-sm">使用言語(language)</div>
+            <select className="mt-3 mx-auto text-sm w-36 h-8 text-center border-2 border-lime-600" value={dLang} onChange={selectLanguage}>
+                {langList.map((lang, index) => {
+                return <option key={index} value={lang}>{lang}</option>;
+                })}
+            </select>
+            <button className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>
+            </div>   
+*/

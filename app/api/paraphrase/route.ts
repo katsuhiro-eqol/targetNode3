@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const { question, model, history } = await req.json()
 
   const chatRes = await openai.chat.completions.create({
-    model: 'gpt-4.1-nano',
+    model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: createPrompt(question,history)}],
     temperature: 0.8
   })
