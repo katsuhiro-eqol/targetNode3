@@ -817,11 +817,15 @@ export default function Aicon() {
                 <p className="text-slate-500">データ読み込み中(Data Loading...)</p>
                 </div>
             )}
-            <button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>              
+            {language === "日本語" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>)}
+            {language === "英語" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">Please read this first</button>)}
+            {language === "中国語（簡体）" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">请先阅读此内容</button>)}
+            {language === "中国語（繁体）" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">請先閱讀此內容</button>)}
+            {language === "韓国語" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">먼저 읽어주세요</button>)}
             </div>
             ):(
             <div>
-                <UsersManual setIsManual={setIsManual} />
+                <UsersManual setIsManual={setIsManual} language={language} />
             </div>
             )}
             </div>             
