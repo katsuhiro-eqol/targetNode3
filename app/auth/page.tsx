@@ -60,7 +60,7 @@ export default function AUTH() {
         />
 
         <br />
-        <button className="border-2" onClick={() => login()}>login</button>
+        <button className="p-2 border-2 rounded-lg bg-blue-600 hover:bg-blue-800 text-white" onClick={() => login()}>login</button>
         <br />
         </div>
     </div>

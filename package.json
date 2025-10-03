@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google-cloud/speech": "^7.1.0",
+    "@vercel/kv": "^3.0.0",
     "axios": "^1.7.9",
     "cookie": "^1.0.2",
     "firebase": "^11.3.1",

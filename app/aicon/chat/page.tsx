@@ -396,13 +396,15 @@ export default function Aicon() {
     }
 
 
-    const createConvField = async (attr:string) => {
+    
+    const createConvId = async (attr:string) => {
         const date = new Date()
         const offset = date.getTimezoneOffset() * 60000
         const localDate = new Date(date.getTime() - offset)
         const now = localDate.toISOString()
         setConvId(now)
     }
+    
 
     const getLanguageList = () => {
         if (eventData?.languages){
@@ -634,7 +636,7 @@ export default function Aicon() {
     useEffect(() => {
         if (attribute && code){
             loadEventData(attribute, code)
-            createConvField(attribute)
+            createConvId(attribute)
         }        
     }, [attribute, code])
 

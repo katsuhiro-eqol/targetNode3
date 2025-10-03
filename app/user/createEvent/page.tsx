@@ -6,6 +6,7 @@ import { doc, getDoc, collection, setDoc, updateDoc, arrayUnion } from "firebase
 import { PronunciationRegistration } from "../../components/pronunciation"
 import EventOption from "../../components/eventOption"
 import VoiceSample from "../../components/voiceSample"
+import UIOption from "../../components/uiOption"
 import { Circle, CircleDot } from 'lucide-react'
 import { Pronunciation, Image } from "@/types"
 
@@ -14,8 +15,9 @@ export default function CreateEvent(){
     const [newEvent, setNewEvent] = useState<string>("")
     const [organization, setOrganization] = useState<string>("")
     const [events, setEvents] = useState<string[]>([])
-    const [usePrevious, setUsePrevious] = useState<boolean>(false)
-    const [event, setEvent] = useState<string>("")
+    //const [usePrevious, setUsePrevious] = useState<boolean>(false)
+    const [eventLimit, setEventLimit] = useState<number>(1)
+    const [eventCount, setEventCount] = useState<number>(0)
     const [comment, setComment] = useState<string>("")
     const [selectedOptions, setSelectedOptions] = useState<string[]>(["日本語"]);
     const [other, setOther] = useState<string>("")//他言語
@@ -29,6 +31,7 @@ export default function CreateEvent(){
     const [isHumanStaff, setIsHumanStaff] = useState<boolean>(false)
     const [startTime, setStartTime] = useState<string>("制限なし")//利用開始時間
     const [endTime, setEndTime] = useState<string>("制限なし")//利用終了時間
+    const [uiOption, setUiOption] = useState<Image[]>([])
     const options = ["英語", "中国語（簡体）", "中国語（繁体）", "韓国語"];
     const otherOptions = ["その他","フランス語","ポルトガル語","スペイン語"]
     const voiceList = ["voice_m", "voice_w2"]
@@ -40,6 +43,13 @@ export default function CreateEvent(){
             if (docSnap.exists()) {
                 const data = docSnap.data()
                 setEvents(data.events)
+                setEventCount(data.events.length)
+                setEventLimit(data.eventLimit)
+                const uOption = data.uiImages
+                setUiOption(uOption)
+                if (data.events.length >= data.eventLimit){
+                    alert("イベント数が上限に達しています。新しいイベントを生成する場合は既存イベントの削除が必要です。")
+                }
             } else {
                 alert("ログインから始めてください")
             }
@@ -68,6 +78,9 @@ export default function CreateEvent(){
             return false
         } else if (endTime == ""){
             alert("利用終了日時を登録してください")
+            return false
+        } else if (eventCount >= eventLimit) {
+            alert("イベント数が上限に達しています。新しいイベントを生成する場合は既存イベントの削除が必要です。")
             return false
         } else {
             return true
@@ -111,6 +124,7 @@ export default function CreateEvent(){
                 const usersRef = collection(db, "Users")
                 await updateDoc(doc(usersRef, organization), {events: arrayUnion(newEvent)})
                 setComment("イベント新規登録が完了しました")
+                setEventCount((prev) => prev + 1)
             } catch (error) {
                 console.log(error)
                 setComment("イベント新規登録時にエラーが発生しました")
@@ -149,13 +163,13 @@ export default function CreateEvent(){
         window.location.reload()
     }
 
-    const toggleState = () => {
-        setIsEventOption((prev) => !prev); // 現在の状態を反転させる
-    };
-
     const isAlphanumeric = (str:string) => {
         return /^[a-zA-Z0-9]+$/.test(str);
     }
+
+    useEffect(() => {
+        console.log(uiOption)
+    }, [uiOption])
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -230,16 +244,9 @@ export default function CreateEvent(){
             <button className="px-2 ml-3 mt-1 text-xs border-2 bg-gray-200 hover:bg-gray-300" onClick={() => setIsNewPronunciation(true)}>+追加</button>
             </div>
             <PronunciationRegistration pronunciations={pronunciations} setPronunciations={setPronunciations} isNewPronunciation={isNewPronunciation} setIsNewPronunciation={setIsNewPronunciation} />
-            <div className="flex flex-row gap-x-4">
-            <div className="text-base mt-10 font-semibold text-gray-700">・ステップ３: イベントオプション設定  </div>
-            {!isEventOption && (
-                <button className="text-sm mt-9 px-2 border-2 bg-gray-100 hover:bg-gray-200 rounded" onClick={toggleState} >オプション入力</button>
-            )}
-            </div>
-            <div className="mt-2 text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
-            {isEventOption && (
-                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime} isHumanStaff={isHumanStaff} setIsHumanStaff={setIsHumanStaff} />
-            )}
+            <div className="font-semibold mt-3 text-sm ml-3 underline">UI画面</div>
+            {Array.isArray(uiOption) && <UIOption uiOption={uiOption} setImage={setImage} organization={organization} setUiOption={setUiOption} />}
+            
             </div>
             <div className="flex flex-row gap-x-4">
             <button className="h-10 mt-10 px-2 border-2 rounded" onClick={pageReload}>キャンセル</button>
@@ -251,14 +258,14 @@ export default function CreateEvent(){
 }
 
 /*
-    <div className="flex flex-row gap-x-4">
-    <div className="text-base mt-10 font-semibold text-gray-700">・ステップ３: イベントオプション設定  </div>
-    {!isEventOption && (
-        <button className="text-sm mt-9 px-2 border-2 bg-gray-100 hover:bg-gray-200 rounded" onClick={toggleState} >オプション入力</button>
-    )}
-    </div>
-    <div className="mt-2 text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
-    {isEventOption && (
-        <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime}/>
-    )}
+            <div className="flex flex-row gap-x-4">
+            <div className="text-base mt-10 font-semibold text-gray-700">・ステップ３: イベントオプション設定  </div>
+            {!isEventOption && (
+                <button className="text-sm mt-9 px-2 border-2 bg-gray-100 hover:bg-gray-200 rounded" onClick={toggleState} >オプション入力</button>
+            )}
+            </div>
+            <div className="mt-2 text-xs text-red-600">（イベント設定後でも設定・修正できる項目です）</div>        
+            {isEventOption && (
+                <EventOption organization={organization} setImage={setImage} setStartTime={setStartTime} setEndTime={setEndTime} isHumanStaff={isHumanStaff} setIsHumanStaff={setIsHumanStaff} />
+            )}
 */

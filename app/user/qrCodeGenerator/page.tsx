@@ -122,20 +122,11 @@ export default function DownloadableQRCode(){
       };
 
     useEffect(() => {
-        
-        if (code!=="" && selectedOption === "AIcon"){
-            const eventUrl = `${rootUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
-            const eventUrl = `${rootUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        }
-        /*
         if (code!=="") {
-            const eventUrl = `${hostUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
+            const aiconUrl = `/aicon/chat?attribute=${organization}_${event}&code=${code}`
+            const renewUrl = `${rootUrl}api/renew?to=${encodeURIComponent(aiconUrl)}`
+            setUrl(renewUrl)
         }
-        */
     }, [code])
 
 
@@ -174,6 +165,31 @@ export default function DownloadableQRCode(){
             })}
             </select>
 
+            {url && (
+                <div>
+                <div className="mb-10 w-1/2"><a className="text-indigo-700" href={url}  target="_blank" rel="noreferrer">{url}</a></div>
+                <div 
+                ref={qrCodeRef} 
+                className="w-60 py-5 px-12 bg-white"
+            >
+
+                <QRCodeCanvas value={url} size={size} level="H"/>
+
+                </div>
+                </div>
+            )}
+
+            <div className="flex flex-row gap-x-4">
+            <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
+            <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>
+            </div>
+            <div className="text-green-500 font-semibold mt-5">{status}</div>
+        
+        </div>
+    );
+};
+
+/*
             {isStaffChat && (
             <div className="flex flex-row gap-x-4">
                 {options.map((option) => (
@@ -189,26 +205,11 @@ export default function DownloadableQRCode(){
             </div>    
             )} 
 
-        {url && (
-            <div>
-            <div className="mb-10 w-1/2"><a className="text-indigo-700" href={url}  target="_blank" rel="noreferrer">{url}</a></div>
-            <div 
-            ref={qrCodeRef} 
-            className="w-60 py-5 px-12 bg-white"
-        >
-
-            <QRCodeCanvas value={url} size={size} level="H"/>
-
-            </div>
-            </div>
-        )}
-
-            <div className="flex flex-row gap-x-4">
-            <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
-            <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>
-            </div>
-            <div className="text-green-500 font-semibold mt-5">{status}</div>
-        
-        </div>
-    );
-};
+        if (code!=="" && selectedOption === "AIcon"){
+            const eventUrl = `${rootUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
+            const eventUrl = `${rootUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
+            setUrl(eventUrl)
+        }
+*/
