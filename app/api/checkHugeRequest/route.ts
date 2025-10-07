@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { checkQuotaOrThrow } from "@/lib/quota";
 
-const LIMIT_PER_DAY = 30;              // 例: 1日20回
+const LIMIT_PER_DAY = 30;              // 例: 1日30回
 const FUNCTION_NAME = "getAnswer";   // 関数ごとに名前を分ける
 
 export async function POST() {

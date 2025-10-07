@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const runpod_key = process.env.RUNPOD_API_KEY
 
-const runpod_url = "https://api.runpod.ai/v2/ipv7b7lbrstx3n/runsync"
+const runpod_url = "https://api.runpod.ai/v2/8cu1tfdpvvx664/runsync"
 
 const vits_param = {
     voice_m: {model_id: 0},

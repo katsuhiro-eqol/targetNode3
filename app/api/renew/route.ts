@@ -8,7 +8,7 @@ const kv = createClient({
     token: process.env.KV_REST_API_TOKEN!, // ← UpstashのREST TOKEN
 });
 
-const TTL_MS = 1 * 24 * 60 * 60 * 1000; // 許可期間（3日）
+const TTL_MS = 1 * 24 * 60 * 60 * 1000; // 許可期間（1日）
 
 const COOKIE = "session_id";
 
