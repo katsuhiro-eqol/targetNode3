@@ -115,7 +115,8 @@ export default function CreateEvent(){
                 pronunciation:pronunciations,
                 code: code,
                 isStaffChat: isHumanStaff,
-                counter:0
+                counter:0,
+                isSuspended:false
             }
             
                 const eventRef = collection(db, "Events")

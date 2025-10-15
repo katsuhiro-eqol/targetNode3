@@ -103,7 +103,8 @@ export default function UpdaateQA(){
                         embedding: data.embedding,
                         qaData: data.qaData,
                         code:data.code,
-                        pronunciations:data.pronunciation
+                        pronunciations:data.pronunciation,
+                        isSuspended:data.isSuspended
                     }
                     setEventData(data3)
                     
@@ -581,7 +582,7 @@ export default function UpdaateQA(){
         <div>
         <div className="mb-5 font-bold text-xl">Q&Aデータの更新</div>
         <div className="text-base">・イベントを選択</div>
-            <select className="mb-5 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
+            <select className="mb-5 w-96 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}

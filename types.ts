@@ -37,6 +37,7 @@ export interface EventData {
     qaData: boolean;
     code: string;
     pronunciations:Pronunciation[]|null;
+    isSuspended: boolean;
 }
 
 interface ForeignAnswer {

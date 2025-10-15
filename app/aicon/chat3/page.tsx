@@ -330,7 +330,8 @@ export default function Aicon3() {
                     embedding:data.embedding,
                     qaData:data.qaData,
                     code:data.code,
-                    pronunciations:data.pronunciation
+                    pronunciations:data.pronunciation,
+                    isSuspended:data.isSuspended
                 }
                 setEventData(event_data)
                 setInitialSlides(data.image.url)

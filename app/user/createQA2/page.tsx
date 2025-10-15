@@ -207,7 +207,7 @@ export default function RegisterCSV() {
                         voiceId: ans[0].voiceId,
                         read: ans[0].read,
                         foreign:foreinAnswers[item.answer],
-                        pronunciations:[]
+                        pronunciations:[],
                     }          
                 } else {
                     data2 = {
@@ -281,8 +281,9 @@ export default function RegisterCSV() {
     const registerToFirestore = async () => {
         if (judgeNewQA()){
             setStatus("Q&Aデータ登録を始めます")
+            
             const readings = await readRegistration()
-            const translated = await registerForeignLang()
+            const translated = await registerForeignLang()          
             await registerQADB(translated, readings)
             await voiceRegistration(readings)
             setStatus("データを検証しています")
@@ -334,6 +335,7 @@ export default function RegisterCSV() {
                             qaData: data.qaData,
                             code:data.code,
                             pronunciations:data.pronunciation,
+                            isSuspended:data.isSuspended
                         }
                         setEventData(data3)
                     }
@@ -449,7 +451,7 @@ export default function RegisterCSV() {
             </div>
 
             <div className="text-xs ml-3">（未設定の場合は「データ新規登録」メニューから「イベント登録」を行なってください）</div>
-            <select className="mt-3 ml-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
+            <select className="mt-3 ml-3 w-96 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}

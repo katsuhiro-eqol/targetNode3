@@ -352,7 +352,12 @@ export default function Aicon() {
                     embedding:data.embedding,
                     qaData:data.qaData,
                     code:data.code,
-                    pronunciations:data.pronunciation
+                    pronunciations:data.pronunciation,
+                    isSuspended:data.isSuspended
+                }
+                if (data.isSuspended){
+                    alert("アプリは現在一時停止中です")
+                    return
                 }
                 setEventData(event_data)
                 setInitialSlides(data.image.url)
@@ -404,8 +409,6 @@ export default function Aicon() {
             await setDoc(doc(db, "Events",attr, "Conversation", convId), {conversations: arrayUnion(data), language:language, date:userMessage.id}, {merge:true})
         }
     }
-
-
     
     const createConvId = async (attr:string) => {
         const date = new Date()
@@ -421,15 +424,6 @@ export default function Aicon() {
             const langs = eventData.languages.map((item) => {return nativeName[item as keyof typeof nativeName]})
             setLangList(langs)
         }
-    }
-
-    const randomStr = (length:number) => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
-        }
-        return result;
     }
     
     const talkStart = async () => {
@@ -655,6 +649,7 @@ export default function Aicon() {
       }, [messages]);
 
     useEffect(() => {
+
         if (eventData){
             getLanguageList()
             //setInitialSlides(eventData?.image.url)

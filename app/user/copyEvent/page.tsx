@@ -172,7 +172,7 @@ export default function CopyEvent(){
         <div className="text-base font-bold">複製元のイベントを選択 </div>
         
         {events && (
-        <select className="mt-3 ml-3 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
+        <select className="mt-3 ml-3 w-96 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
         {eventList.map((name) => {
         return <option key={name} value={name}>{name}</option>;
         })}

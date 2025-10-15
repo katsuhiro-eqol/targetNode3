@@ -18,6 +18,7 @@ export default function DownloadableQRCode(){
     const [status, setStatus] = useState<string>("")
     const [selectedOption, setSelectedOption] = useState<string>("AIcon")
     const [isStaffChat, setIsStaffChat] = useState<boolean>(false)
+    const [isSuspended, setIsSuspended] = useState<boolean>(false)
     const qrCodeRef = useRef(null);
     const size:number = 144
 
@@ -51,6 +52,7 @@ export default function DownloadableQRCode(){
                 if (docSnap.exists()) {
                     const data = docSnap.data()
                     if (data.qaData){
+                        setIsSuspended(data.isSuspended)
                         setCode(data.code)
                         if (data.isStaffChat){
                             setIsStaffChat(data.isStaffChat)
@@ -112,6 +114,16 @@ export default function DownloadableQRCode(){
         }
     }
 
+    const toggleSuspendedState = async() => {
+        const eventId = organization + "_" + event
+        try {
+            await setDoc(doc(db,"Events",eventId), {isSuspended:!isSuspended}, {merge:true})
+            setIsSuspended((prev) => !prev)
+        } catch (error){
+            alert("一時停止状態の更新に失敗しました")
+        }
+    }
+
     const getRootUrl = () => {
         // クライアントサイドでのみ実行
         if (typeof window === 'undefined'){
@@ -159,7 +171,7 @@ export default function DownloadableQRCode(){
         <div className="flex-1 flex flex-col justify-center gap-2">
         <div className="font-bold text-xl">QRコード生成</div>
         <div className="text-base mt-5">イベントを選択</div>
-            <select className="mb-8 w-48 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
+            <select className="mb-8 w-96 h-8 text-center border-2 border-lime-600" value={event} onChange={selectEvent}>
             {events.map((name) => {
             return <option key={name} value={name}>{name}</option>;
             })}
@@ -178,38 +190,18 @@ export default function DownloadableQRCode(){
                 </div>
                 </div>
             )}
-
+            {isSuspended && (<div className="text-red-600 mt-5 ml-2">現在このイベントは一時停止中です</div>)}
             <div className="flex flex-row gap-x-4">
             <button onClick={downloadQRAsJPG} className="mt-10 px-2 py-1 text-sm bg-amber-300 rounded hover:bg-amber-400">ダウンロード</button>
             <button onClick={setNewEventCode} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-gray-200">イベントコード変更</button>
+            {isSuspended ? (
+                <button onClick={toggleSuspendedState} className="ml-2 mt-10 px-2 py-1 text-sm bg-gray-100 rounded hover:bg-blue-200">イベント再開</button>
+            ):(
+                <button onClick={toggleSuspendedState} className="ml-2 mt-10 px-2 py-1 text-sm bg-blue-100 rounded hover:bg-gray-200">イベント一時停止</button>                
+            )}
             </div>
             <div className="text-green-500 font-semibold mt-5">{status}</div>
         
         </div>
     );
 };
-
-/*
-            {isStaffChat && (
-            <div className="flex flex-row gap-x-4">
-                {options.map((option) => (
-                    <div
-                    key={option}
-                    className="flex items-center mb-2 cursor-pointer hover:bg-gray-200 p-2 rounded"
-                    onClick={() => setSelectedOption(option)}
-                    >
-                    {(selectedOption === option) ? <CircleDot className="w-4 h-4 text-blue-500" /> : <Circle className="w-4 h-4 text-gray-400" />}
-                    <span className="ml-2 text-gray-700 text-sm">{option}</span>
-                </div>
-                ))}
-            </div>    
-            )} 
-
-        if (code!=="" && selectedOption === "AIcon"){
-            const eventUrl = `${rootUrl}aicon/chat?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        } else if (code!=="" && selectedOption === "AIcon + HumanStaff") {
-            const eventUrl = `${rootUrl}aicon/chat3?attribute=${organization}_${event}&code=${code}`
-            setUrl(eventUrl)
-        }
-*/
