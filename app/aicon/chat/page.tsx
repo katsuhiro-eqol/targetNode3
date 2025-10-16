@@ -5,9 +5,9 @@ import { useSearchParams as useSearchParamsOriginal } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk"
 //import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Mic, Send, Eraser, Paperclip, X, LoaderCircle } from 'lucide-react';
+import { Mic, Send, Eraser, Paperclip, X, LoaderCircle, Pickaxe } from 'lucide-react';
 import { db } from "@/firebase";
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
 import Modal from "../../components/modalModal"
 import UsersManual from "../../components/usersManual"
 import {Message, EmbeddingsData, EventData} from "@/types"
@@ -45,6 +45,7 @@ export default function Aicon() {
     const [sttStartTime, setSttStartTime] = useState<number>(0)
     const [sttDuration, setSttDuration] = useState<number>(0)
     const [isManual, setIsManual] = useState<boolean>(false)
+    const [isSuspended, setIsSuspended] = useState<boolean>(false)
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const nativeName = {"日本語":"日本語", "英語":"English","中国語（簡体）":"简体中文","中国語（繁体）":"繁體中文","韓国語":"한국어","フランス語":"Français","スペイン語":"Español","ポルトガル語":"Português"}
@@ -355,8 +356,8 @@ export default function Aicon() {
                     pronunciations:data.pronunciation,
                     isSuspended:data.isSuspended
                 }
+                setIsSuspended(data.isSuspended)
                 if (data.isSuspended){
-                    alert("アプリは現在一時停止中です")
                     return
                 }
                 setEventData(event_data)
@@ -370,6 +371,18 @@ export default function Aicon() {
         } else {
             alert("イベントが登録されていません")
         }
+    }
+
+    const listenSuspendState = (attribute:string, code:string) => {
+        const eventRef = doc(db, "Events", attribute)
+        const suspendState = onSnapshot(eventRef, (snapshot) => {
+            if (snapshot.exists()){
+                const suspend = snapshot.data().isSuspended
+                console.log("isSuspended", isSuspended, "suspend", suspend)
+                setIsSuspended(suspend)      
+            }
+        })
+        return suspendState
     }
 
     const saveMessage = async (userMessage:Message, message:Message, attr:string, translatedQuestion:string, index:number) => {
@@ -611,6 +624,28 @@ export default function Aicon() {
     }, []);
 
     useEffect(() => {
+        if (attribute && code){
+            const suspendState = listenSuspendState(attribute, code)
+            return () => suspendState()
+        }
+    },[])
+
+    useEffect(() => {
+        if (isSuspended){
+            setEventData(null)
+            setWavReady(false)
+            setMessages([])
+        } else {
+            if (!eventData){
+                if (attribute && code){
+                    loadEventData(attribute, code)
+                    createConvId(attribute)
+                }                       
+            }
+        }
+    }, [isSuspended])
+
+    useEffect(() => {
         if (recognizing){
             setRecord(true)
         } else {
@@ -649,11 +684,9 @@ export default function Aicon() {
       }, [messages]);
 
     useEffect(() => {
-
         if (eventData){
             getLanguageList()
             //setInitialSlides(eventData?.image.url)
-            
         }
     }, [eventData])
     
@@ -819,11 +852,15 @@ export default function Aicon() {
                     </select>
                 </div>
             ):(
-                <div className="flex flex-row gap-x-4 mx-auto mt-32">
-                <LoaderCircle size={24} className="text-slate-500 animate-spin" />
-                <p className="text-slate-500">データ読み込み中(Data Loading...)</p>
-                </div>
-            )}
+            <div className="flex flex-col">
+            {isSuspended ? (<div className="flex flex-row gap-x-4 mx-auto mt-32">
+                <Pickaxe size={24} className="text-slate-500" />
+                <p className="text-slate-500">アプリは一時停止中です(Paused...)</p>
+                </div>):(<div className="flex flex-row gap-x-4 mx-auto mt-32">
+                    <LoaderCircle size={24} className="text-slate-500 animate-spin" />
+                    <p className="text-slate-500">データ読み込み中(Data Loading...)</p>
+                </div>)}
+            </div>)}
             {language === "日本語" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">はじめにお読みください</button>)}
             {language === "英語" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">Please read this first</button>)}
             {language === "中国語（簡体）" && (<button onClick={() => setIsManual(true)} className="mt-auto mb-32 text-blue-500 hover:text-blue-700 text-sm">请先阅读此内容</button>)}
